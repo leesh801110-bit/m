@@ -113,6 +113,9 @@ input[type=number]{width:64px;text-align:right;font-family:var(--f-mono)}
 .warns li .h{display:flex;justify-content:space-between;gap:8px;font-weight:600}
 .warns li .h .mono{color:var(--ink)}
 .warns li .w{color:var(--muted)}
+.warns li.crit{border-left-color:#d03b3b}
+.warns li.crit .h .tagc{font-family:var(--f-mono);font-size:.68rem;font-weight:600;color:#fff;background:#d03b3b;border-radius:3px;padding:0 5px}
+.warns li.info{border-left-color:var(--faint)}
 .warns li.none{border-left-color:var(--cht)}
 .tag{font-family:var(--f-mono);font-size:.68rem;padding:1px 6px;border-radius:3px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
 .btn{font:inherit;font-size:.8rem;border:1px solid var(--line);background:var(--sunk);color:var(--ink);border-radius:4px;padding:4px 10px;cursor:pointer}
@@ -170,7 +173,7 @@ details.panel[open] summary{margin-bottom:4px}
   </section>
 
   <section class="panel">
-    <h2>밀린 단계와 원인</h2>
+    <h2>밀린 단계와 원인 · 확인 필요</h2>
     <ul class="warns" id="warns"></ul>
   </section>
 
@@ -211,7 +214,7 @@ details.panel[open] summary{margin-bottom:4px}
         <li>밀린 단계와 평가 때문에 시점이 바뀐 사후 세척은 근무시간 안에서만 진행합니다. 근무 종료 전에 끝낼 수 없으면 다음 날 근무 시작 시각으로 넘어갑니다(새벽 작업 없음). 계획 일정 자체는 그대로 둡니다.</li>
         <li>사용 전 세척·평형화(Pre CIP &amp; EQ)는 근무시간 안에서 공정 전에 끝내야 합니다. 가능하면 전날로 당겨 잡고, 설비가 아직 세척 중이면 세척이 끝난 뒤에 진행합니다.</li><li>세척(사용 전 세척·평형화, 막·컬럼 세척, 시스템 CIP)은 중간에 끊어서 나눠 할 수 없습니다. 근무 종료 전에 한 번에 끝낼 수 없으면 통째로 다음 날 근무 시작 시각으로 넘깁니다. 위 '적용' 설정과 관계없이 항상 이 규칙을 씁니다. 단, 크로마토그래피 메소드 안에서 이어지는 컬럼 CIP는 공정과 연속이라 예외입니다.</li><li>사후 세척은 막·컬럼 세척(Post Mem/Resin) → 시스템 CIP 순서이고, 그동안 시스템을 계속 점유합니다. 막과 시스템은 사용 후 DHT가 지나야 세척을 시작합니다.</li>
         <li>DHT 평가를 켜면 사후 세척 시작이 사용 종료 + 목표 DHT 이후로 밀립니다. CHT 평가를 켜면 세척한 설비를 목표 CHT 동안 다음 사용에 쓰지 않습니다.</li>
-        <li>공정 사이의 평소 간격(분석 대기, 야간 보관)은 계획 일정에서 계산해 유지합니다. HTS 목표가 그보다 길면 그 차이만큼 밀립니다.</li>
+        <li>앞 공정과 다음 공정의 계획상 관계(같은 날 이어서 / 며칠 뒤 같은 시각)는 유지합니다. HTS를 켜면 앞 공정 종료 + 홀드 목표보다 일찍 시작하지 않습니다. 둘 중 늦은 쪽이 기준입니다.</li><li>여러 공정액이 모이는 2차 UF는 가장 늦게 끝나는 1차 크로-3과의 관계만 지킵니다. 먼저 끝난 1차 크로-1·2 용출액은 기다리기만 하고 2차 UF를 늦추지 않습니다.</li><li>HTS·DHT·CHT는 서로 독립적으로 더하지 않고 한 일정 안에서 함께 계산합니다. 각 단계는 공정액 보관, 설비 세척(DHT), 청정 보관(CHT), 근무시간 조건 중 가장 늦은 것에 맞춰 시작합니다. 그래서 항목별 단독 영향의 합과 전체 지연이 다를 수 있습니다.</li><li>설비가 늦게 비어서 다음 공정이 밀리면 그 앞 공정액의 실제 보관 시간이 길어집니다. 홀드 목표·기준을 넘으면 '보관 초과'로 표시합니다.</li>
         <li>누적 막대는 HTS → DHT → CHT 순서로 하나씩 더했을 때 늘어나는 일수입니다. 항목끼리 겹치는 대기가 있어서 단독 영향의 합과 다를 수 있습니다.</li>
         <li>바이러스 여과의 Post CIP 21 h는 익일 세척까지 대기를 포함한 값으로 보고 Nano Vessel 세척 2 h로 나눴습니다.</li>
       </ul>
@@ -317,7 +320,7 @@ function fitWork(t, dur, strict){
   const need = !strict && S.workMode === 'start' ? 0 : Math.min(num(dur), we - ws);
   let d = Math.floor(t / H), tod = t - d * H;
   if (tod < ws) tod = ws;
-  if (tod + need > we + 1e-9){ d += 1; tod = ws; }
+  if (need > 0 ? tod + need > we + 1e-9 : tod >= we - 1e-9){ d += 1; tod = ws; }
   return d * H + tod;
 }
 function snap(t, plan, dur){ return t <= plan + 1e-9 ? plan : fitWork(t, dur); }
@@ -333,6 +336,13 @@ function latestFit(endBy, dur){
   return d * H + tod - dur;
 }
 
+/* 계획에서 앞 공정과의 관계: k = 앞 공정 종료일로부터 며칠 뒤(0 = 같은 날 이어서)에 시작했는가.
+   여러 공정액이 모이는 단계(2차 UF)는 가장 늦게 끝나는 앞 공정만 이 관계를 갖고, 나머지 공정액은 기다리기만 한다 */
+function relTime(rel, p, plan){
+  if (!rel || rel.k <= 0) return p.end;
+  const tod = plan - Math.floor(plan / H) * H;
+  return Math.max(p.end, (Math.floor(p.end / H) + rel.k) * H + tod);
+}
 function simulate(tg, g0){
   const map = Object.fromEntries(S.steps.map(s => [s.id, s]));
   const eqMap = Object.fromEntries(S.equipment.map(e => [e.id, e]));
@@ -344,10 +354,10 @@ function simulate(tg, g0){
     if (!s.anchor){
       S.holds.filter(h => h.to === s.id).forEach(h => {
         const p = res[h.from]; if (!p) return;
-        const base = g0 ? (g0[h.id] || 0) : 0;
-        const req = tg.hts && h.on ? Math.max(base, num(h.t)) : base;
-        const t = p.end + req;
-        if (t > earliest + 1e-9){ earliest = t; bind = { type:'hold', h, req, base }; }
+        const tRel = g0 ? relTime(g0[h.id], p, plan) : p.end;
+        const tHts = tg.hts && h.on ? p.end + num(h.t) : -Infinity;
+        const t = Math.max(tRel, tHts);
+        if (t > earliest + 1e-9){ earliest = t; bind = { type:'hold', h, req: t - p.end, base: tRel - p.end, hts: tHts > tRel + 1e-9 }; }
       });
     }
     const eqs = [s.sys, s.media].filter(Boolean);
@@ -382,26 +392,28 @@ function simulate(tg, g0){
       const i = idx(medE.id), dur = num(s.post);
       const dhtOn = tg.dht && medE.dht && pick(medE.dhtUse, i, totals[medE.id]);
       const grouped = sysE && sysE.rule === 'next' && medE.rule === 'next' ? num(s.cip) : 0;
-      let ms = medE.rule === 'now' ? end : fitWork(nextWork(end), dur + grouped, true);
-      if (dhtOn) ms = Math.max(ms, fitWork(end + num(medE.dhtT), dur + grouped, true));
+      const ms0 = medE.rule === 'now' ? end : fitWork(nextWork(end), dur + grouped, true);
+      const ms = dhtOn ? Math.max(ms0, fitWork(end + num(medE.dhtT), dur + grouped, true)) : ms0;
       mediaEnd = ms + dur;
       const chtOn = tg.cht && medE.cht && medE.kind !== 'membrane' && pick(medE.chtUse, i, totals[medE.id]);
-      ev[medE.id] = { cs:ms, ce:mediaEnd, dhtOn, chtOn, fr: mediaEnd + (chtOn ? num(medE.chtT) : 0), e:medE, segs:[['dht', end, ms, dhtOn], ['cip', ms, mediaEnd]] };
+      ev[medE.id] = { cs:ms, ce:mediaEnd, dhtOn, dhtPush: ms > ms0 + 1e-9, chtOn, fr: mediaEnd + (chtOn ? num(medE.chtT) : 0), e:medE, segs:[['dht', end, ms, dhtOn], ['cip', ms, mediaEnd]] };
     }
     if (sysE){
       const i = idx(sysE.id), dur = num(s.cip);
       const dhtOn = tg.dht && sysE.dht && pick(sysE.dhtUse, i, totals[sysE.id]);
       let ss = sysE.rule === 'now' ? end : fitWork(nextWork(end), dur, true);
+      const ss0 = fitWork(Math.max(ss, medE ? mediaEnd : -Infinity), dur, true);
       if (dhtOn) ss = Math.max(ss, fitWork(end + num(sysE.dhtT), dur, true));
       if (medE) ss = Math.max(ss, mediaEnd);
       ss = fitWork(ss, dur, true);
+      const mPush = medE ? ev[medE.id].dhtPush : false;
       const se = ss + dur;
       const chtOn = tg.cht && sysE.cht && pick(sysE.chtUse, i, totals[sysE.id]);
       const m = medE ? ev[medE.id] : null;
       const cs = m ? Math.min(ss, m.cs) : ss;
       /* 시스템 줄: 사용 후 대기 → (막·컬럼 세척 동안 점유) → 대기 → 시스템 CIP. 각 세척 블록은 끊지 않는다 */
       const segs = m ? [['dht', end, m.cs, dhtOn], ['cip', m.cs, m.ce], ['dht', m.ce, ss, dhtOn], ['cip', ss, se]] : [['dht', end, ss, dhtOn], ['cip', ss, se]];
-      ev[sysE.id] = { cs, ce:se, dhtOn, chtOn, fr: se + (chtOn ? num(sysE.chtT) : 0), e:sysE, segs };
+      ev[sysE.id] = { cs, ce:se, dhtOn, dhtPush: ss > ss0 + 1e-9 || mPush, chtOn, fr: se + (chtOn ? num(sysE.chtT) : 0), e:sysE, segs };
     }
     Object.entries(ev).forEach(([eid, v]) => {
       bars.push({ eq:eid, type:'pre', start:preStart, end:preStart + pre, step:s });
@@ -409,13 +421,14 @@ function simulate(tg, g0){
       v.segs.forEach(([type, a, b, st]) => { if (b > a + 1e-9) bars.push({ eq:eid, type, start:a, end:b, step:s, study:type === 'dht' ? !!st : undefined }); });
       if (v.chtOn && v.fr > v.ce) bars.push({ eq:eid, type:'cht', start:v.ce, end:v.fr, step:s, study:true });
       free[eid] = v.fr;
-      freeWhy[eid] = { step:s, dhtOn:v.dhtOn, chtOn:v.chtOn, e:v.e, dhtH: v.cs - end, chtH: v.fr - v.ce };
+      freeWhy[eid] = { step:s, dhtOn:v.dhtOn, dhtPush:!!v.dhtPush, chtOn:v.chtOn, e:v.e, dhtH: v.cs - end, chtH: v.fr - v.ce };
     });
   });
   S.holds.forEach(h => {
     const p = res[h.from], q = res[h.to]; if (!p || !q) return;
-    const base = g0 ? (g0[h.id] || 0) : 0;
-    holdRes.push({ h, from:p, to:q, base, req: tg.hts && h.on ? Math.max(base, num(h.t)) : base, par: tg.hts && !h.on });
+    const base = (g0 ? relTime(g0[h.id], p, q.plan) : p.end) - p.end;
+    const req = Math.max(base, tg.hts && h.on ? num(h.t) : 0);
+    holdRes.push({ h, from:p, to:q, base, req, actual: q.start - p.end });
   });
   const last = res[S.steps[S.steps.length - 1].id];
   return { res, bars, holdRes, end:last.end, horizon: Math.max(last.end, ...bars.map(b => b.end)) };
@@ -424,7 +437,15 @@ function simulate(tg, g0){
 function computeAll(){
   const off = { hts:false, dht:false, cht:false };
   const b0 = simulate(off, null);
-  const g0 = {}; S.holds.forEach(h => { const p = b0.res[h.from], q = b0.res[h.to]; if (p && q) g0[h.id] = Math.max(0, q.start - p.end); });
+  const g0 = {};
+  S.steps.forEach(st => {
+    const hs = S.holds.filter(h => h.to === st.id && b0.res[h.from]); if (!hs.length) return;
+    const lastEnd = Math.max(...hs.map(h => b0.res[h.from].end));
+    hs.forEach(h => {
+      const p = b0.res[h.from], q = b0.res[st.id];
+      g0[h.id] = p.end >= lastEnd - 1e-9 ? { k: Math.floor(q.start / H) - Math.floor(p.end / H) } : { k: -1 };
+    });
+  });
   const base = simulate(off, g0);
   /* 누적: HTS → DHT → CHT 순서로 켜진 항목을 하나씩 더한다 */
   const steps = []; let acc = { ...off }, prev = base;
@@ -443,10 +464,11 @@ function computeAll(){
 
 /* 단계가 밀린 원인 → 평가 항목 색 */
 function causeOf(r){
-  if (r.bind.type === 'hold') return r.bind.req > r.bind.base + 1e-9 ? 'hts' : 'chain';
+  if (r.bind.type === 'hold') return r.bind.hts ? 'hts' : 'chain';
   if (r.bind.type === 'eq'){ const f = r.bind.why; if (!f) return 'chain';
-    if (f.chtOn && f.dhtOn) return f.chtH >= f.dhtH ? 'cht' : 'dht';
-    if (f.chtOn) return 'cht'; if (f.dhtOn) return 'dht'; return 'chain'; }
+    const cht = f.chtOn && f.chtH > 1e-9, dht = f.dhtPush;
+    if (cht && dht) return f.chtH >= f.dhtH ? 'cht' : 'dht';
+    if (cht) return 'cht'; if (dht) return 'dht'; return 'chain'; }
   return 'chain';
 }
 const causeColor = c => COLOR[c] || 'var(--muted)';
@@ -554,9 +576,10 @@ function renderGantt(R){
       body += rect(b.start, b.end, y + 5, 9, 'var(--plan)', `계획 ${s.name}\n${stamp(b.start)} → ${stamp(b.end)}`);
       /* 공정액 보관 */
       cur.holdRes.filter(x => x.h.from === s.id).forEach(x => {
-        const e0 = x.from.end, need = e0 + x.req, go = x.to.start, baseEnd = Math.min(go, e0 + x.base);
+        const bx = base.holdRes.find(y => y.h === x.h), usual = Math.max(x.base, bx ? bx.actual : 0);
+        const e0 = x.from.end, need = e0 + x.req, go = x.to.start, baseEnd = Math.min(go, e0 + usual);
         const yy = y + 18, hh = 12;
-        if (S.tg.hts && x.h.on && x.req > x.base + 1e-9) body += rect(baseEnd, Math.min(go, need), yy + 2, hh - 4, 'url(#pHts)', `${x.h.name} HTS 실공정 보관 · 목표 ${fmtGap(x.h.t)} (평소 ${fmtGap(x.base)})`);
+        if (x.req > x.base + 1e-9) body += rect(baseEnd, Math.min(go, need), yy + 2, hh - 4, 'url(#pHts)', `${x.h.name} HTS 실공정 보관 · 목표 ${fmtGap(x.h.t)} (평소 ${fmtGap(usual)})`);
         if (go > Math.max(need, baseEnd) + 0.01) body += rect(Math.max(need, baseEnd), go, yy + 2, hh - 4, 'url(#pWait)', `${x.h.name} 추가 대기 ${fmtGap(go - Math.max(need, baseEnd))} (설비 준비·근무 시간)`);
       });
       /* 이동 화살표 */
@@ -645,16 +668,29 @@ function renderWarns(R){
     const sh = r.start - b.start; if (sh < 0.01) return;
     const c = causeOf(r);
     let why = '';
-    if (r.bind.type === 'hold') why = r.bind.req > r.bind.base + 1e-9 ? `${esc(r.bind.h.name)}을 ${fmtGap(r.bind.req)} 보관 (평소 ${fmtGap(r.bind.base)})` : `앞 단계(${esc(r.bind.h.name)})가 밀린 영향`;
+    if (r.bind.type === 'hold') why = r.bind.hts ? `${esc(r.bind.h.name)}을 ${fmtGap(r.bind.req)} 보관 (평소 ${fmtGap(r.bind.base)})` : `앞 단계(${esc(r.bind.h.name)})가 밀린 영향`;
     else if (r.bind.type === 'eq'){
       const f = r.bind.why, parts = [];
-      if (f && f.dhtOn) parts.push(`DHT ${fmtGap(f.dhtH)}`);
+      if (f && f.dhtPush) parts.push(`DHT ${fmtGap(f.dhtH)}`);
       if (f && f.chtOn) parts.push(`CHT ${fmtGap(f.chtH)}`);
       why = `${esc(f ? f.e.name : r.bind.eq)}이 ${esc(f ? f.step.name : '')} 사용 후 ${parts.length ? parts.join(' + ') : '세척'} 동안 묶임`;
     } else why = '앞 단계가 밀린 영향';
     if (r.start - r.earliest > 0.01) why += ` · ${hm(r.earliest)} 착수는 근무시간(${workSpan()[0]}~${workSpan()[1]}시) 밖이라 D${dayOf(r.start)} ${hm(r.start)}로 넘어감`;
     w.push(`<li style="--c:${causeColor(c)}"><div class="h"><span>${esc(s.name)} <span class="pill" style="--c:${causeColor(c)}">${causeName(c)}</span></span><span class="mono">+${days1(sh)}일</span></div><div class="w">D${dayOf(b.start)} ${hm(b.start)} → D${dayOf(r.start)} ${hm(r.start)}</div><div>${why}</div></li>`);
   });
+  /* 확인 필요: 실제 보관 시간이 목표·기준을 넘는 공정액, 계획 자체가 근무시간 밖인 작업 */
+  const alerts = [];
+  R.cur.holdRes.forEach(x => {
+    if (x.actual > num(x.h.t) + 0.01) alerts.push(`<li class="crit"><div class="h"><span>${esc(x.h.name)}</span><span class="tagc">! 보관 초과</span></div><div class="w">실제 보관 ${fmtGap(x.actual)} &gt; 목표·기준 ${fmtGap(num(x.h.t))}</div><div>${esc(x.to.id ? (S.steps.find(q => q.id === x.to.id) || {}).name : '')} 착수가 늦어져 기존 보관 기준을 넘습니다. 홀드 목표를 늘리거나 일정 조정이 필요합니다.</div></li>`);
+  });
+  const [ws, we] = workSpan();
+  S.steps.forEach(st => {
+    const b = R.base.res[st.id]; if (st.anchor) return;
+    const tod = b.start - Math.floor(b.start / H) * H, endTod = tod + num(st.proc);
+    if (tod < ws - 1e-9 || (S.workMode !== 'start' && endTod > we + 1e-9) || (S.workMode === 'start' && tod >= we))
+      alerts.push(`<li class="info"><div class="h"><span>${esc(st.name)}</span><span class="tag">계획 · 근무시간 밖</span></div><div class="w">계획 ${stamp(b.start)} → ${stamp(b.end)}</div><div>계획 일정은 그대로 두고 계산합니다. 근무시간(${ws}~${we}시)에 맞추려면 계획일·시각을 조정하세요.</div></li>`);
+  });
+  w.unshift(...alerts);
   if (!w.length) w.push(`<li class="none">${KEYS.some(k => S.tg[k]) ? '켜진 평가 항목이 계획 일정 안에서 소화됩니다.' : '평가 항목이 모두 꺼져 있습니다. 위 스위치를 켜 보세요.'}</li>`);
   document.getElementById('warns').innerHTML = w.join('');
 }
@@ -718,7 +754,7 @@ function render(){
   const R = computeAll();
   renderSwitches(R); renderBridge(R); renderGantt(R); renderWarns(R);
   S.holds.forEach((x, i) => {
-    const g = document.getElementById('ho-g-' + i); if (g) g.textContent = fmtGap(R.g0[x.id] || 0);
+    const bh = R.base.holdRes.find(y => y.h === x); const g = document.getElementById('ho-g-' + i); if (g) g.textContent = bh ? fmtGap(bh.actual) : '';
     const d = document.getElementById('ho-d-' + i); if (d) d.textContent = days1(num(x.t));
   });
 }
