@@ -202,14 +202,14 @@ details.panel[open] summary{margin-bottom:4px}
       <div class="workset">
         <label for="ws">근무 시작 <input type="number" id="ws" min="0" max="23" data-k="workStart"> 시</label>
         <label for="we">근무 종료 <input type="number" id="we" min="1" max="24" data-k="workEnd"> 시</label>
-        <label for="wm">적용 <select id="wm" data-k="workMode"><option value="full">작업이 근무 종료 전에 끝나야 함</option><option value="start">근무시간 안에 시작만 하면 됨</option></select></label>
+        <label for="wm">적용 <select id="wm" data-k="workMode"><option value="full">공정이 근무 종료 전에 끝나야 함</option><option value="start">공정은 근무시간 안에 시작만 하면 됨</option></select></label>
         <label for="sd">D1 날짜 <input type="date" id="sd" data-k="startDate"></label>
         <button class="btn" type="button" id="reset">처음 값으로</button>
       </div>
       <ul class="notes">
         <li>CCF 1·2·3은 배양 수확일(D1·D5·D9)에 고정합니다. 나머지 단계는 앞 공정 종료, 공정액 보관, 설비 준비가 모두 끝난 뒤 시작합니다.</li>
         <li>밀린 단계와 평가 때문에 시점이 바뀐 사후 세척은 근무시간 안에서만 진행합니다. 근무 종료 전에 끝낼 수 없으면 다음 날 근무 시작 시각으로 넘어갑니다(새벽 작업 없음). 계획 일정 자체는 그대로 둡니다.</li>
-        <li>사용 전 세척·평형화(Pre CIP &amp; EQ)는 근무시간 안에서 공정 전에 끝내야 합니다. 가능하면 전날로 당겨 잡고, 설비가 아직 세척 중이면 세척이 끝난 뒤에 진행합니다.</li><li>사후 세척은 막·컬럼 세척(Post Mem/Resin) → 시스템 CIP 순서이고, 그동안 시스템을 계속 점유합니다. 막과 시스템은 사용 후 DHT가 지나야 세척을 시작합니다.</li>
+        <li>사용 전 세척·평형화(Pre CIP &amp; EQ)는 근무시간 안에서 공정 전에 끝내야 합니다. 가능하면 전날로 당겨 잡고, 설비가 아직 세척 중이면 세척이 끝난 뒤에 진행합니다.</li><li>세척(사용 전 세척·평형화, 막·컬럼 세척, 시스템 CIP)은 중간에 끊어서 나눠 할 수 없습니다. 근무 종료 전에 한 번에 끝낼 수 없으면 통째로 다음 날 근무 시작 시각으로 넘깁니다. 위 '적용' 설정과 관계없이 항상 이 규칙을 씁니다. 단, 크로마토그래피 메소드 안에서 이어지는 컬럼 CIP는 공정과 연속이라 예외입니다.</li><li>사후 세척은 막·컬럼 세척(Post Mem/Resin) → 시스템 CIP 순서이고, 그동안 시스템을 계속 점유합니다. 막과 시스템은 사용 후 DHT가 지나야 세척을 시작합니다.</li>
         <li>DHT 평가를 켜면 사후 세척 시작이 사용 종료 + 목표 DHT 이후로 밀립니다. CHT 평가를 켜면 세척한 설비를 목표 CHT 동안 다음 사용에 쓰지 않습니다.</li>
         <li>공정 사이의 평소 간격(분석 대기, 야간 보관)은 계획 일정에서 계산해 유지합니다. HTS 목표가 그보다 길면 그 차이만큼 밀립니다.</li>
         <li>누적 막대는 HTS → DHT → CHT 순서로 하나씩 더했을 때 늘어나는 일수입니다. 항목끼리 겹치는 대기가 있어서 단독 영향의 합과 다를 수 있습니다.</li>
@@ -312,9 +312,9 @@ function planned(map, s){ if (s.after){ const p = map[s.after]; return planned(m
 function workSpan(){ const ws = Math.min(23, num(S.workStart)), we = Math.max(ws + 1, Math.min(24, num(S.workEnd))); return [ws, we]; }
 function nextWork(t){ const ws = workSpan()[0], d = Math.floor(t / H), tod = t - d * H; return tod <= ws + 1e-9 ? d * H + ws : (d + 1) * H + ws; }
 /* t 이후 가장 이른 근무시간 내 착수 시각. 'full'이면 작업 전체(dur)가 근무 종료 전에 끝나야 한다 */
-function fitWork(t, dur){
+function fitWork(t, dur, strict){
   const [ws, we] = workSpan();
-  const need = S.workMode === 'start' ? 0 : Math.min(num(dur), we - ws);
+  const need = !strict && S.workMode === 'start' ? 0 : Math.min(num(dur), we - ws);
   let d = Math.floor(t / H), tod = t - d * H;
   if (tod < ws) tod = ws;
   if (tod + need > we + 1e-9){ d += 1; tod = ws; }
@@ -361,7 +361,7 @@ function simulate(tg, g0){
       const lf = pre > 0 ? latestFit(start, pre) : start;
       if (lf >= freeEq - 1e-9) preStart = lf;
       else {
-        preStart = pre > 0 ? fitWork(freeEq, pre) : freeEq;
+        preStart = pre > 0 ? fitWork(freeEq, pre, true) : freeEq;
         const preEnd = preStart + pre;
         if (!s.anchor && preEnd > start + 1e-9){
           const ns = fitWork(preEnd, s.proc);
@@ -382,29 +382,31 @@ function simulate(tg, g0){
       const i = idx(medE.id), dur = num(s.post);
       const dhtOn = tg.dht && medE.dht && pick(medE.dhtUse, i, totals[medE.id]);
       const grouped = sysE && sysE.rule === 'next' && medE.rule === 'next' ? num(s.cip) : 0;
-      let ms = medE.rule === 'now' ? end : fitWork(nextWork(end), dur + grouped);
-      if (dhtOn) ms = Math.max(ms, fitWork(end + num(medE.dhtT), dur + grouped));
+      let ms = medE.rule === 'now' ? end : fitWork(nextWork(end), dur + grouped, true);
+      if (dhtOn) ms = Math.max(ms, fitWork(end + num(medE.dhtT), dur + grouped, true));
       mediaEnd = ms + dur;
       const chtOn = tg.cht && medE.cht && medE.kind !== 'membrane' && pick(medE.chtUse, i, totals[medE.id]);
-      ev[medE.id] = { cs:ms, ce:mediaEnd, dhtOn, chtOn, fr: mediaEnd + (chtOn ? num(medE.chtT) : 0), e:medE };
+      ev[medE.id] = { cs:ms, ce:mediaEnd, dhtOn, chtOn, fr: mediaEnd + (chtOn ? num(medE.chtT) : 0), e:medE, segs:[['dht', end, ms, dhtOn], ['cip', ms, mediaEnd]] };
     }
     if (sysE){
       const i = idx(sysE.id), dur = num(s.cip);
       const dhtOn = tg.dht && sysE.dht && pick(sysE.dhtUse, i, totals[sysE.id]);
-      let ss = sysE.rule === 'now' ? end : fitWork(nextWork(end), dur);
-      if (dhtOn) ss = Math.max(ss, fitWork(end + num(sysE.dhtT), dur));
+      let ss = sysE.rule === 'now' ? end : fitWork(nextWork(end), dur, true);
+      if (dhtOn) ss = Math.max(ss, fitWork(end + num(sysE.dhtT), dur, true));
       if (medE) ss = Math.max(ss, mediaEnd);
-      ss = fitWork(ss, dur);
+      ss = fitWork(ss, dur, true);
       const se = ss + dur;
       const chtOn = tg.cht && sysE.cht && pick(sysE.chtUse, i, totals[sysE.id]);
-      const cs = medE ? Math.min(ss, ev[medE.id].cs) : ss;
-      ev[sysE.id] = { cs, ce:se, dhtOn, chtOn, fr: se + (chtOn ? num(sysE.chtT) : 0), e:sysE };
+      const m = medE ? ev[medE.id] : null;
+      const cs = m ? Math.min(ss, m.cs) : ss;
+      /* 시스템 줄: 사용 후 대기 → (막·컬럼 세척 동안 점유) → 대기 → 시스템 CIP. 각 세척 블록은 끊지 않는다 */
+      const segs = m ? [['dht', end, m.cs, dhtOn], ['cip', m.cs, m.ce], ['dht', m.ce, ss, dhtOn], ['cip', ss, se]] : [['dht', end, ss, dhtOn], ['cip', ss, se]];
+      ev[sysE.id] = { cs, ce:se, dhtOn, chtOn, fr: se + (chtOn ? num(sysE.chtT) : 0), e:sysE, segs };
     }
     Object.entries(ev).forEach(([eid, v]) => {
       bars.push({ eq:eid, type:'pre', start:preStart, end:preStart + pre, step:s });
       bars.push({ eq:eid, type:'use', start, end, step:s });
-      if (v.cs > end + 1e-9) bars.push({ eq:eid, type:'dht', start:end, end:v.cs, step:s, study:v.dhtOn });
-      if (v.ce > v.cs) bars.push({ eq:eid, type:'cip', start:v.cs, end:v.ce, step:s });
+      v.segs.forEach(([type, a, b, st]) => { if (b > a + 1e-9) bars.push({ eq:eid, type, start:a, end:b, step:s, study:type === 'dht' ? !!st : undefined }); });
       if (v.chtOn && v.fr > v.ce) bars.push({ eq:eid, type:'cht', start:v.ce, end:v.fr, step:s, study:true });
       free[eid] = v.fr;
       freeWhy[eid] = { step:s, dhtOn:v.dhtOn, chtOn:v.chtOn, e:v.e, dhtH: v.cs - end, chtH: v.fr - v.ce };
