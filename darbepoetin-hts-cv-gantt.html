@@ -4,11 +4,11 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* Layout: 배치기록서 머리 → 요약 지표 → 간트(자체 가로 스크롤) → 지연 분해·경고 → 입력 표 (2열 → 1열) */
+/* Layout: 배치기록서 머리 → 평가 스위치 3개 → 요약 → 간트(자체 가로 스크롤) → 지연 원인·제조지시서 검토 → 설정 표 */
 :root{
-  --bg:#eef2f1; --surface:#ffffff; --sunk:#f6f8f7; --ink:#16201f; --muted:#5b6a68; --line:#d5dddb;
+  --bg:#eef2f1; --surface:#ffffff; --sunk:#f5f7f6; --ink:#16201f; --muted:#5b6a68; --line:#d5dddb;
   --us:#1d7566; --ds:#3a4ca3; --hold:#dccb9c; --ext:#b8336f; --ext-bg:#f4d9e5;
-  --dht:#cf7f12; --cip:#2a86bd; --cht:#468f41; --wait:#8f9b99; --wait-bg:#e3e8e7;
+  --dht:#cf7f12; --cip:#2a86bd; --cht:#468f41; --wait:#8f9b99; --wait-bg:#e3e8e7; --act:#2b3433;
   --warn:#a94b12; --warn-bg:#fbeadc; --ok:#2f7a3a; --on-bar:#ffffff; --focus:#3a4ca3;
   --f-sans:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
   --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
@@ -16,35 +16,45 @@
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
   --bg:#0f1514; --surface:#172020; --sunk:#131a19; --ink:#e3ebe9; --muted:#93a3a0; --line:#2a3634;
   --us:#3fb09d; --ds:#8797ec; --hold:#7d6e45; --ext:#e46fa4; --ext-bg:#4a2335;
-  --dht:#e5a142; --cip:#5bb2e5; --cht:#7cc276; --wait:#6c7977; --wait-bg:#232d2c;
+  --dht:#e5a142; --cip:#5bb2e5; --cht:#7cc276; --wait:#6c7977; --wait-bg:#232d2c; --act:#d7e0de;
   --warn:#f0a167; --warn-bg:#3a2617; --ok:#7cc276; --on-bar:#0c1211; --focus:#8797ec; color-scheme:dark }}
 :root[data-theme="dark"]{
   --bg:#0f1514; --surface:#172020; --sunk:#131a19; --ink:#e3ebe9; --muted:#93a3a0; --line:#2a3634;
   --us:#3fb09d; --ds:#8797ec; --hold:#7d6e45; --ext:#e46fa4; --ext-bg:#4a2335;
-  --dht:#e5a142; --cip:#5bb2e5; --cht:#7cc276; --wait:#6c7977; --wait-bg:#232d2c;
+  --dht:#e5a142; --cip:#5bb2e5; --cht:#7cc276; --wait:#6c7977; --wait-bg:#232d2c; --act:#d7e0de;
   --warn:#f0a167; --warn-bg:#3a2617; --ok:#7cc276; --on-bar:#0c1211; --focus:#8797ec; color-scheme:dark }
 
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-sans);font-size:14px;line-height:1.55}
-.wrap{max-width:1240px;margin:0 auto;padding-inline:16px;padding-block:20px 48px;display:grid;gap:18px}
-h1,h2,h3{text-wrap:balance;margin:0}
-h1{font-size:1.55rem;font-weight:700;letter-spacing:-.01em}
-h2{font-size:1.02rem;font-weight:600}
-.num,td.n,input[type=number]{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.wrap{max-width:1280px;margin:0 auto;padding-inline:16px;padding-block:20px 48px;display:grid;gap:16px}
+h1,h2{text-wrap:balance;margin:0}
+h1{font-size:1.5rem;font-weight:700;letter-spacing:-.01em}
+h2{font-size:1rem;font-weight:600}
 .eyebrow{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .muted{color:var(--muted)}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
 
 header.doc{display:grid;grid-template-columns:1fr auto;gap:8px 24px;align-items:end;border-bottom:2px solid var(--ink);padding-bottom:12px}
-header.doc p{margin:4px 0 0;max-width:68ch;color:var(--muted)}
+header.doc p{margin:4px 0 0;max-width:72ch;color:var(--muted)}
 .docmeta{font-family:var(--f-mono);font-size:.74rem;color:var(--muted);text-align:right;line-height:1.7}
 @media (max-width:720px){header.doc{grid-template-columns:1fr}.docmeta{text-align:left}}
 
+.switches{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:760px){.switches{grid-template-columns:1fr}}
+.sw-card{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:center;background:var(--surface);border:1.5px solid var(--line);border-radius:8px;padding:12px 14px;cursor:pointer;min-width:0}
+.sw-card:has(input:checked){border-color:var(--ink)}
+.sw-card input{width:20px;height:20px;margin:0;accent-color:var(--ink);grid-row:span 2}
+.sw-card .t{font-weight:600;font-size:.95rem}
+.sw-card .s{font-size:.76rem;color:var(--muted);grid-column:2}
+.sw-card .chip{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:baseline}
+
 .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:6px;overflow:hidden}
 .kpi{background:var(--surface);padding:12px 14px;display:grid;gap:2px;min-width:0}
-.kpi .v{font-family:var(--f-mono);font-size:1.45rem;font-weight:500;font-variant-numeric:tabular-nums}
-.kpi .v small{font-size:.8rem;color:var(--muted);font-weight:400}
+.kpi .v{font-family:var(--f-mono);font-size:1.4rem;font-weight:500;font-variant-numeric:tabular-nums}
+.kpi .v small{font-size:.78rem;color:var(--muted);font-weight:400}
 .kpi.delay .v{color:var(--ext)}
-@media (max-width:820px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi .parts{font-family:var(--f-mono);font-size:.8rem;display:grid;gap:1px}
+@media (max-width:860px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px;display:grid;gap:12px;min-width:0}
 .toolbar{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;justify-content:space-between}
@@ -52,11 +62,11 @@ header.doc p{margin:4px 0 0;max-width:68ch;color:var(--muted)}
 .seg button{font:inherit;font-size:.85rem;border:0;background:var(--sunk);color:var(--muted);padding:5px 11px;cursor:pointer}
 .seg button+button{border-left:1px solid var(--line)}
 .seg button[aria-pressed=true]{background:var(--ink);color:var(--bg)}
-.ctl{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;font-size:.85rem;color:var(--muted)}
+.ctl{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;font-size:.84rem;color:var(--muted)}
 .ctl label{display:inline-flex;gap:6px;align-items:center}
 button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 
-.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.78rem;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.77rem;color:var(--muted)}
 .legend span{display:inline-flex;align-items:center;gap:6px}
 .sw{width:18px;height:10px;border-radius:2px;display:inline-block}
 .sw.us{background:var(--us)}.sw.ds{background:var(--ds)}.sw.hold{background:var(--hold)}
@@ -64,79 +74,77 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .sw.par{border:1.5px dashed var(--ext);height:6px}
 .sw.wait{background:repeating-linear-gradient(45deg,var(--wait) 0 2px,var(--wait-bg) 2px 6px)}
 .sw.dht{background:var(--dht)}.sw.cip{background:var(--cip)}.sw.cht{background:var(--cht)}
-.sw.ghost{height:3px;background:var(--muted)}
+.sw.ghost{height:8px;border:1.5px solid var(--muted);background:transparent}
+.sw.act{height:3px;background:var(--act)}
 
-.gantt{display:grid;grid-template-columns:200px minmax(0,1fr);border:1px solid var(--line);border-radius:4px;overflow:hidden;background:var(--sunk)}
-@media (max-width:620px){.gantt{grid-template-columns:118px minmax(0,1fr)}}
+.gantt{display:grid;grid-template-columns:190px minmax(0,1fr);border:1px solid var(--line);border-radius:4px;overflow:hidden;background:var(--sunk)}
+@media (max-width:620px){.gantt{grid-template-columns:112px minmax(0,1fr)}}
 .g-labels{border-right:1px solid var(--line);background:var(--surface);min-width:0}
 .g-labels .lr{display:flex;flex-direction:column;justify-content:center;padding:0 10px;border-bottom:1px solid var(--line);overflow:hidden}
 .g-labels .lr .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.8rem}
-.g-labels .lr .s{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.68rem;color:var(--muted);font-family:var(--f-mono)}
-.g-labels .lr.bh{background:var(--sunk)}
-.g-labels .lr.bh .t{font-weight:600}
+.g-labels .lr .s{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.67rem;color:var(--muted);font-family:var(--f-mono)}
 .g-labels .lr.head{font-family:var(--f-mono);font-size:.7rem;color:var(--muted);letter-spacing:.06em}
+.g-labels .lr .t b{font-weight:600;color:var(--ext)}
 .g-scroll{overflow-x:auto;min-width:0}
 .g-scroll svg{display:block}
 
-.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
-@media (max-width:900px){.cols{grid-template-columns:minmax(0,1fr)}}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:920px){.cols{grid-template-columns:minmax(0,1fr)}}
 .tbl{overflow-x:auto}
-table{border-collapse:collapse;width:100%;font-size:.82rem}
-th{font-weight:500;color:var(--muted);text-align:left;font-size:.74rem;padding:6px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+table{border-collapse:collapse;width:100%;font-size:.8rem}
+th{font-weight:500;color:var(--muted);text-align:left;font-size:.72rem;padding:6px;border-bottom:1px solid var(--line);white-space:nowrap}
 td{padding:4px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
 td.n,th.n{text-align:right}
-input[type=number],select,input[type=text]{font:inherit;font-size:.82rem;color:var(--ink);background:var(--sunk);border:1px solid var(--line);border-radius:4px;padding:3px 6px}
-input[type=number]{width:68px;text-align:right}
-select{max-width:190px}
-.stage{font-family:var(--f-mono);font-size:.68rem;padding:1px 5px;border-radius:3px;color:var(--on-bar)}
-.stage.US{background:var(--us)}.stage.DS{background:var(--ds)}
-
-.breakdown{display:grid;gap:10px}
-.bk{display:grid;grid-template-columns:70px minmax(0,1fr) 92px;gap:10px;align-items:center;font-size:.8rem}
-.bk .bar{height:14px;background:var(--sunk);border-radius:2px;display:flex;overflow:hidden;border:1px solid var(--line)}
-.bk .bar i{display:block;height:100%}
-.bk .bar i.h{background:repeating-linear-gradient(45deg,var(--ext) 0 3px,var(--ext-bg) 3px 6px)}
-.bk .bar i.w{background:var(--dht)}
-.bk .r{text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
-.warns{list-style:none;margin:0;padding:0;display:grid;gap:6px;font-size:.82rem}
-.warns li{background:var(--warn-bg);color:var(--ink);border-left:3px solid var(--warn);padding:7px 10px;border-radius:0 4px 4px 0}
+td.src{font-size:.72rem;color:var(--muted);min-width:150px}
+input[type=number],select,input[type=date]{font:inherit;font-size:.8rem;color:var(--ink);background:var(--sunk);border:1px solid var(--line);border-radius:4px;padding:3px 6px}
+input[type=number]{width:64px;text-align:right;font-family:var(--f-mono)}
+.warns{list-style:none;margin:0;padding:0;display:grid;gap:6px;font-size:.81rem}
+.warns li{background:var(--warn-bg);border-left:3px solid var(--warn);padding:7px 10px;border-radius:0 4px 4px 0}
 .warns li b{color:var(--warn);font-weight:600}
 .warns li.ok{background:var(--sunk);border-left-color:var(--ok)}
-.btn{font:inherit;font-size:.82rem;border:1px solid var(--line);background:var(--sunk);color:var(--ink);border-radius:4px;padding:5px 10px;cursor:pointer}
-.notes{font-size:.8rem;color:var(--muted);margin:0;padding-left:18px;display:grid;gap:3px;max-width:90ch}
-.batchset{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
-.batchset label{display:grid;gap:3px;font-size:.78rem;color:var(--muted)}
-.batchset input{width:100%}
+.review{display:grid;gap:8px;font-size:.82rem}
+.review dl{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:4px 12px;margin:0}
+.review dt{color:var(--muted)}
+.review dd{margin:0}
+.tag{font-family:var(--f-mono);font-size:.68rem;padding:1px 6px;border-radius:3px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.tag.ok{color:var(--ok);border-color:var(--ok)}
+.tag.warn{color:var(--warn);border-color:var(--warn)}
+.btn{font:inherit;font-size:.8rem;border:1px solid var(--line);background:var(--sunk);color:var(--ink);border-radius:4px;padding:4px 10px;cursor:pointer}
+.btns{display:flex;flex-wrap:wrap;gap:6px}
+.notes{font-size:.79rem;color:var(--muted);margin:0;padding-left:18px;display:grid;gap:3px;max-width:95ch}
+.workset{display:flex;flex-wrap:wrap;gap:10px 18px;font-size:.8rem;color:var(--muted)}
+.workset label{display:inline-flex;gap:6px;align-items:center}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
 <div class="wrap">
   <header class="doc">
     <div>
-      <div class="eyebrow">Darbepoetin alfa · 원액(DS) 공정 · 일정 영향 평가</div>
-      <h1>공정액 HTS · CV DHT/CHT 일정 시뮬레이터</h1>
-      <p>공정액 홀드 타임 연구(HTS)와 세척 밸리데이션의 DHT·CHT 설정이 기준 공정 일정을 얼마나 늦추는지 계산합니다. 아래 입력값은 예시이며, 실제 MBR 소요시간과 설비 목록으로 바꿔 쓰면 됩니다.</p>
+      <div class="eyebrow">다베포에틴알파(N) 1G · 제조단위 12.2 g · 정제(DSP) 일정</div>
+      <h1>HTS · DHT · CHT 평가 일정 시뮬레이터</h1>
+      <p>운영 예정 스케줄(D1~D16)에 공정액 홀드타임 연구와 세척 밸리데이션 DHT·CHT 평가를 넣었을 때 원액 소분이 며칠 밀리는지 계산합니다. 위의 세 스위치를 켜고 끄면 간트 차트가 바로 바뀝니다.</p>
     </div>
     <div class="docmeta" id="docmeta"></div>
   </header>
 
-  <section class="kpis" id="kpis" aria-label="요약 지표"></section>
+  <section class="switches" aria-label="평가 항목">
+    <label class="sw-card"><input type="checkbox" id="tg-hts"><span class="t"><i class="chip" style="background:var(--ext)"></i>공정액 홀드타임 (HTS)</span><span class="s">CCF 공정액부터, 200 L 라인 설정값 그대로 · 당일 공정 ≥ 24 h</span></label>
+    <label class="sw-card"><input type="checkbox" id="tg-dht"><span class="t"><i class="chip" style="background:var(--dht)"></i>세척 DHT 평가</span><span class="s">사용 종료 후 ≥ 24 h 방치 후 세척 · 모든 장비 동일</span></label>
+    <label class="sw-card"><input type="checkbox" id="tg-cht"><span class="t"><i class="chip" style="background:var(--cht)"></i>세척 CHT 평가</span><span class="s">세척 후 청정 보관 · UF Membrane 제외 (Pre-CIP 필수)</span></label>
+  </section>
+
+  <section class="kpis" id="kpis" aria-label="요약"></section>
 
   <section class="panel" aria-label="간트 차트">
     <div class="toolbar">
-      <div class="ctl">
-        <div class="seg" role="group" aria-label="시나리오">
-          <button type="button" data-sc="study" aria-pressed="true">연구 반영</button>
-          <button type="button" data-sc="base" aria-pressed="false">기준 공정</button>
-        </div>
-        <div class="seg" role="group" aria-label="보기">
-          <button type="button" data-vw="proc" aria-pressed="true">배치·공정</button>
-          <button type="button" data-vw="eq" aria-pressed="false">설비 점유</button>
-        </div>
+      <div class="seg" role="group" aria-label="보기">
+        <button type="button" data-vw="proc" aria-pressed="true">공정 단계</button>
+        <button type="button" data-vw="eq" aria-pressed="false">설비 점유</button>
       </div>
       <div class="ctl">
-        <label><input type="checkbox" id="ghost" checked> 기준 일정 겹쳐 보기</label>
-        <label>확대 <input type="range" id="zoom" min="1" max="16" step="0.5" value="1"></label>
+        <label><input type="checkbox" id="ghost" checked> 계획 일정 겹쳐 보기</label>
+        <label><input type="checkbox" id="actual" checked> 시범 생산 실측(LQ001LD2)</label>
+        <label>확대 <input type="range" id="zoom" min="1" max="8" step="0.5" value="1"></label>
       </div>
     </div>
     <div class="legend" id="legend"></div>
@@ -148,346 +156,432 @@ select{max-width:190px}
 
   <div class="cols">
     <section class="panel">
-      <h2>배치별 지연 분해</h2>
-      <div class="legend"><span><i class="sw ext"></i>실공정 홀드 연장</span><span><i class="sw dht"></i>설비 대기 증가 (DHT·CHT·연쇄)</span></div>
-      <div class="breakdown" id="breakdown"></div>
+      <h2>지연이 생긴 단계</h2>
+      <ul class="warns" id="warns"></ul>
     </section>
     <section class="panel">
-      <h2>일정 경고</h2>
-      <ul class="warns" id="warns"></ul>
+      <h2>제조지시서 스캔 검토 (1~5번 파일)</h2>
+      <div class="review" id="review"></div>
     </section>
   </div>
 
   <section class="panel">
-    <div class="toolbar"><h2>배치 · 연구 범위</h2><button class="btn" type="button" id="reset">예시값으로 되돌리기</button></div>
-    <div class="batchset">
-      <label for="in-batches">연속 배치 수<input type="number" id="in-batches" min="1" max="6" data-k="batches"></label>
-      <label for="in-interval">배치 착수 간격 (h)<input type="number" id="in-interval" min="0" step="12" data-k="interval"></label>
-      <label for="in-hts">HTS 적용 배치 수 (앞에서부터)<input type="number" id="in-hts" min="0" max="6" data-k="htsBatches"></label>
-      <label for="in-cv">CV 적용 배치 수 (앞에서부터)<input type="number" id="in-cv" min="0" max="6" data-k="cvBatches"></label>
+    <div class="toolbar">
+      <h2>공정액 홀드 지점</h2>
+      <div class="btns">
+        <button class="btn" type="button" data-preset="short">당일·익일 홀드만 실공정</button>
+        <button class="btn" type="button" data-preset="all">전부 실공정</button>
+        <button class="btn" type="button" data-preset="none">전부 시료 병행</button>
+      </div>
     </div>
+    <p class="notes" style="padding:0;list-style:none">체크한 지점은 실제 배치의 공정액을 목표 시간만큼 보관한 뒤 다음 공정으로 넘깁니다(일정 지연 발생). 체크를 해제하면 시료를 떼어 따로 보관하는 것으로 보고 일정에 반영하지 않습니다.</p>
+    <div class="tbl"><table id="t-hold"></table></div>
+  </section>
+
+  <section class="panel">
+    <h2>평가 대상 설비 · DHT / CHT 조건</h2>
+    <div class="tbl"><table id="t-eq"></table></div>
   </section>
 
   <div class="cols">
     <section class="panel">
-      <h2>공정 단계 · 공정액 홀드 지점</h2>
-      <div class="tbl"><table id="t-steps"></table></div>
+      <h2>공정 소요시간 (예상 공정 시간표, h)</h2>
+      <div class="tbl"><table id="t-step"></table></div>
     </section>
     <section class="panel">
-      <h2>설비 · 세척 밸리데이션 (DHT / CHT)</h2>
-      <div class="tbl"><table id="t-eq"></table></div>
+      <h2>근무 시간 · 계산 가정</h2>
+      <div class="workset">
+        <label for="ws">작업 시작 <input type="number" id="ws" min="0" max="23" data-k="workStart"> 시</label>
+        <label for="ls">당일 착수 마감 <input type="number" id="ls" min="0" max="23" data-k="latestStart"> 시</label>
+        <label for="sd">D1 날짜 <input type="date" id="sd" data-k="startDate"></label>
+        <button class="btn" type="button" id="reset">처음 값으로</button>
+      </div>
+      <ul class="notes">
+        <li>CCF 1·2·3은 배양 수확일(D1·D5·D9)에 고정합니다. 나머지 단계는 앞 공정 종료와 공정액 보관, 설비 준비가 끝난 뒤에 시작합니다.</li>
+        <li>밀린 단계는 작업 시작 시각부터 당일 착수 마감 시각 사이에만 착수합니다. 마감을 넘기면 다음 날 작업 시작 시각으로 넘어갑니다.</li>
+        <li>각 단계는 공정 직전에 사용 전 세척·평형화(Pre CIP &amp; EQ) 시간만큼 설비를 점유합니다.</li>
+        <li>평소 사후 세척 시점은 설비별로 고릅니다(익일 아침 또는 공정 직후). DHT 평가를 켜면 세척 시작이 사용 종료 + 목표 DHT 이후로 밀립니다.</li>
+        <li>CHT 평가를 켜면 세척이 끝난 설비를 목표 CHT 동안 다음 사용(사용 전 세척 포함)에 쓰지 않습니다. 다음 사용이 없는 설비는 일정에 영향이 없습니다.</li>
+        <li>공정 사이의 평소 간격(분석 대기, 야간 보관 등)은 계획 일정에서 계산해 그대로 유지합니다. HTS 목표가 그 간격보다 길면 그 차이만큼 밀립니다.</li>
+        <li>바이러스 여과의 Post CIP 21 h는 익일 세척까지의 대기를 포함한 값으로 보고, Nano Vessel 세척 2 h + 익일 아침 세척으로 나눴습니다.</li>
+      </ul>
     </section>
   </div>
-
-  <section class="panel">
-    <h2>계산 가정</h2>
-    <ul class="notes">
-      <li><b>실공정 홀드</b>: 실제 배치의 공정액을 목표 홀드시간만큼 보관한 뒤 다음 단계로 넘깁니다. 늘어난 시간만큼 하류 단계가 밀립니다.</li>
-      <li><b>축소 모델 병행</b>: 공정액 일부를 떼어 실험실에서 홀드합니다. 본 공정 일정은 그대로이고, 차트에는 점선으로만 표시됩니다.</li>
-      <li><b>DHT 연구</b>: 사용이 끝난 뒤 연구 DHT만큼 오염 상태로 두었다가 세척을 시작합니다.</li>
-      <li><b>CHT 연구</b>: 세척 후 연구 CHT만큼 설비를 쓰지 않고 보관한 뒤에야 다음 사용(또는 시료 채취 후 사용)이 가능하다고 봅니다.</li>
-      <li>같은 설비를 쓰는 단계는 설비가 준비될 때까지 대기합니다. 한 배치 안에서 같은 크로마토그래피 스키드를 두 번 쓰면, 첫 사용 뒤의 DHT·CHT가 같은 배치의 다음 단계를 늦출 수 있습니다.</li>
-      <li>배치는 순서대로 배정합니다(먼저 착수한 배치가 설비 우선권). 생산 배양 전 대기가 생기면 실제로는 시드 일정을 다시 잡아야 하므로 경고로 표시합니다.</li>
-    </ul>
-  </section>
 </div>
 
 <script>
+const H = 24;
 const DEF = {
-  batches: 3, interval: 360, htsBatches: 1, cvBatches: 3,
+  workStart: 8, latestStart: 13, startDate: '',
+  tg: { hts: true, dht: true, cht: true },
   equipment: [
-    { id:'SBR', name:'Seed 바이오리액터 200 L', clean:6, dhtBase:4, dhtStudy:72, chtStudy:168, cv:false },
-    { id:'PBR', name:'생산 바이오리액터 2,000 L', clean:8, dhtBase:4, dhtStudy:72, chtStudy:168, cv:true },
-    { id:'HRV', name:'원심분리·심층여과 스키드', clean:4, dhtBase:2, dhtStudy:48, chtStudy:120, cv:false },
-    { id:'CHA', name:'크로마토그래피 스키드 A', clean:3, dhtBase:2, dhtStudy:48, chtStudy:120, cv:true },
-    { id:'VIT', name:'불활화 탱크 500 L', clean:3, dhtBase:2, dhtStudy:48, chtStudy:120, cv:false },
-    { id:'CHB', name:'크로마토그래피 스키드 B', clean:3, dhtBase:2, dhtStudy:48, chtStudy:120, cv:false },
-    { id:'VFS', name:'바이러스 여과 스키드', clean:2, dhtBase:2, dhtStudy:24, chtStudy:72, cv:false },
-    { id:'UFD', name:'UF/DF 스키드', clean:4, dhtBase:2, dhtStudy:48, chtStudy:120, cv:true },
-    { id:'FIL', name:'원액 충전 스테이션', clean:2, dhtBase:2, dhtStudy:24, chtStudy:72, cv:false }
+    { id:'AKTA1', name:'AKTA Process (Axichrom 450)', kind:'system', rule:'next', dht:true, cht:true, dhtT:24, chtT:72, dhtUse:'all', chtUse:'all' },
+    { id:'AKTA2', name:'AKTA Process (Axichrom 300)', kind:'system', rule:'next', dht:true, cht:true, dhtT:24, chtT:72, dhtUse:'all', chtUse:'all' },
+    { id:'COL1',  name:'Column · Q FF (1차 크로)', kind:'column', rule:'now', dht:true, cht:true, dhtT:24, chtT:72, dhtUse:'all', chtUse:'all' },
+    { id:'COL2',  name:'Column · CHT (2차 크로)', kind:'column', rule:'now', dht:true, cht:true, dhtT:24, chtT:72, dhtUse:'all', chtUse:'all' },
+    { id:'COL3',  name:'Column · Source 30Q (3차 크로)', kind:'column', rule:'now', dht:true, cht:true, dhtT:24, chtT:72, dhtUse:'all', chtUse:'all' },
+    { id:'UFS',   name:'UF System', kind:'system', rule:'next', dht:true, cht:true, dhtT:24, chtT:72, dhtUse:'all', chtUse:'all' },
+    { id:'MEM1',  name:'UF Membrane (1차 UF)', kind:'membrane', rule:'next', dht:true, cht:false, dhtT:24, chtT:0, dhtUse:'all', chtUse:'all' },
+    { id:'MEM2',  name:'UF Membrane (2차 UF)', kind:'membrane', rule:'next', dht:true, cht:false, dhtT:24, chtT:0, dhtUse:'all', chtUse:'all' },
+    { id:'MEM3',  name:'UF Membrane (3차 UF)', kind:'membrane', rule:'next', dht:true, cht:false, dhtT:24, chtT:0, dhtUse:'all', chtUse:'all' },
+    { id:'NANO',  name:'Nano Vessel', kind:'system', rule:'next', dht:true, cht:true, dhtT:24, chtT:72, dhtUse:'all', chtUse:'all' }
   ],
   steps: [
-    { name:'종배양 확장 (N-1)', stage:'US', eq:'SBR', dur:96 },
-    { name:'생산 배양 (유가식, CHO)', stage:'US', eq:'PBR', dur:336 },
-    { name:'수확·청징', stage:'US', eq:'HRV', dur:8, hName:'청징 수확액 (HCCF)', hBase:4, hTarget:72, hMode:'scale' },
-    { name:'캡처 크로마토그래피 (AEX)', stage:'DS', eq:'CHA', dur:12, hName:'AEX 용출액', hBase:2, hTarget:48, hMode:'atscale' },
-    { name:'바이러스 불활화 (S/D)', stage:'DS', eq:'VIT', dur:6, hName:'S/D 처리액', hBase:2, hTarget:24, hMode:'atscale' },
-    { name:'중간 정제 (HIC)', stage:'DS', eq:'CHB', dur:10, hName:'HIC 용출액', hBase:2, hTarget:48, hMode:'scale' },
-    { name:'최종 정제 (CEX)', stage:'DS', eq:'CHA', dur:10, hName:'CEX 용출액', hBase:2, hTarget:48, hMode:'atscale' },
-    { name:'바이러스 여과', stage:'DS', eq:'VFS', dur:8, hName:'VF 여과액', hBase:2, hTarget:24, hMode:'off' },
-    { name:'UF/DF 농축·완충액 교환', stage:'DS', eq:'UFD', dur:10, hName:'UF/DF 농축액', hBase:2, hTarget:72, hMode:'atscale' },
-    { name:'원액 여과·충전 (BDS)', stage:'DS', eq:'FIL', dur:4 }
+    { id:'ccf1', name:'CCF-1', day:1, at:8, anchor:true, pre:0, proc:3, post:0, cip:0 },
+    { id:'uf1', name:'1차 UF-1', day:1, after:'ccf1', pre:6, proc:7.5, post:4, cip:2, sys:'UFS', media:'MEM1' },
+    { id:'c1', name:'1차 크로-1', day:2, at:8, pre:3, proc:6, post:2, cip:1, sys:'AKTA1', media:'COL1' },
+    { id:'ccf2', name:'CCF-2', day:5, at:8, anchor:true, pre:0, proc:3, post:0, cip:0 },
+    { id:'uf2', name:'1차 UF-2', day:5, after:'ccf2', pre:6, proc:6, post:4, cip:2, sys:'UFS', media:'MEM1' },
+    { id:'c2', name:'1차 크로-2', day:6, at:8, pre:3, proc:6, post:2, cip:1, sys:'AKTA1', media:'COL1' },
+    { id:'ccf3', name:'CCF-3', day:9, at:8, anchor:true, pre:0, proc:3, post:0, cip:0 },
+    { id:'uf3', name:'1차 UF-3', day:9, after:'ccf3', pre:6, proc:8, post:4, cip:2, sys:'UFS', media:'MEM1' },
+    { id:'c3', name:'1차 크로-3', day:10, at:8, pre:3, proc:6, post:2, cip:1, sys:'AKTA1', media:'COL1' },
+    { id:'uf2nd', name:'2차 UF', day:11, at:8, pre:6, proc:6, post:4, cip:2, sys:'UFS', media:'MEM2' },
+    { id:'ch2', name:'2차 크로', day:11, after:'uf2nd', pre:3, proc:3, post:2, cip:1, sys:'AKTA1', media:'COL2' },
+    { id:'ch3', name:'3차 크로', day:12, at:8, pre:3, proc:7.5, post:3, cip:1, sys:'AKTA2', media:'COL3' },
+    { id:'uf3rd', name:'3차 UF', day:14, at:8, pre:6, proc:6, post:4, cip:6.5, sys:'UFS', media:'MEM3' },
+    { id:'vf', name:'바이러스 여과', day:15, at:8, pre:24, proc:9, post:0, cip:2, sys:'NANO' },
+    { id:'mf', name:'제균 여과', day:15, after:'vf', pre:0, proc:3, post:0, cip:0 },
+    { id:'disp', name:'원액 소분', day:16, at:8, pre:0, proc:4, post:0, cip:0 }
+  ],
+  holds: [
+    { id:'h1', from:'ccf1', to:'uf1', name:'CCF-1 여과액', t:24, on:true, src:'원칙 2 (당일 공정) · 200 L 값 미확인' },
+    { id:'h2', from:'uf1', to:'c1', name:'1차 UF-1 회수액', t:24, on:true, src:'200 L 값 미확인 (임시 24 h)' },
+    { id:'h3', from:'c1', to:'uf2nd', name:'1차 크로-1 용출액', t:384, on:false, src:'제조지시서 394p · 16일 이하' },
+    { id:'h4', from:'ccf2', to:'uf2', name:'CCF-2 여과액', t:24, on:true, src:'원칙 2 (당일 공정) · 200 L 값 미확인' },
+    { id:'h5', from:'uf2', to:'c2', name:'1차 UF-2 회수액', t:24, on:true, src:'200 L 값 미확인 (임시 24 h)' },
+    { id:'h6', from:'c2', to:'uf2nd', name:'1차 크로-2 용출액', t:288, on:false, src:'제조지시서 394p · 12일 이하' },
+    { id:'h7', from:'ccf3', to:'uf3', name:'CCF-3 여과액', t:24, on:true, src:'원칙 2 (당일 공정) · 200 L 값 미확인' },
+    { id:'h8', from:'uf3', to:'c3', name:'1차 UF-3 회수액', t:24, on:true, src:'200 L 값 미확인 (임시 24 h)' },
+    { id:'h9', from:'c3', to:'uf2nd', name:'1차 크로-3 용출액', t:192, on:false, src:'제조지시서 394p · 8일 이하' },
+    { id:'h10', from:'uf2nd', to:'ch2', name:'2차 UF 회수액', t:24, on:true, src:'원칙 2 (당일 공정) · 200 L 값 미확인' },
+    { id:'h11', from:'ch2', to:'ch3', name:'2차 크로 Flow-through', t:144, on:false, src:'제조지시서 417p · 6일 이하' },
+    { id:'h12', from:'ch3', to:'uf3rd', name:'3차 크로 분획 (Mixed pool)', t:240, on:false, src:'제조지시서 433p · 10일 이하' },
+    { id:'h13', from:'uf3rd', to:'vf', name:'3차 UF 회수액', t:240, on:false, src:'제조지시서 451p · 10일 이하' },
+    { id:'h14', from:'vf', to:'mf', name:'바이러스 여과액', t:240, on:false, src:'제조지시서 464p · 10일 이하 (당일 공정)' },
+    { id:'h15', from:'mf', to:'disp', name:'제균 여과액', t:240, on:false, src:'제조지시서 468p · 10일 이하' }
   ]
 };
-const MODES = { off:'미적용', atscale:'실공정 홀드', scale:'축소 모델 병행' };
-const STORE = 'darbe-hts-cv-v1';
+/* 시범 생산(LQ001LD2) 제조지시서 기록. D1 = 2026-09-07. 일부 종료 시각은 기록 페이지 사이를 이어 추정한 근사값 */
+const ACTUAL = {
+  ccf1:[1,9.33,11.5,'09.07 09:20~ (CCF 종료 시각 근사)'], uf1:[1,11.5,19,'09.07 DF 14:59~16:07 (전후 근사)'],
+  c1:[2,9.93,17.38,'09.08 09:56~17:23'], ccf2:[5,8.5,11.5,'09.11 (근사)'], uf2:[5,11.5,20,'09.11 (근사)'],
+  c2:[6,7.7,16.17,'09.12 07:42~16:10'], ccf3:[9,9.25,11.5,'09.15 09:15~11:30'], uf3:[9,11.57,20.02,'09.15 11:34~20:01'],
+  c3:[10,8.85,16.8,'09.16 08:51~16:48'], uf2nd:[11,8.42,14.07,'09.17 08:25~14:04'], ch2:[12,12.93,16.37,'09.18 12:56~16:22'],
+  ch3:[13,7.42,16.63,'09.19 07:25~16:38'], uf3rd:[15,12.08,19,'09.21 12:05~19:00 (Pooling 09.21 오전)'],
+  vf:[16,9,15.87,'09.22 09:00~15:52'], mf:[16,16.03,18.6,'09.22 16:02~18:36'], disp:[17,8.08,12.08,'09.23 08:05~12:05']
+};
+const STORE = 'darbe-lq001ld2-v2';
 const clone = o => JSON.parse(JSON.stringify(o));
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 let S = null;
 try { S = JSON.parse(localStorage.getItem(STORE)); } catch (e) {}
-if (!S || !Array.isArray(S.steps) || !Array.isArray(S.equipment)) S = clone(DEF);
-const V = { sc:'study', vw:'proc', zoom:1, ghost:true };
+if (!S || !Array.isArray(S.steps) || !Array.isArray(S.holds) || !Array.isArray(S.equipment)) S = clone(DEF);
+const V = { vw:'proc', zoom:1, ghost:true, actual:true };
 function save(){ try { localStorage.setItem(STORE, JSON.stringify(S)); } catch (e) {} }
-
 const num = v => { const n = Number(v); return isFinite(n) && n >= 0 ? n : 0; };
-const fmtD = h => (h/24).toFixed(1);
-const fmtH = h => h >= 24 ? `${fmtD(h)}일 (${Math.round(h)} h)` : `${Math.round(h*10)/10} h`;
 
-function simulate(study){
+/* ---------- 시간 표기 ---------- */
+const dayOf = t => Math.floor(t / H) + 1;
+const hm = t => { const m = Math.round((t - Math.floor(t / H) * H) * 60); const hh = Math.floor(m / 60), mm = m % 60; return `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`; };
+function dateLabel(d){
+  if (!S.startDate) return '';
+  const base = new Date(S.startDate + 'T00:00:00'); if (isNaN(base)) return '';
+  base.setDate(base.getDate() + d - 1);
+  return `${base.getMonth()+1}/${base.getDate()}`;
+}
+const stamp = t => `D${dayOf(t)} ${hm(t)}`;
+const fmtGap = h => h >= 24 ? `${(h/24).toFixed(1)}일` : `${Math.round(h*10)/10} h`;
+
+/* ---------- 시뮬레이션 ---------- */
+function planned(map, s){
+  if (s.after){ const p = map[s.after]; return planned(map, p) + num(p.proc); }
+  return (num(s.day) - 1) * H + num(s.at);
+}
+function nextWork(t){
+  const d = Math.floor(t / H), tod = t - d * H, ws = num(S.workStart);
+  return tod <= ws + 1e-9 ? d * H + ws : (d + 1) * H + ws;
+}
+function snap(t, plan){
+  if (t <= plan + 1e-9) return plan;
+  const d = Math.floor(t / H), tod = t - d * H;
+  const ws = num(S.workStart), cut = Math.max(num(S.latestStart), plan - Math.floor(plan / H) * H);
+  if (tod < ws) return d * H + ws;
+  if (tod <= cut + 1e-9) return t;
+  return (d + 1) * H + ws;
+}
+function pick(sel, idx, total){ return sel === 'all' || (sel === 'first' && idx === 0) || (sel === 'last' && idx === total - 1); }
+
+function simulate(tg, g0){
+  const map = Object.fromEntries(S.steps.map(s => [s.id, s]));
   const eqMap = Object.fromEntries(S.equipment.map(e => [e.id, e]));
-  const free = {}; S.equipment.forEach(e => free[e.id] = 0);
-  const rows = [], eqBars = [], batches = [];
-  const n = S.steps.length;
-  const N = Math.max(1, Math.min(6, Math.round(num(S.batches)) || 1));
-  for (let b = 0; b < N; b++){
-    const release = b * num(S.interval);
-    const hts = study && b < num(S.htsBatches), cv = study && b < num(S.cvBatches);
-    let ready = release, sumHold = 0, sumWait = 0, sumExt = 0;
-    const br = [];
-    S.steps.forEach((s, i) => {
-      const e = eqMap[s.eq] || { id:s.eq, name:s.eq, clean:0, dhtBase:0, dhtStudy:0, chtStudy:0, cv:false };
-      if (free[s.eq] === undefined) free[s.eq] = 0;
-      const start = Math.max(ready, free[s.eq]);
-      const wait = start - ready;
-      const end = start + num(s.dur);
-      eqBars.push({ eq:s.eq, type:'use', start, end, b, stage:s.stage, step:s.name });
-      const cvOn = cv && e.cv;
-      const dht = cvOn ? num(e.dhtStudy) : num(e.dhtBase);
-      const cipS = end + dht, cipE = cipS + num(e.clean);
-      const cht = cvOn ? num(e.chtStudy) : 0;
-      if (dht > 0) eqBars.push({ eq:s.eq, type:'dht', start:end, end:cipS, b, study:cvOn });
-      if (cipE > cipS) eqBars.push({ eq:s.eq, type:'cip', start:cipS, end:cipE, b });
-      if (cht > 0) eqBars.push({ eq:s.eq, type:'cht', start:cipE, end:cipE + cht, b, study:true });
-      free[s.eq] = cipE + cht;
-      let hold = 0, holdBase = 0, par = null, mode = 'off', target = 0;
-      if (i < n - 1 && s.hName){
-        holdBase = num(s.hBase); target = num(s.hTarget); mode = s.hMode; hold = holdBase;
-        if (hts && mode === 'atscale') hold = Math.max(target, holdBase);
-        if (hts && mode === 'scale') par = { start:end, end:end + target };
-      }
-      const r = { b, i, ready, start, end, wait, hold, holdBase, ext:hold - holdBase, par, mode, target, hts, cvOn, eq:s.eq };
-      rows.push(r); br.push(r);
-      sumHold += hold; sumWait += wait; sumExt += r.ext;
-      ready = end + hold;
+  const totals = {}; S.steps.forEach(s => [s.sys, s.media].forEach(e => { if (e) totals[e] = (totals[e] || 0) + 1; }));
+  const free = {}, freeWhy = {}, useCount = {};
+  const res = {}, bars = [], holdRes = [];
+  S.steps.forEach(s => {
+    const plan = planned(map, s);
+    let earliest = plan, bind = { type:'plan' };
+    if (!s.anchor){
+      S.holds.filter(h => h.to === s.id).forEach(h => {
+        const p = res[h.from]; if (!p) return;
+        const base = g0 ? (g0[h.id] || 0) : 0;
+        const req = tg.hts && h.on ? Math.max(base, num(h.t)) : base;
+        const t = p.end + req;
+        if (t > earliest + 1e-9){ earliest = t; bind = { type:'hold', h, req, base, ext: req - base }; }
+      });
+      [s.sys, s.media].forEach(e => {
+        if (!e || free[e] === undefined) return;
+        const t = free[e] + num(s.pre);
+        if (t > earliest + 1e-9){ earliest = t; bind = { type:'eq', eq:e, why:freeWhy[e] }; }
+      });
+    }
+    const start = s.anchor ? plan : snap(earliest, plan);
+    const end = start + num(s.proc);
+    res[s.id] = { id:s.id, plan, earliest, start, end, bind };
+    [['sys', s.cip], ['media', s.post]].forEach(([k, dur]) => {
+      const eid = s[k]; if (!eid) return;
+      const e = eqMap[eid]; const idx = useCount[eid] || 0; useCount[eid] = idx + 1;
+      const base = e.rule === 'now' ? end : nextWork(end);
+      const dhtOn = tg.dht && e.dht && pick(e.dhtUse, idx, totals[eid]);
+      const cs = dhtOn ? Math.max(base, end + num(e.dhtT)) : base;
+      const ce = cs + num(dur);
+      const chtOn = tg.cht && e.cht && e.kind !== 'membrane' && pick(e.chtUse, idx, totals[eid]);
+      const fr = ce + (chtOn ? num(e.chtT) : 0);
+      bars.push({ eq:eid, type:'pre', start:start - num(s.pre), end:start, step:s });
+      bars.push({ eq:eid, type:'use', start, end, step:s });
+      if (cs > end) bars.push({ eq:eid, type:'dht', start:end, end:cs, step:s, study:dhtOn });
+      if (ce > cs) bars.push({ eq:eid, type:'cip', start:cs, end:ce, step:s });
+      if (chtOn && fr > ce) bars.push({ eq:eid, type:'cht', start:ce, end:fr, step:s, study:true });
+      free[eid] = fr; freeWhy[eid] = { step:s, dhtOn, chtOn, e, dhtH: cs - end, chtH: fr - ce };
     });
-    br.forEach((r, k) => { r.actualHold = k < br.length - 1 ? br[k+1].start - r.end : 0; });
-    batches.push({ release, end: br.length ? br[br.length-1].end : release, sumHold, sumWait, sumExt });
-  }
-  const productEnd = Math.max(...batches.map(x => x.end));
-  const makespan = Math.max(productEnd, ...eqBars.map(x => x.end));
-  return { rows, eqBars, batches, makespan, productEnd, N };
+  });
+  S.holds.forEach(h => {
+    const p = res[h.from], q = res[h.to]; if (!p || !q) return;
+    const base = g0 ? (g0[h.id] || 0) : 0;
+    const req = tg.hts && h.on ? Math.max(base, num(h.t)) : base;
+    holdRes.push({ h, from:p, to:q, base, req, par: tg.hts && !h.on });
+  });
+  const last = res[S.steps[S.steps.length - 1].id];
+  const horizon = Math.max(last.end, ...bars.map(b => b.end));
+  return { res, bars, holdRes, end:last.end, horizon };
+}
+function computeAll(){
+  const off = { hts:false, dht:false, cht:false };
+  const b0 = simulate(off, null);
+  const g0 = {}; S.holds.forEach(h => { const p = b0.res[h.from], q = b0.res[h.to]; if (p && q) g0[h.id] = Math.max(0, q.start - p.end); });
+  const base = simulate(off, g0);
+  const cur = simulate(S.tg, g0);
+  const only = k => simulate({ hts:k==='hts', dht:k==='dht', cht:k==='cht' }, g0);
+  return { base, cur, hts:only('hts'), dht:only('dht'), cht:only('cht') };
 }
 
 /* ---------- 요약 ---------- */
-function renderKpis(base, st){
-  const d = st.productEnd - base.productEnd;
-  const pct = base.productEnd ? d / base.productEnd * 100 : 0;
-  const maxB = Math.max(...st.batches.map((x, b) => x.end - base.batches[b].end));
-  const nHold = S.steps.filter((s, i) => i < S.steps.length - 1 && s.hName && s.hMode === 'atscale').length;
-  const nPar = S.steps.filter((s, i) => i < S.steps.length - 1 && s.hName && s.hMode === 'scale').length;
-  const nCv = S.equipment.filter(e => e.cv).length;
+function renderKpis(R){
+  const d = R.cur.end - R.base.end;
+  const part = (k, label) => { const x = R[k].end - R.base.end; return `<span>${label} ${x > 0.01 ? '+' + (x/24).toFixed(1) + '일' : '영향 없음'}</span>`; };
+  const dl = t => { const s = dateLabel(dayOf(t)); return s ? ` · ${s}` : ''; };
   document.getElementById('kpis').innerHTML = `
-    <div class="kpi"><span class="eyebrow">기준 공정 · ${st.N}배치 완료</span><span class="v">D${fmtD(base.productEnd)}<small> ${Math.round(base.productEnd)} h</small></span></div>
-    <div class="kpi"><span class="eyebrow">연구 반영 · ${st.N}배치 완료</span><span class="v">D${fmtD(st.productEnd)}<small> ${Math.round(st.productEnd)} h</small></span></div>
-    <div class="kpi delay"><span class="eyebrow">전체 지연</span><span class="v">+${fmtD(d)}일<small> +${pct.toFixed(1)}%</small></span></div>
-    <div class="kpi"><span class="eyebrow">최대 배치 지연</span><span class="v">+${fmtD(maxB)}일<small> 실공정 홀드 ${nHold} · 병행 ${nPar} · CV 설비 ${nCv}</small></span></div>`;
-  document.getElementById('docmeta').innerHTML =
-    `배치 ${st.N} · 착수 간격 ${num(S.interval)} h<br>HTS 적용 ${Math.min(num(S.htsBatches), st.N)}배치 · CV 적용 ${Math.min(num(S.cvBatches), st.N)}배치<br>시간 단위 h · 일정 D0 = 1배치 N-1 착수`;
+    <div class="kpi"><span class="eyebrow">계획 · 원액 소분 완료</span><span class="v">D${dayOf(R.base.end)}<small> ${hm(R.base.end)}${dl(R.base.end)}</small></span></div>
+    <div class="kpi"><span class="eyebrow">평가 반영 · 원액 소분 완료</span><span class="v">D${dayOf(R.cur.end)}<small> ${hm(R.cur.end)}${dl(R.cur.end)}</small></span></div>
+    <div class="kpi delay"><span class="eyebrow">전체 지연</span><span class="v">${d > 0.01 ? '+' + (d/24).toFixed(1) + '일' : '지연 없음'}<small> ${d > 0.01 ? Math.round(d) + ' h' : ''}</small></span></div>
+    <div class="kpi"><span class="eyebrow">항목별 단독 영향</span><span class="parts">${part('hts','HTS')}${part('dht','DHT')}${part('cht','CHT')}</span></div>`;
+  const on = ['hts','dht','cht'].filter(k => S.tg[k]).map(k => k.toUpperCase());
+  document.getElementById('docmeta').innerHTML = `제품코드 J010923 · 시범 배치 LQ001LD2<br>평가 반영: ${on.length ? on.join(' · ') : '없음 (계획 일정)'}<br>D1 = CCF-1 · 1차 UF-1`;
 }
 
 /* ---------- 간트 ---------- */
-const ROW = 26, BH = 30, HEAD = 30;
-function renderGantt(base, st){
-  const sc = V.sc === 'study' ? st : base;
+const ROW = 30, HEAD = 34, EROW = 30;
+function renderGantt(R){
+  const cur = R.cur, base = R.base;
   const gs = document.getElementById('gs'), svg = document.getElementById('gsvg'), gl = document.getElementById('gl');
-  const maxT = Math.max(base.makespan, st.makespan) + 24;
-  const fit = Math.max(0.2, (gs.clientWidth - 12) / maxT);
+  const days = Math.max(dayOf(cur.horizon), dayOf(base.horizon), 17) + 1;
+  const maxT = days * H;
+  const fit = Math.max(0.4, (gs.clientWidth - 8) / maxT);
   const pxh = fit * V.zoom;
-  const W = Math.ceil(maxT * pxh) + 8;
-  const x = t => (t * pxh).toFixed(2);
+  const W = Math.ceil(maxT * pxh) + 4;
+  const X = t => (t * pxh).toFixed(2);
   const eqName = id => (S.equipment.find(e => e.id === id) || { name:id }).name;
-  const labels = [`<div class="lr head" style="height:${HEAD}px">${V.vw === 'proc' ? '배치 / 단계' : '설비'}</div>`];
+  const labels = [`<div class="lr head" style="height:${HEAD}px">${V.vw === 'proc' ? '공정 단계' : '평가 대상 설비'}</div>`];
   let body = '', y = HEAD;
-
-  const rect = (t0, t1, yy, h, fill, title, label, extra='') => {
-    if (t1 <= t0) return '';
+  const rect = (t0, t1, yy, h, fill, title, label, extra) => {
+    if (t1 <= t0 + 1e-9) return '';
     const w = Math.max(1, (t1 - t0) * pxh);
-    let s = `<rect x="${x(t0)}" y="${yy}" width="${w.toFixed(2)}" height="${h}" rx="2" style="fill:${fill}" ${extra}><title>${esc(title)}</title></rect>`;
-    if (label && w > label.length * 6.4 + 10) s += `<text x="${(t0 * pxh + 5).toFixed(2)}" y="${yy + h/2 + 3.5}" style="fill:var(--on-bar);font:500 10.5px var(--f-sans);pointer-events:none">${esc(label)}</text>`;
+    let s = `<rect x="${X(t0)}" y="${yy}" width="${w.toFixed(2)}" height="${h}" rx="2" style="fill:${fill}${extra || ''}"><title>${esc(title)}</title></rect>`;
+    if (label && w > label.length * 6.6 + 8) s += `<text x="${(t0 * pxh + 4).toFixed(2)}" y="${yy + h/2 + 3.6}" style="fill:var(--on-bar);font:500 10.5px var(--f-sans);pointer-events:none">${esc(label)}</text>`;
     return s;
   };
 
   if (V.vw === 'proc'){
-    for (let b = 0; b < sc.N; b++){
-      const bt = sc.batches[b], bb = base.batches[b];
-      const delay = st.batches[b].end - bb.end;
-      labels.push(`<div class="lr bh" style="height:${BH}px"><span class="t">배치 ${b+1}</span><span class="s">D${fmtD(bt.release)} → D${fmtD(bt.end)}</span></div>`);
-      body += `<rect x="0" y="${y}" width="${W}" height="${BH}" style="fill:var(--surface)"/>`;
-      body += `<rect x="${x(bt.release)}" y="${y + 11}" width="${((bt.end - bt.release) * pxh).toFixed(2)}" height="8" rx="4" style="fill:var(--line)"><title>배치 ${b+1}: ${fmtH(bt.end - bt.release)}</title></rect>`;
-      if (V.sc === 'study' && delay > 0.01)
-        body += `<text x="${(bt.end * pxh + 6).toFixed(2)}" y="${y + 19}" style="fill:var(--ext);font:500 11px var(--f-mono)">+${fmtD(delay)}일</text>`;
-      y += BH;
-      sc.rows.filter(r => r.b === b).forEach(r => {
-        const s = S.steps[r.i];
-        const col = s.stage === 'US' ? 'var(--us)' : 'var(--ds)';
-        labels.push(`<div class="lr" style="height:${ROW}px"><span class="t" title="${esc(s.name)}">${esc(s.name)}</span></div>`);
-        if (r.wait > 0) body += rect(r.ready, r.start, y + 6, ROW - 12, 'url(#pWait)', `설비 대기 ${fmtH(r.wait)} · ${eqName(r.eq)}`);
-        body += rect(r.start, r.end, y + 5, ROW - 10, col, `${s.name}\n${fmtH(r.end - r.start)} · ${eqName(r.eq)}\nD${fmtD(r.start)} → D${fmtD(r.end)}`, s.name);
-        if (r.hold > 0){
-          const hb = Math.min(r.hold, r.holdBase);
-          body += rect(r.end, r.end + hb, y + 8, ROW - 16, 'var(--hold)', `${s.hName} 기준 홀드 ${fmtH(hb)}`);
-          if (r.ext > 0) body += rect(r.end + hb, r.end + r.hold, y + 8, ROW - 16, 'url(#pExt)', `${s.hName} 실공정 홀드 연장 +${fmtH(r.ext)} (목표 ${fmtH(r.target)})`);
-        }
-        if (r.par) body += `<rect x="${x(r.par.start)}" y="${y + 2}" width="${((r.par.end - r.par.start) * pxh).toFixed(2)}" height="3" style="fill:none;stroke:var(--ext);stroke-width:1.2;stroke-dasharray:3 2"><title>${esc(s.hName)} 축소 모델 병행 ${fmtH(r.par.end - r.par.start)} (일정 영향 없음)</title></rect>`;
-        if (V.sc === 'study' && V.ghost){
-          const g = base.rows.find(q => q.b === b && q.i === r.i);
-          if (g) body += `<rect x="${x(g.start)}" y="${y + ROW - 4}" width="${Math.max(1, (g.end - g.start) * pxh).toFixed(2)}" height="2.5" style="fill:var(--muted)"><title>기준 일정 D${fmtD(g.start)} → D${fmtD(g.end)}</title></rect>`;
-        }
-        body += `<line x1="0" x2="${W}" y1="${y + ROW - 0.5}" y2="${y + ROW - 0.5}" style="stroke:var(--line);stroke-width:1"/>`;
-        y += ROW;
+    S.steps.forEach(s => {
+      const r = cur.res[s.id], b = base.res[s.id];
+      const shift = r.start - b.start;
+      labels.push(`<div class="lr" style="height:${ROW}px"><span class="t">${esc(s.name)}${shift > 0.01 ? ` <b>+${fmtGap(shift)}</b>` : ''}</span><span class="s">D${dayOf(r.start)} ${hm(r.start)}${dateLabel(dayOf(r.start)) ? ' · ' + dateLabel(dayOf(r.start)) : ''}</span></div>`);
+      body += `<line x1="0" x2="${W}" y1="${y + ROW - 0.5}" y2="${y + ROW - 0.5}" style="stroke:var(--line)"/>`;
+      if (V.ghost) body += `<rect x="${X(b.start)}" y="${y + 6}" width="${Math.max(1,(b.end - b.start) * pxh).toFixed(2)}" height="${ROW - 13}" rx="2" style="fill:none;stroke:var(--muted);stroke-width:1.2;stroke-dasharray:3 2"><title>계획 ${stamp(b.start)} → ${stamp(b.end)}</title></rect>`;
+      cur.holdRes.filter(x => x.h.from === s.id).forEach(x => {
+        const e0 = x.from.end, need = e0 + x.req, go = x.to.start;
+        const hasExt = S.tg.hts && x.h.on && x.req > x.base + 1e-9;
+        const baseEnd = Math.min(go, e0 + x.base);
+        body += rect(e0, baseEnd, y + 10, ROW - 21, 'var(--hold)', `${x.h.name} 평소 보관 ${fmtGap(baseEnd - e0)}`);
+        if (hasExt) body += rect(baseEnd, Math.min(go, need), y + 10, ROW - 21, 'url(#pExt)', `${x.h.name} HTS 실공정 보관 · 목표 ${fmtGap(x.h.t)}`);
+        if (go > need + 0.01) body += rect(Math.max(need, baseEnd), go, y + 10, ROW - 21, 'url(#pWait)', `${x.h.name} 추가 대기 ${fmtGap(go - Math.max(need, baseEnd))} (설비 준비·근무 시간)`);
+        if (x.par) body += `<rect x="${X(e0)}" y="${y + 2}" width="${(num(x.h.t) * pxh).toFixed(2)}" height="3" style="fill:none;stroke:var(--ext);stroke-width:1.1;stroke-dasharray:3 2"><title>${esc(x.h.name)} 시료 병행 보관 ${fmtGap(num(x.h.t))} (일정 영향 없음)</title></rect>`;
       });
-    }
+      const col = /CCF/.test(s.name) ? 'var(--us)' : 'var(--ds)';
+      body += rect(r.start, r.end, y + 7, ROW - 15, col, `${s.name}\n${stamp(r.start)} → ${stamp(r.end)} (${num(s.proc)} h)`, s.name);
+      const a = ACTUAL[s.id];
+      if (V.actual && a){ const t0 = (a[0]-1)*H + a[1], t1 = (a[0]-1)*H + a[2];
+        body += `<rect x="${X(t0)}" y="${y + ROW - 5}" width="${Math.max(1,(t1 - t0) * pxh).toFixed(2)}" height="3" style="fill:var(--act)"><title>시범 생산 실측 D${a[0]} · ${esc(a[3])}</title></rect>`; }
+      y += ROW;
+    });
   } else {
-    const typeName = { dht:'DHT', cip:'세척 (CIP/SIP)', cht:'CHT' };
-    const typeCol = { dht:'var(--dht)', cip:'var(--cip)', cht:'var(--cht)' };
+    const typeName = { pre:'사용 전 세척·평형화', dht:'DHT (오염 방치)', cip:'세척', cht:'CHT (청정 보관)' };
+    const typeCol = { pre:'var(--wait-bg)', dht:'var(--dht)', cip:'var(--cip)', cht:'var(--cht)' };
     S.equipment.forEach(e => {
-      const bars = sc.eqBars.filter(q => q.eq === e.id);
-      if (!bars.length) return;
-      labels.push(`<div class="lr" style="height:${ROW + 4}px"><span class="t" title="${esc(e.name)}">${esc(e.name)}</span><span class="s">${e.cv ? 'CV 연구 대상' : '일상 세척'}</span></div>`);
-      bars.forEach(q => {
-        if (q.type === 'use'){
-          body += rect(q.start, q.end, y + 6, ROW - 8, q.stage === 'US' ? 'var(--us)' : 'var(--ds)', `배치 ${q.b+1} · ${q.step}\nD${fmtD(q.start)} → D${fmtD(q.end)}`, `B${q.b+1}`);
-        } else {
-          body += rect(q.start, q.end, y + 9, ROW - 14, typeCol[q.type], `배치 ${q.b+1} 후 ${typeName[q.type]} ${fmtH(q.end - q.start)}${q.study ? ' (연구 조건)' : ''}`);
-          if (q.study && q.end > q.start) body += `<rect x="${x(q.start)}" y="${y + 9}" width="${((q.end - q.start) * pxh).toFixed(2)}" height="${ROW - 14}" style="fill:url(#pStudy);pointer-events:none"/>`;
+      const bs = cur.bars.filter(q => q.eq === e.id);
+      if (!bs.length) return;
+      labels.push(`<div class="lr" style="height:${EROW}px"><span class="t">${esc(e.name)}</span><span class="s">DHT ${e.dht ? num(e.dhtT) + 'h' : '제외'} · CHT ${e.kind === 'membrane' ? '설정 안 함' : e.cht ? num(e.chtT) + 'h' : '제외'}</span></div>`);
+      body += `<line x1="0" x2="${W}" y1="${y + EROW - 0.5}" y2="${y + EROW - 0.5}" style="stroke:var(--line)"/>`;
+      bs.forEach(q => {
+        if (q.type === 'use') body += rect(q.start, q.end, y + 6, EROW - 12, /CCF/.test(q.step.name) ? 'var(--us)' : 'var(--ds)', `${q.step.name}\n${stamp(q.start)} → ${stamp(q.end)}`, q.step.name);
+        else {
+          body += rect(q.start, q.end, y + 9, EROW - 18, typeCol[q.type], `${q.step.name} 후 ${typeName[q.type]} ${fmtGap(q.end - q.start)}${q.study ? ' · 평가 조건' : ''}\n${stamp(q.start)} → ${stamp(q.end)}`, '', q.type === 'pre' ? ';stroke:var(--wait);stroke-width:1' : '');
+          if (q.study && q.end > q.start) body += `<rect x="${X(q.start)}" y="${y + 9}" width="${((q.end - q.start) * pxh).toFixed(2)}" height="${EROW - 18}" style="fill:url(#pStudy);pointer-events:none"/>`;
         }
       });
-      body += `<line x1="0" x2="${W}" y1="${y + ROW + 3.5}" y2="${y + ROW + 3.5}" style="stroke:var(--line);stroke-width:1"/>`;
-      y += ROW + 4;
+      y += EROW;
     });
   }
 
-  // 축
-  const steps = [1, 2, 7, 14, 28, 56];
-  const dayStep = steps.find(d => d * 24 * pxh >= 46) || 56;
+  const step = [1,2,7].find(d => d * H * pxh >= 30) || 7;
   let axis = `<rect x="0" y="0" width="${W}" height="${HEAD}" style="fill:var(--surface)"/>`;
-  for (let d = 0; d * 24 <= maxT; d += dayStep){
-    const xx = (d * 24 * pxh).toFixed(2);
-    axis += `<line x1="${xx}" x2="${xx}" y1="${HEAD - 6}" y2="${y}" style="stroke:var(--line);stroke-width:1"/>`;
-    axis += `<text x="${(+xx + 3).toFixed(2)}" y="${HEAD - 11}" style="fill:var(--muted);font:500 10.5px var(--f-mono)">D${d}</text>`;
+  for (let d = 1; d <= days; d++){
+    const xx = ((d - 1) * H * pxh).toFixed(2);
+    axis += `<line x1="${xx}" x2="${xx}" y1="${HEAD - 6}" y2="${y}" style="stroke:var(--line);stroke-width:${(d - 1) % 7 === 0 ? 1.2 : 0.6}"/>`;
+    if ((d - 1) % step === 0){
+      axis += `<text x="${(+xx + 3).toFixed(2)}" y="${HEAD - 18}" style="fill:var(--ink);font:500 10.5px var(--f-mono)">D${d}</text>`;
+      const dl = dateLabel(d); if (dl) axis += `<text x="${(+xx + 3).toFixed(2)}" y="${HEAD - 6}" style="fill:var(--muted);font:400 9.5px var(--f-mono)">${dl}</text>`;
+    }
   }
   axis += `<line x1="0" x2="${W}" y1="${HEAD - 0.5}" y2="${HEAD - 0.5}" style="stroke:var(--line)"/>`;
-  const endX = (sc.productEnd * pxh).toFixed(2);
-  const endMark = `<line x1="${endX}" x2="${endX}" y1="${HEAD}" y2="${y}" style="stroke:var(--ext);stroke-width:1.2;stroke-dasharray:4 3"><title>마지막 배치 원액 완료 D${fmtD(sc.productEnd)}</title></line>`;
-
+  const planX = X(base.end), endX = X(cur.end);
+  let marks = `<line x1="${planX}" x2="${planX}" y1="${HEAD}" y2="${y}" style="stroke:var(--muted);stroke-width:1;stroke-dasharray:2 3"><title>계획 원액 소분 완료 ${stamp(base.end)}</title></line>`;
+  if (cur.end > base.end + 0.01) marks += `<line x1="${endX}" x2="${endX}" y1="${HEAD}" y2="${y}" style="stroke:var(--ext);stroke-width:1.4;stroke-dasharray:5 3"><title>평가 반영 원액 소분 완료 ${stamp(cur.end)}</title></line>`;
   const defs = `<defs>
     <pattern id="pWait" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" style="fill:var(--wait-bg)"/><rect width="2" height="6" style="fill:var(--wait)"/></pattern>
     <pattern id="pExt" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" style="fill:var(--ext-bg)"/><rect width="3" height="6" style="fill:var(--ext)"/></pattern>
-    <pattern id="pStudy" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)"><rect width="2" height="6" style="fill:var(--surface);opacity:.55"/></pattern>
-  </defs>`;
-  svg.setAttribute('width', W); svg.setAttribute('height', y);
-  svg.setAttribute('viewBox', `0 0 ${W} ${y}`);
-  svg.innerHTML = defs + axis + body + endMark;
+    <pattern id="pStudy" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)"><rect width="2" height="6" style="fill:var(--surface);opacity:.55"/></pattern></defs>`;
+  svg.setAttribute('width', W); svg.setAttribute('height', y); svg.setAttribute('viewBox', `0 0 ${W} ${y}`);
+  svg.innerHTML = defs + axis + body + marks;
   gl.innerHTML = labels.join('');
-
   document.getElementById('legend').innerHTML = V.vw === 'proc'
-    ? `<span><i class="sw us"></i>업스트림</span><span><i class="sw ds"></i>다운스트림</span><span><i class="sw hold"></i>기준 홀드</span><span><i class="sw ext"></i>실공정 홀드 연장</span><span><i class="sw par"></i>축소 모델 병행</span><span><i class="sw wait"></i>설비 대기</span>${V.sc === 'study' && V.ghost ? '<span><i class="sw ghost"></i>기준 일정</span>' : ''}`
-    : `<span><i class="sw us"></i>사용 (업스트림)</span><span><i class="sw ds"></i>사용 (다운스트림)</span><span><i class="sw dht"></i>DHT</span><span><i class="sw cip"></i>세척</span><span><i class="sw cht"></i>CHT</span><span class="muted">흰 빗금 = 연구 조건</span>`;
+    ? `<span><i class="sw us"></i>CCF</span><span><i class="sw ds"></i>정제 공정</span><span><i class="sw hold"></i>평소 공정액 보관</span><span><i class="sw ext"></i>HTS 실공정 보관</span><span><i class="sw par"></i>HTS 시료 병행</span><span><i class="sw wait"></i>추가 대기</span>${V.ghost ? '<span><i class="sw ghost"></i>계획 일정</span>' : ''}${V.actual ? '<span><i class="sw act"></i>시범 생산 실측</span>' : ''}`
+    : `<span><i class="sw ds"></i>사용</span><span><i class="sw wait"></i>사용 전 세척·평형화</span><span><i class="sw dht"></i>DHT</span><span><i class="sw cip"></i>세척</span><span><i class="sw cht"></i>CHT</span><span class="muted">흰 빗금 = 평가 조건</span>`;
 }
 
-/* ---------- 지연 분해 · 경고 ---------- */
-function renderAnalysis(base, st){
-  const parts = st.batches.map((x, b) => {
-    const bb = base.batches[b];
-    const ext = x.sumHold - bb.sumHold, wait = x.sumWait - bb.sumWait;
-    return { b, ext, wait, total: x.end - bb.end };
-  });
-  const mx = Math.max(1, ...parts.map(p => Math.max(0, p.ext) + Math.max(0, p.wait)));
-  document.getElementById('breakdown').innerHTML = parts.map(p => `
-    <div class="bk"><span>배치 ${p.b+1}</span>
-      <span class="bar" title="홀드 연장 ${fmtH(p.ext)} · 설비 대기 증가 ${fmtH(p.wait)}"><i class="h" style="width:${Math.max(0,p.ext)/mx*100}%"></i><i class="w" style="width:${Math.max(0,p.wait)/mx*100}%"></i></span>
-      <span class="r">+${fmtD(p.total)}일</span></div>
-    <div class="bk muted" style="margin-top:-6px"><span></span><span style="font-size:.74rem">홀드 연장 ${fmtH(p.ext)} · 설비 대기 증가 ${fmtH(p.wait)}</span><span></span></div>`).join('');
-
+/* ---------- 지연 원인 ---------- */
+function renderWarns(R){
   const w = [];
-  const eqName = id => (S.equipment.find(e => e.id === id) || { name:id }).name;
-  st.rows.forEach(r => {
-    const s = S.steps[r.i];
-    const g = base.rows.find(q => q.b === r.b && q.i === r.i);
-    const dw = r.wait - (g ? g.wait : 0);
-    if (dw > 0.01){
-      const e = S.equipment.find(q => q.id === r.eq);
-      const why = e && e.cv && r.b > 0 || (e && e.cv && S.steps.filter(q => q.eq === r.eq).length > 1) ? 'DHT·CHT 연구로 설비 반환 지연' : '앞 단계·앞 배치 지연의 연쇄';
-      const culture = s.stage === 'US' && r.i > 0 && /배양/.test(s.name);
-      w.push(`<li><b>배치 ${r.b+1} · ${esc(s.name)}</b> — ${esc(eqName(r.eq))} 준비 대기 ${fmtH(dw)} 증가. ${why}.${culture ? ' 생산 배양 전 대기이므로 N-1 시드 착수를 늦추거나 시드 단계 연장 근거가 필요합니다.' : ''}</li>`);
-    }
-    if (s.hName && r.i < S.steps.length - 1 && r.target > 0 && r.actualHold > r.target + 0.01){
-      w.push(`<li><b>배치 ${r.b+1} · ${esc(s.hName)}</b> — 실제 홀드 ${fmtH(r.actualHold)}가 설정 목표 ${fmtH(r.target)}를 넘습니다. 목표 홀드를 늘리거나 설비 일정을 조정하세요.</li>`);
-    }
+  S.steps.forEach(s => {
+    const r = R.cur.res[s.id], b = R.base.res[s.id];
+    const sh = r.start - b.start; if (sh < 0.01) return;
+    let why = '';
+    if (r.bind.type === 'hold') why = `${esc(r.bind.h.name)} HTS 실공정 보관 ${fmtGap(r.bind.req)} (평소 ${fmtGap(r.bind.base)})`;
+    else if (r.bind.type === 'eq'){
+      const f = r.bind.why, parts = [];
+      if (f && f.dhtOn) parts.push(`DHT ${fmtGap(f.dhtH)}`);
+      if (f && f.chtOn) parts.push(`CHT ${fmtGap(f.chtH)}`);
+      why = `${esc(f ? f.e.name : r.bind.eq)} 준비 대기 · ${esc(f ? f.step.name : '')} 사용 후 ${parts.length ? parts.join(' + ') : '세척'}`;
+    } else why = '앞 공정 지연의 연쇄';
+    const snapped = r.start - r.earliest > 0.01 ? ` · 착수 마감 이후라 다음 날 ${hm(r.start)} 착수` : '';
+    w.push(`<li><b>${esc(s.name)}</b> D${dayOf(b.start)} ${hm(b.start)} → D${dayOf(r.start)} ${hm(r.start)} (+${fmtGap(sh)})<br>${why}${snapped}</li>`);
   });
-  if (!w.length) w.push('<li class="ok">설비 대기 증가나 홀드 초과가 없습니다. 지연은 실공정 홀드 연장분만큼만 생깁니다.</li>');
+  if (!w.length) w.push(`<li class="ok">${S.tg.hts || S.tg.dht || S.tg.cht ? '켜진 평가 항목이 계획 일정 안에서 소화됩니다. 지연 없음.' : '평가 항목이 모두 꺼져 있습니다. 위 스위치를 켜면 지연을 계산합니다.'}</li>`);
   document.getElementById('warns').innerHTML = w.join('');
+}
+
+function renderReview(){
+  document.getElementById('review').innerHTML = `
+    <dl>
+      <dt>파일 순서</dt><dd><span class="tag ok">맞음</span> 1번 291~310p · 2번 311~341p · 3번 342~373p · 4번 374~427p · 5번 428~471p. 파일 사이 쪽 번호가 끊김 없이 이어집니다.</dd>
+      <dt>공정 순서</dt><dd><span class="tag ok">맞음</span> Packing Test → WFI Vessel CIP → CCF-1 → 1차 UF-1 → 1차 크로-1 → CCF-2 → … → 3차 크로 → Pooling → 3차 UF → 바이러스 여과 → 제균 여과 → 원액 소분</dd>
+      <dt>빠진 쪽</dt><dd><span class="tag warn">확인 필요</span> 431p, 448p, 466p, 470p는 스캔에 없습니다. 388p는 빈 장으로 스캔됐습니다(4번 파일 15번째 장). 1번 파일 앞 2장(WFI 용기 #1·#2 CIP)은 쪽 번호가 비어 있습니다.</dd>
+      <dt>실측 일정</dt><dd>시범 생산은 D17(09.23)에 소분을 마쳤습니다. 운영 스케줄(D16)과 비교하면 2차 크로가 D12, 3차 크로가 D13, 3차 UF가 D15로 하루씩 늦습니다. 차트의 검은 선이 실측입니다.</dd>
+      <dt>기존 보관 기준</dt><dd>1차 크로 용출액 16·12·8일(394p) · 2차 크로 FT 6일(417p) · Mixed pool 10일(433p) · 3차 UF 회수액 10일(451p) · VF 여과액 10일(464p) · 제균 여과 후 10일(468p). 홀드 지점 기본값으로 넣었습니다.</dd>
+      <dt>메모·표시</dt><dd>305~308p CCF-1 첫 장 "중복 페이지" 사선 처리 · 406p 2차 크로 사용 전 CIP를 1차 크로-3 사후 CIP로 갈음(포스트잇 "N/A?") · 410p Chromatogram 첨부 미체크(포스트잇) · 452p SIP 날짜 기재 포스트잇</dd>
+    </dl>`;
 }
 
 /* ---------- 입력 표 ---------- */
 function buildTables(){
-  const eqOpts = sel => S.equipment.map(e => `<option value="${e.id}"${e.id === sel ? ' selected' : ''}>${esc(e.name)}</option>`).join('');
-  const last = S.steps.length - 1;
-  let h = `<thead><tr><th>단계</th><th>설비</th><th class="n">소요 (h)</th><th>홀드 지점 (다음 단계 전)</th><th class="n">기준 (h)</th><th class="n">목표 (h)</th><th>HTS 방식</th></tr></thead><tbody>`;
-  S.steps.forEach((s, i) => {
-    h += `<tr><td><span class="stage ${s.stage}">${s.stage}</span> ${esc(s.name)}</td>
-      <td><select id="st-eq-${i}" data-k="steps.${i}.eq" aria-label="${esc(s.name)} 설비">${eqOpts(s.eq)}</select></td>
-      <td class="n"><input type="number" id="st-dur-${i}" min="0" data-k="steps.${i}.dur" value="${s.dur}" aria-label="${esc(s.name)} 소요시간"></td>`;
-    if (s.hName && i < last){
-      h += `<td>${esc(s.hName)}</td>
-      <td class="n"><input type="number" id="st-hb-${i}" min="0" data-k="steps.${i}.hBase" value="${s.hBase}" aria-label="${esc(s.hName)} 기준 홀드"></td>
-      <td class="n"><input type="number" id="st-ht-${i}" min="0" data-k="steps.${i}.hTarget" value="${s.hTarget}" aria-label="${esc(s.hName)} 목표 홀드"></td>
-      <td><select id="st-hm-${i}" data-k="steps.${i}.hMode" aria-label="${esc(s.hName)} HTS 방식">${Object.entries(MODES).map(([k,v]) => `<option value="${k}"${k === s.hMode ? ' selected' : ''}>${v}</option>`).join('')}</select></td>`;
-    } else h += `<td class="muted">${i === last ? '최종 단계' : '연속 이송'}</td><td></td><td></td><td></td>`;
-    h += '</tr>';
+  const stepName = id => (S.steps.find(s => s.id === id) || { name:id }).name;
+  let h = `<thead><tr><th>실공정</th><th>홀드 지점</th><th>다음 공정</th><th class="n">목표 (h)</th><th class="n">일</th><th class="n">평소 간격</th><th>근거</th></tr></thead><tbody>`;
+  S.holds.forEach((x, i) => {
+    h += `<tr><td><input type="checkbox" id="ho-on-${i}" data-k="holds.${i}.on"${x.on ? ' checked' : ''} aria-label="${esc(x.name)} 실공정 보관"></td>
+      <td>${esc(x.name)}</td><td class="muted">${esc(stepName(x.to))}</td>
+      <td class="n"><input type="number" id="ho-t-${i}" min="0" step="1" data-k="holds.${i}.t" value="${x.t}" aria-label="${esc(x.name)} 목표 시간"></td>
+      <td class="n mono" id="ho-d-${i}">${(num(x.t)/24).toFixed(1)}</td><td class="n mono" id="ho-g-${i}"></td><td class="src">${esc(x.src)}</td></tr>`;
   });
-  document.getElementById('t-steps').innerHTML = h + '</tbody>';
+  document.getElementById('t-hold').innerHTML = h + '</tbody>';
 
-  let e = `<thead><tr><th>설비</th><th class="n">세척 (h)</th><th class="n">기준 DHT</th><th class="n">연구 DHT</th><th class="n">연구 CHT</th><th>CV 연구</th></tr></thead><tbody>`;
+  const useSel = (k, i, v) => `<select id="eq-${k}-${i}" data-k="equipment.${i}.${k}" aria-label="적용 회차">${[['all','모든 사용'],['first','첫 사용'],['last','마지막 사용']].map(([a,b]) => `<option value="${a}"${a === v ? ' selected' : ''}>${b}</option>`).join('')}</select>`;
+  let e = `<thead><tr><th>설비</th><th>사용 공정</th><th>평소 사후 세척</th><th>DHT</th><th class="n">목표 (h)</th><th>회차</th><th>CHT</th><th class="n">목표 (h)</th><th>회차</th></tr></thead><tbody>`;
   S.equipment.forEach((q, i) => {
-    e += `<tr><td>${esc(q.name)}</td>
-      <td class="n"><input type="number" id="eq-cl-${i}" min="0" data-k="equipment.${i}.clean" value="${q.clean}" aria-label="${esc(q.name)} 세척시간"></td>
-      <td class="n"><input type="number" id="eq-db-${i}" min="0" data-k="equipment.${i}.dhtBase" value="${q.dhtBase}" aria-label="${esc(q.name)} 기준 DHT"></td>
-      <td class="n"><input type="number" id="eq-ds-${i}" min="0" data-k="equipment.${i}.dhtStudy" value="${q.dhtStudy}" aria-label="${esc(q.name)} 연구 DHT"></td>
-      <td class="n"><input type="number" id="eq-cs-${i}" min="0" data-k="equipment.${i}.chtStudy" value="${q.chtStudy}" aria-label="${esc(q.name)} 연구 CHT"></td>
-      <td><input type="checkbox" id="eq-cv-${i}" data-k="equipment.${i}.cv"${q.cv ? ' checked' : ''} aria-label="${esc(q.name)} CV 연구 적용"></td></tr>`;
+    const uses = S.steps.filter(s => s.sys === q.id || s.media === q.id).map(s => s.name).join(', ');
+    const mem = q.kind === 'membrane';
+    e += `<tr><td>${esc(q.name)}</td><td class="src">${esc(uses)}</td>
+      <td><select id="eq-rule-${i}" data-k="equipment.${i}.rule" aria-label="평소 사후 세척 시점"><option value="next"${q.rule === 'next' ? ' selected' : ''}>익일 아침</option><option value="now"${q.rule === 'now' ? ' selected' : ''}>공정 직후</option></select></td>
+      <td><input type="checkbox" id="eq-dht-${i}" data-k="equipment.${i}.dht"${q.dht ? ' checked' : ''} aria-label="DHT 평가"></td>
+      <td class="n"><input type="number" id="eq-dt-${i}" min="0" data-k="equipment.${i}.dhtT" value="${q.dhtT}" aria-label="DHT 목표"></td>
+      <td>${useSel('dhtUse', i, q.dhtUse)}</td>
+      ${mem ? `<td colspan="3" class="src">설정하지 않음 · Pre-CIP 필수 (원칙 3)</td>` :
+      `<td><input type="checkbox" id="eq-cht-${i}" data-k="equipment.${i}.cht"${q.cht ? ' checked' : ''} aria-label="CHT 평가"></td>
+      <td class="n"><input type="number" id="eq-ct-${i}" min="0" data-k="equipment.${i}.chtT" value="${q.chtT}" aria-label="CHT 목표"></td>
+      <td>${useSel('chtUse', i, q.chtUse)}</td>`}</tr>`;
   });
   document.getElementById('t-eq').innerHTML = e + '</tbody>';
-  ['batches','interval','htsBatches','cvBatches'].forEach(k => { document.querySelector(`[data-k="${k}"]`).value = S[k]; });
+
+  let s = `<thead><tr><th>공정</th><th class="n">계획일</th><th class="n">Pre CIP &amp; EQ</th><th class="n">Process</th><th class="n">Post Mem/Resin</th><th class="n">Post CIP</th></tr></thead><tbody>`;
+  S.steps.forEach((x, i) => {
+    const f = (k, lab) => `<td class="n"><input type="number" id="st-${k}-${i}" min="0" step="0.5" data-k="steps.${i}.${k}" value="${x[k]}" aria-label="${esc(x.name)} ${lab}"></td>`;
+    s += `<tr><td>${esc(x.name)}${x.anchor ? ' <span class="tag">수확일 고정</span>' : ''}</td><td class="n mono">D${x.day}</td>${f('pre','Pre CIP')}${f('proc','Process')}${f('post','Post')}${f('cip','Post CIP')}</tr>`;
+  });
+  document.getElementById('t-step').innerHTML = s + '</tbody>';
+
+  ['workStart','latestStart','startDate'].forEach(k => { document.querySelector(`[data-k="${k}"]`).value = S[k]; });
+  ['hts','dht','cht'].forEach(k => { document.getElementById('tg-' + k).checked = !!S.tg[k]; });
 }
 
-function setPath(path, val){
-  const ks = path.split('.'); let o = S;
-  for (let i = 0; i < ks.length - 1; i++) o = o[ks[i]];
-  o[ks[ks.length - 1]] = val;
-}
-document.addEventListener('input', ev => {
-  const el = ev.target; const k = el.dataset && el.dataset.k; if (!k) return;
-  const v = el.type === 'checkbox' ? el.checked : el.tagName === 'SELECT' ? el.value : num(el.value);
+function setPath(path, val){ const ks = path.split('.'); let o = S; for (let i = 0; i < ks.length - 1; i++) o = o[ks[i]]; o[ks[ks.length - 1]] = val; }
+function onField(el){
+  const k = el.dataset && el.dataset.k; if (!k) return;
+  const v = el.type === 'checkbox' ? el.checked : (el.tagName === 'SELECT' || el.type === 'date') ? el.value : num(el.value);
   setPath(k, v); save(); render();
-});
-document.addEventListener('change', ev => { if (ev.target.tagName === 'SELECT' && ev.target.dataset.k) { setPath(ev.target.dataset.k, ev.target.value); save(); render(); } });
-document.querySelectorAll('[data-sc]').forEach(bt => bt.addEventListener('click', () => {
-  V.sc = bt.dataset.sc; document.querySelectorAll('[data-sc]').forEach(x => x.setAttribute('aria-pressed', x === bt)); render();
-}));
-document.querySelectorAll('[data-vw]').forEach(bt => bt.addEventListener('click', () => {
-  V.vw = bt.dataset.vw; document.querySelectorAll('[data-vw]').forEach(x => x.setAttribute('aria-pressed', x === bt)); render();
+}
+document.addEventListener('input', ev => onField(ev.target));
+document.addEventListener('change', ev => { if (ev.target.tagName === 'SELECT' || ev.target.type === 'checkbox' || ev.target.type === 'date') onField(ev.target); });
+['hts','dht','cht'].forEach(k => document.getElementById('tg-' + k).addEventListener('change', e => { S.tg[k] = e.target.checked; save(); render(); }));
+document.querySelectorAll('[data-vw]').forEach(bt => bt.addEventListener('click', () => { V.vw = bt.dataset.vw; document.querySelectorAll('[data-vw]').forEach(x => x.setAttribute('aria-pressed', x === bt)); render(); }));
+document.querySelectorAll('[data-preset]').forEach(bt => bt.addEventListener('click', () => {
+  const p = bt.dataset.preset; S.holds.forEach(h => { h.on = p === 'all' ? true : p === 'none' ? false : num(h.t) <= 48; });
+  save(); buildTables(); render();
 }));
 document.getElementById('zoom').addEventListener('input', e => { V.zoom = +e.target.value; render(); });
 document.getElementById('ghost').addEventListener('change', e => { V.ghost = e.target.checked; render(); });
+document.getElementById('actual').addEventListener('change', e => { V.actual = e.target.checked; render(); });
 document.getElementById('reset').addEventListener('click', () => { S = clone(DEF); save(); buildTables(); render(); });
 let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(render, 120); });
 
 function render(){
-  const base = simulate(false), st = simulate(true);
-  renderKpis(base, st); renderGantt(base, st); renderAnalysis(base, st);
+  const R = computeAll();
+  renderKpis(R); renderGantt(R); renderWarns(R);
+  R.cur.holdRes.forEach(x => {
+    const i = S.holds.indexOf(x.h);
+    const g = document.getElementById('ho-g-' + i); if (g) g.textContent = fmtGap(x.base);
+    const d = document.getElementById('ho-d-' + i); if (d) d.textContent = (num(x.h.t)/24).toFixed(1);
+  });
 }
-buildTables(); render();
+buildTables(); renderReview(); render();
 </script>
 
 </html>
