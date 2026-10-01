@@ -2,195 +2,217 @@
 <title>다베포에틴 HTS·CV 일정</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* Layout: 머리 → 평가 스위치(각자 +일수) → 지연 브리지(계획 → +HTS → +DHT → +CHT) → 간트(계획 vs 반영, 지연 구간 음영) → 지연 단계 → 설정 표
-   색 규칙: 평가 항목마다 고정 색 하나. HTS 파랑 · DHT 주황 · CHT 청록. 공정 막대는 무채색, 계획은 연회색. */
+/* Layout: 생산 일정 보드. 조건(평가 3종 + 근무시간) 한 줄 → 탭(평가 진행 / 평가 완료 후 운영) → 요약 타임라인 → 간트 → 조치 목록 → 설정.
+   한 곳만 강하게: 요약 타임라인 끝에 붙는 '+n일'. 나머지는 무채색 스틸 계열로 조용하게.
+   색은 의미에만 쓴다: HTS 파랑, DHT 주황, CHT 청록, 야간·초과 빨강, 운영 가능 초록. */
 :root{
-  --bg:#eef1f0; --surface:#fcfcfb; --sunk:#f3f5f4; --ink:#141b1a; --muted:#56625f; --faint:#8a9592; --line:#d8dedc;
-  --plan:#cfd6d4; --proc:#36444a; --on-bar:#ffffff;
-  --hts:#2a78d6; --hts-bg:#d3e3f7; --dht:#eb6834; --cht:#1baf7a; --cip:#93a0ab;
-  --wait:#9aa4a2; --wait-bg:#e6eae9; --night:rgba(20,27,26,.06); --band:rgba(42,120,214,.07); --act:#141b1a;
+  --bg:#eef1f3; --surface:#ffffff; --sunk:#f5f7f8; --ink:#17212b; --ink-2:#4a5866; --ink-3:#7d8a96; --line:#dce2e7; --line-2:#c5cdd4;
+  --plan:#d3dae0; --proc:#2c3a47; --on-proc:#ffffff;
+  --hts:#2a78d6; --hts-soft:#d8e6f8; --dht:#eb6834; --dht-soft:#fbe1d6; --cht:#1baf7a; --cht-soft:#d2f0e4; --cip:#8fa0b0;
+  --crit:#d03b3b; --crit-soft:#fbe4e4; --warn:#b77700; --warn-soft:#fdf0d4; --good:#0c8a3c; --good-soft:#dcf2e4;
+  --night:rgba(23,33,43,.055); --band:rgba(42,120,214,.07);
   --focus:#2a78d6;
-  --f-sans:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
-  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  --f:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
 }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
-  --bg:#121615; --surface:#1a1a19; --sunk:#151918; --ink:#f1f3f2; --muted:#a8b2af; --faint:#6f7a77; --line:#2c3331;
-  --plan:#3a4442; --proc:#c9d3d6; --on-bar:#101413;
-  --hts:#3987e5; --hts-bg:#1c3150; --dht:#d95926; --cht:#199e70; --cip:#6d7a86;
-  --wait:#5f6a68; --wait-bg:#222827; --night:rgba(0,0,0,.28); --band:rgba(57,135,229,.10); --act:#f1f3f2;
-  --focus:#3987e5; color-scheme:dark }}
+  --bg:#101418; --surface:#181d22; --sunk:#14181c; --ink:#e7ecf0; --ink-2:#adb8c2; --ink-3:#7c8893; --line:#2a3239; --line-2:#3a444d;
+  --plan:#38424b; --proc:#c9d3db; --on-proc:#101418;
+  --hts:#3987e5; --hts-soft:#1c3150; --dht:#d95926; --dht-soft:#43261a; --cht:#199e70; --cht-soft:#173a2e; --cip:#5f6e7c;
+  --crit:#e66767; --crit-soft:#46201f; --warn:#e3a338; --warn-soft:#3d2f14; --good:#4cc27a; --good-soft:#163524;
+  --night:rgba(0,0,0,.30); --band:rgba(57,135,229,.10); --focus:#3987e5; color-scheme:dark }}
 :root[data-theme="dark"]{
-  --bg:#121615; --surface:#1a1a19; --sunk:#151918; --ink:#f1f3f2; --muted:#a8b2af; --faint:#6f7a77; --line:#2c3331;
-  --plan:#3a4442; --proc:#c9d3d6; --on-bar:#101413;
-  --hts:#3987e5; --hts-bg:#1c3150; --dht:#d95926; --cht:#199e70; --cip:#6d7a86;
-  --wait:#5f6a68; --wait-bg:#222827; --night:rgba(0,0,0,.28); --band:rgba(57,135,229,.10); --act:#f1f3f2;
-  --focus:#3987e5; color-scheme:dark }
+  --bg:#101418; --surface:#181d22; --sunk:#14181c; --ink:#e7ecf0; --ink-2:#adb8c2; --ink-3:#7c8893; --line:#2a3239; --line-2:#3a444d;
+  --plan:#38424b; --proc:#c9d3db; --on-proc:#101418;
+  --hts:#3987e5; --hts-soft:#1c3150; --dht:#d95926; --dht-soft:#43261a; --cht:#199e70; --cht-soft:#173a2e; --cip:#5f6e7c;
+  --crit:#e66767; --crit-soft:#46201f; --warn:#e3a338; --warn-soft:#3d2f14; --good:#4cc27a; --good-soft:#163524;
+  --night:rgba(0,0,0,.30); --band:rgba(57,135,229,.10); --focus:#3987e5; color-scheme:dark }
 
 *{box-sizing:border-box}
-body{background:var(--bg);color:var(--ink);font-family:var(--f-sans);font-size:14px;line-height:1.55}
-.wrap{max-width:1280px;margin:0 auto;padding-inline:16px;padding-block:20px 48px;display:grid;gap:16px}
-h1,h2{text-wrap:balance;margin:0}
-h1{font-size:1.45rem;font-weight:700;letter-spacing:-.01em}
-h2{font-size:1rem;font-weight:600}
-.eyebrow{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-.muted{color:var(--muted)}
-.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f);font-size:14px;line-height:1.55;font-variant-numeric:tabular-nums}
+.wrap{max-width:1280px;margin:0 auto;padding-inline:16px;padding-block:24px 56px;display:grid;gap:14px}
+.wrap > *{min-width:0}
+h1,h2,h3{margin:0;text-wrap:balance}
+h1{font-size:1.5rem;font-weight:700;letter-spacing:-.015em}
+h2{font-size:1.02rem;font-weight:600}
+p{margin:0}
+.sub{color:var(--ink-2);max-width:70ch}
+.num{font-variant-numeric:tabular-nums}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 
-header.doc{display:flex;flex-wrap:wrap;gap:6px 24px;align-items:end;justify-content:space-between;border-bottom:2px solid var(--ink);padding-bottom:12px}
-header.doc p{margin:4px 0 0;max-width:70ch;color:var(--muted)}
+/* 머리 */
+header.top{display:grid;gap:4px;padding-bottom:4px}
 
-/* 스위치 */
-.switches{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-@media (max-width:780px){.switches{grid-template-columns:1fr}}
-.sw-card{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:2px 12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px 12px 18px;cursor:pointer;overflow:hidden}
-.sw-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--c);opacity:.35}
-.sw-card:has(input:checked){border-color:var(--c)}
-.sw-card:has(input:checked)::before{opacity:1}
-.sw-card input{width:20px;height:20px;margin:0;accent-color:var(--c);grid-row:span 2}
-.sw-card .t{font-weight:600;font-size:.95rem}
-.sw-card .s{font-size:.74rem;color:var(--muted);grid-column:2}
-.sw-card .d{grid-row:1 / span 2;grid-column:3;text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums;line-height:1.2}
-.sw-card .d b{display:block;font-size:1.3rem;font-weight:600;color:var(--ink)}
-.sw-card .d span{font-size:.68rem;color:var(--muted)}
-.sw-card.off .d b{color:var(--faint)}
+/* 조건 막대 */
+.conds{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) minmax(0,1.15fr);gap:10px}
+@media (max-width:1040px){.conds{grid-template-columns:repeat(3,minmax(0,1fr))}.hours{grid-column:1 / -1}}
+@media (max-width:640px){.conds{grid-template-columns:1fr}}
+.tg{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:2px 12px;padding:12px 14px;border-radius:10px;background:var(--surface);border:1px solid var(--line);cursor:pointer;transition:border-color .15s,background .15s}
+.tg input{position:absolute;opacity:0;pointer-events:none}
+.tg .sw{grid-row:span 2;width:36px;height:20px;border-radius:999px;background:var(--line-2);position:relative;transition:background .15s}
+.tg .sw::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--surface);transition:transform .15s}
+.tg:has(input:checked){border-color:var(--c);background:color-mix(in srgb,var(--c) 6%,var(--surface))}
+.tg:has(input:checked) .sw{background:var(--c)}
+.tg:has(input:checked) .sw::after{transform:translateX(16px)}
+.tg:has(input:focus-visible){outline:2px solid var(--focus);outline-offset:2px}
+.tg .t{font-weight:600}
+.tg .s{grid-column:2;font-size:.76rem;color:var(--ink-2)}
+.tg .d{grid-column:3;grid-row:1 / span 2;text-align:right;line-height:1.15}
+.tg .d b{display:block;font-size:1.25rem;font-weight:700}
+.tg .d span{font-size:.7rem;color:var(--ink-3)}
+.tg.off .d b{color:var(--ink-3);font-weight:600}
+.hours{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;padding:10px 14px;border-radius:10px;background:var(--surface);border:1px solid var(--line)}
+.hours .t{font-weight:600}
+.hours label{display:inline-flex;align-items:center;gap:6px;font-size:.84rem;color:var(--ink-2)}
+.hours input[type=number]{width:52px}
+.hours select{max-width:100%}
 
-/* 브리지 */
-.bridge{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px;display:grid;gap:14px;min-width:0}
-.hero{display:flex;flex-wrap:wrap;gap:8px 28px;align-items:baseline}
-.hero .big{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:2.3rem;font-weight:600;letter-spacing:-.02em;line-height:1}
-.hero .big.zero{color:var(--muted)}
-.hero .path{font-family:var(--f-mono);font-size:1rem;color:var(--muted)}
-.hero .path b{color:var(--ink);font-weight:600}
-.br-wrap{overflow-x:auto;min-width:0;max-width:100%}
-.hero > *{min-width:0}
+/* 탭 */
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line-2);margin-top:6px}
+.tabs button{border:0;background:none;padding:10px 14px 9px;font-weight:600;color:var(--ink-3);border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer}
+.tabs button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--ink)}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:grid;gap:12px;min-width:0}
+.panel > *{min-width:0}
+
+/* 요약 */
+.sum-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 18px}
+.sum-head .big{font-size:2.4rem;font-weight:700;letter-spacing:-.03em;line-height:1}
+.sum-head .big.zero{color:var(--ink-3);font-size:1.6rem}
+.sum-head .path{color:var(--ink-2)}
+.sum-head .path b{color:var(--ink);font-weight:600}
+.br-wrap{overflow-x:auto;max-width:100%}
 .br-wrap svg{display:block}
+.verdict{display:flex;align-items:center;gap:12px}
+.verdict .ic{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:700;color:#fff;flex:none;font-size:1.05rem}
+.verdict.ok .ic{background:var(--good)} .verdict.bad .ic{background:var(--crit)}
+.verdict b{display:block;font-size:1.15rem}
+.verdict span{font-size:.82rem;color:var(--ink-2)}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.stats div{padding:10px 12px;display:grid;gap:2px;border-left:1px solid var(--line)}
+.stats div:first-child{border-left:0}
+.stats b{font-size:1.35rem;font-weight:700}
+.stats b.zero{color:var(--ink-3)}
+.stats span{font-size:.76rem;color:var(--ink-2)}
+@media (max-width:560px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.stats div:nth-child(3){border-left:0}.stats div:nth-child(n+3){border-top:1px solid var(--line)}}
 
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px;display:grid;gap:12px;min-width:0}
-.toolbar{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;justify-content:space-between}
-.seg{display:inline-flex;border:1px solid var(--line);border-radius:5px;overflow:hidden}
-.seg button{font:inherit;font-size:.85rem;border:0;background:var(--sunk);color:var(--muted);padding:5px 11px;cursor:pointer}
-.seg button+button{border-left:1px solid var(--line)}
-.seg button[aria-pressed=true]{background:var(--ink);color:var(--surface)}
-.ctl{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;font-size:.84rem;color:var(--muted)}
+/* 간트 */
+.toolbar{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
+.seg{display:inline-flex;padding:3px;border-radius:8px;background:var(--sunk);border:1px solid var(--line)}
+.seg button{border:0;background:none;padding:4px 12px;border-radius:6px;font-size:.84rem;color:var(--ink-2);cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--surface);color:var(--ink);box-shadow:0 0 0 1px var(--line-2)}
+.ctl{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;font-size:.84rem;color:var(--ink-2)}
 .ctl label{display:inline-flex;gap:6px;align-items:center}
-button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
-
-.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.77rem;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.78rem;color:var(--ink-2)}
 .legend span{display:inline-flex;align-items:center;gap:6px}
-.sw{width:18px;height:10px;border-radius:2px;display:inline-block}
-.sw.plan{background:var(--plan)}.sw.proc{background:var(--proc)}
-.sw.hts{background:repeating-linear-gradient(45deg,var(--hts) 0 3px,var(--hts-bg) 3px 6px)}
-.sw.htsl{border:1.5px dashed var(--hts);height:6px}
-.sw.wait{background:repeating-linear-gradient(45deg,var(--wait) 0 2px,var(--wait-bg) 2px 6px)}
-.sw.dht{background:var(--dht)}.sw.cip{background:var(--cip)}.sw.cht{background:var(--cht)}
-.sw.night{background:var(--night);border:1px solid var(--line)}
-.sw.re{background:repeating-linear-gradient(-45deg,var(--cht) 0 3px,var(--surface) 3px 6px)}
-.sw.nightw{border:2px solid #d03b3b;height:10px}
-.ops-head{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:stretch}
-.verdict{display:flex;gap:12px;align-items:center;padding:10px 14px;border-radius:6px;border:1px solid var(--line);background:var(--sunk);min-width:0;flex:1 1 320px}
-.verdict .ic{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:700;color:#fff;flex:none}
-.verdict.ok .ic{background:#0ca30c}.verdict.bad .ic{background:#d03b3b}
-.verdict b{display:block;font-size:1rem}
-.verdict span{font-size:.76rem;color:var(--muted)}
-.ops-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:6px;overflow:hidden;flex:2 1 420px}
-.ops-stats div{background:var(--surface);padding:8px 10px;display:grid;gap:2px;min-width:0}
-.ops-stats b{font-size:1.3rem;font-weight:600}
-.ops-stats span{font-size:.7rem;color:var(--muted)}
-@media (max-width:520px){.ops-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
-.sw.ntry{border:1.5px dashed #d03b3b;background:repeating-linear-gradient(45deg,#d03b3b 0 2px,rgba(208,59,59,.15) 2px 5px)}
-.sw.band{background:var(--band);border:1px dashed var(--hts)}
-.sw.act{height:3px;background:var(--act)}
-.pill{display:inline-block;font-family:var(--f-mono);font-size:.68rem;font-weight:600;padding:0 5px;border-radius:3px;color:var(--on-bar);background:var(--c,var(--muted));margin-left:4px;vertical-align:1px}
-
-.gantt{display:grid;grid-template-columns:188px minmax(0,1fr);border:1px solid var(--line);border-radius:4px;overflow:hidden;background:var(--sunk)}
-@media (max-width:620px){.gantt{grid-template-columns:116px minmax(0,1fr)}}
-.g-labels{border-right:1px solid var(--line);background:var(--surface);min-width:0}
-.g-labels .lr{display:flex;flex-direction:column;justify-content:center;padding:0 10px;border-bottom:1px solid var(--line);overflow:hidden}
-.g-labels .lr .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.82rem}
-.g-labels .lr .s{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.67rem;color:var(--muted);font-family:var(--f-mono)}
-.g-labels .lr.head{font-family:var(--f-mono);font-size:.7rem;color:var(--muted);letter-spacing:.06em}
+.k{width:18px;height:10px;border-radius:3px;display:inline-block;flex:none}
+.k.plan{background:var(--plan)} .k.proc{background:var(--proc)}
+.k.hts{background:var(--hts);height:4px} .k.wait{background:var(--line-2);height:4px}
+.k.dht{background:var(--dht)} .k.cip{background:var(--cip)} .k.cht{background:var(--cht)}
+.k.re{background:repeating-linear-gradient(-45deg,var(--cht) 0 3px,var(--surface) 3px 6px)}
+.k.ntry{border:1.5px dashed var(--crit);background:var(--crit-soft)}
+.k.nightw{border:2px solid var(--crit);background:var(--cip)}
+.k.night{background:var(--night);border:1px solid var(--line)}
+.k.band{background:var(--band);border:1px dashed var(--hts)}
+.k.act{height:3px;background:var(--ink)}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--c,var(--ink-3));flex:none}
+.gantt{display:grid;grid-template-columns:176px minmax(0,1fr);border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
+@media (max-width:620px){.gantt{grid-template-columns:118px minmax(0,1fr)}.g-labels .lr{padding:0 8px}.g-labels .lr .t{font-size:.78rem}.g-labels .lr .s{display:none}.g-labels .lr .t{flex-wrap:wrap;gap:0 4px;white-space:normal;line-height:1.25}}
+.g-labels{border-right:1px solid var(--line);min-width:0}
+.g-labels .lr{display:flex;flex-direction:column;justify-content:center;padding:0 12px;border-bottom:1px solid var(--line);overflow:hidden}
+.g-labels .lr .t{display:flex;align-items:center;gap:6px;white-space:nowrap;font-size:.84rem;font-weight:500;min-width:0}
+.g-labels .lr .t > span:first-child{overflow:hidden;text-overflow:ellipsis}
+.g-labels .lr .s{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.72rem;color:var(--ink-3)}
+.g-labels .lr.head{font-size:.74rem;color:var(--ink-3)}
 .g-scroll{overflow-x:auto;min-width:0}
 .g-scroll svg{display:block}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:.72rem;font-weight:600;padding:0 6px;border-radius:999px;background:color-mix(in srgb,var(--c,var(--ink-3)) 14%,transparent);color:var(--ink);white-space:nowrap;flex:none}
+.chip::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--c,var(--ink-3))}
 
-.tbl{overflow-x:auto}
-table{border-collapse:collapse;width:100%;font-size:.8rem}
-th{font-weight:500;color:var(--muted);text-align:left;font-size:.72rem;padding:6px;border-bottom:1px solid var(--line);white-space:nowrap}
-td{padding:4px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
-td.n,th.n{text-align:right}
-td.src{font-size:.72rem;color:var(--muted);min-width:150px}
-input[type=number],select,input[type=date]{font:inherit;font-size:.8rem;color:var(--ink);background:var(--sunk);border:1px solid var(--line);border-radius:4px;padding:3px 6px}
-input[type=number]{width:64px;text-align:right;font-family:var(--f-mono)}
-.warns{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px;font-size:.8rem}
-.warns li{background:var(--sunk);border:1px solid var(--line);border-left:4px solid var(--c,var(--muted));padding:8px 10px;border-radius:0 4px 4px 0;min-width:0}
-.warns li .h{display:flex;justify-content:space-between;gap:8px;font-weight:600}
-.warns li .h .mono{color:var(--ink)}
-.warns li .w{color:var(--muted)}
-.warns li.crit{border-left-color:#d03b3b}
-.warns li.crit .h .tagc{font-family:var(--f-mono);font-size:.68rem;font-weight:600;color:#fff;background:#d03b3b;border-radius:3px;padding:0 5px;white-space:nowrap;flex:none;align-self:flex-start}
-.warns li.warn{border-left-color:#fab219}
-.warns li.warn .h .tagw{font-family:var(--f-mono);font-size:.68rem;font-weight:600;color:#141b1a;background:#fab219;border-radius:3px;padding:0 5px;white-space:nowrap;flex:none;align-self:flex-start}
-.warns li.info{border-left-color:var(--faint)}
-.warns li.none{border-left-color:var(--cht)}
-.tag{font-family:var(--f-mono);font-size:.68rem;padding:1px 6px;border-radius:3px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
-.btn{font:inherit;font-size:.8rem;border:1px solid var(--line);background:var(--sunk);color:var(--ink);border-radius:4px;padding:4px 10px;cursor:pointer}
-.btns{display:flex;flex-wrap:wrap;gap:6px}
-.notes{font-size:.79rem;color:var(--muted);margin:0;padding-left:18px;display:grid;gap:3px;max-width:95ch}
-.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
-@media (max-width:920px){.cols{grid-template-columns:minmax(0,1fr)}}
-.workset{display:flex;flex-wrap:wrap;gap:10px 18px;font-size:.8rem;color:var(--muted)}
-.workset label{display:inline-flex;gap:6px;align-items:center}
-.wrap > *, .panel > *, .cols > *{min-width:0}
-details.panel{display:block;max-width:100%}
+/* 조치 목록 (표) */
+.list{width:100%;border-collapse:collapse;font-size:.84rem}
+.list th{font-weight:500;color:var(--ink-3);text-align:left;font-size:.76rem;padding:8px 10px;border-bottom:1px solid var(--line-2);white-space:nowrap}
+.list td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.list tr:last-child td{border-bottom:0}
+.list td.when{white-space:nowrap;color:var(--ink-2)}
+.list td.what{font-weight:600;white-space:nowrap}
+.list td.why{color:var(--ink-2);min-width:240px;max-width:62ch}
+.list td.d{text-align:right;font-weight:700;white-space:nowrap}
+.sev{display:inline-flex;align-items:center;gap:6px;font-size:.74rem;font-weight:600;padding:2px 8px;border-radius:6px;white-space:nowrap}
+.sev.crit{background:var(--crit-soft);color:var(--crit)} .sev.warn{background:var(--warn-soft);color:var(--warn)} .sev.info{background:var(--sunk);color:var(--ink-2);border:1px solid var(--line)}
+.sev.good{background:var(--good-soft);color:var(--good)}
+.list-wrap{overflow-x:auto}
+.empty{color:var(--ink-2);padding:6px 2px}
+.group-h{font-size:.84rem;font-weight:600;color:var(--ink-2);margin-top:2px}
+
+/* 설정 */
+details.panel{display:block}
 details.panel > * + *{margin-top:12px}
-.tbl{max-width:100%}
-details.panel summary{cursor:pointer;font-weight:600}
-details.panel[open] summary{margin-bottom:4px}
+details.panel summary{cursor:pointer;font-weight:600;list-style-position:outside}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+.cols > *{min-width:0}
+@media (max-width:920px){.cols{grid-template-columns:minmax(0,1fr)}}
+.tbl{overflow-x:auto;max-width:100%}
+table.set{border-collapse:collapse;width:100%;font-size:.8rem}
+table.set th{font-weight:500;color:var(--ink-3);text-align:left;font-size:.74rem;padding:6px;border-bottom:1px solid var(--line-2);white-space:nowrap}
+table.set td{padding:4px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+table.set td.n, table.set th.n{text-align:right}
+table.set td.src{font-size:.74rem;color:var(--ink-3);min-width:150px}
+input[type=number],select,input[type=date]{font-size:.82rem;color:var(--ink);background:var(--sunk);border:1px solid var(--line-2);border-radius:6px;padding:3px 6px}
+input[type=number]{width:64px;text-align:right}
+.tag{font-size:.7rem;padding:1px 6px;border-radius:4px;border:1px solid var(--line-2);color:var(--ink-3);white-space:nowrap}
+.btn{font-size:.82rem;border:1px solid var(--line-2);background:var(--surface);border-radius:6px;padding:5px 10px;cursor:pointer}
+.btn:hover{background:var(--sunk)}
+.btns{display:flex;flex-wrap:wrap;gap:6px}
+.notes{font-size:.8rem;color:var(--ink-2);margin:0;padding-left:18px;display:grid;gap:4px;max-width:95ch}
+.workset{display:flex;flex-wrap:wrap;gap:10px 18px;font-size:.82rem;color:var(--ink-2)}
+.workset label{display:inline-flex;gap:6px;align-items:center}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
 <div class="wrap">
-  <header class="doc">
-    <div>
-      <div class="eyebrow">다베포에틴알파(N) 1G · 제조단위 12.2 g · 정제(DSP)</div>
-      <h1>HTS · DHT · CHT 평가 일정 시뮬레이터</h1>
-      <p>운영 스케줄(D1~D16)에 평가 항목을 하나씩 켜면 원액 소분이 며칠 밀리는지 바로 보여줍니다.</p>
-    </div>
+  <header class="top">
+    <h1>HTS · DHT · CHT 평가 일정</h1>
+    <p class="sub">다베포에틴알파(N) 1G 정제 공정, 제조단위 12.2 g. 운영 스케줄 D1~D16에 평가를 넣으면 원액 소분이 며칠 늦어지는지, 평가가 끝난 뒤 근무시간 안에서 운영할 수 있는지 봅니다.</p>
   </header>
 
-  <section class="switches" aria-label="평가 항목">
-    <label class="sw-card" style="--c:var(--hts)" id="card-hts"><input type="checkbox" id="tg-hts"><span class="t">공정액 홀드타임 (HTS)</span><span class="s">CCF부터 · 200 L 라인 값 · 당일 공정 ≥ 24 h</span><span class="d" id="d-hts"></span></label>
-    <label class="sw-card" style="--c:var(--dht)" id="card-dht"><input type="checkbox" id="tg-dht"><span class="t">세척 DHT 평가</span><span class="s">사용 후 ≥ 24 h 방치 후 세척 · 모든 장비</span><span class="d" id="d-dht"></span></label>
-    <label class="sw-card" style="--c:var(--cht)" id="card-cht"><input type="checkbox" id="tg-cht"><span class="t">세척 CHT 평가</span><span class="s">세척 후 청정 보관 · UF Membrane 제외</span><span class="d" id="d-cht"></span></label>
+  <section class="conds" aria-label="계산 조건">
+    <label class="tg" style="--c:var(--hts)" id="card-hts"><input type="checkbox" id="tg-hts"><span class="sw" aria-hidden="true"></span><span class="t">공정액 홀드타임</span><span class="s">CCF부터, 당일 공정은 24 h 이상</span><span class="d" id="d-hts"></span></label>
+    <label class="tg" style="--c:var(--dht)" id="card-dht"><input type="checkbox" id="tg-dht"><span class="sw" aria-hidden="true"></span><span class="t">세척 DHT</span><span class="s">사용 후 24 h 이상 두었다가 세척</span><span class="d" id="d-dht"></span></label>
+    <label class="tg" style="--c:var(--cht)" id="card-cht"><input type="checkbox" id="tg-cht"><span class="sw" aria-hidden="true"></span><span class="t">세척 CHT</span><span class="s">세척 후 청정 보관, UF 막 제외</span><span class="d" id="d-cht"></span></label>
+    <div class="hours">
+      <span class="t">근무시간</span>
+      <label for="ws"><input type="number" id="ws" min="0" max="23" data-k="workStart">시부터</label>
+      <label for="we"><input type="number" id="we" min="1" max="24" data-k="workEnd">시까지</label>
+      <label for="wm"><select id="wm" data-k="workMode" aria-label="근무시간 적용 방식"><option value="full">공정이 근무시간 안에 끝나야 함</option><option value="start">공정은 시작만 근무시간 안</option></select></label>
+    </div>
   </section>
 
-  <section class="bridge" aria-label="지연 누적">
-    <div class="hero" id="hero"></div>
+  <nav class="tabs" role="tablist" aria-label="일정">
+    <button type="button" role="tab" data-sc="study" aria-selected="true">평가 진행 일정</button>
+    <button type="button" role="tab" data-sc="ops" aria-selected="false">평가 완료 후 운영</button>
+  </nav>
+
+  <section class="panel" id="sum-study" aria-label="지연 요약">
+    <div class="sum-head" id="hero"></div>
     <div class="br-wrap"><svg id="brsvg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="계획 대비 평가 항목별 누적 지연"></svg></div>
   </section>
-
-  <section class="panel" aria-label="평가 완료 후 운영">
-    <h2>평가 완료 후 운영 점검</h2>
-    <p class="notes" style="padding:0;list-style:none">설정한 홀드 목표·DHT·CHT로 평가가 끝나면 그 값이 운영 기준이 됩니다. 계획 일정(D1~D16) 그대로 운영할 때 기준을 지키려면 세척을 언제 해야 하는지, 근무시간 안에서 가능한지 확인합니다. 간트에서 '평가 완료 후 운영'을 고르면 그 일정이 보입니다.</p>
-    <div id="ops"></div>
+  <section class="panel" id="sum-ops" aria-label="운영 점검 요약" hidden>
+    <div id="ops-head"></div>
   </section>
 
   <section class="panel" aria-label="간트 차트">
     <div class="toolbar">
-      <div class="ctl">
-      <div class="seg" role="group" aria-label="일정">
-        <button type="button" data-sc="study" aria-pressed="true">평가 진행 일정</button>
-        <button type="button" data-sc="ops" aria-pressed="false">평가 완료 후 운영</button>
-      </div>
       <div class="seg" role="group" aria-label="보기">
         <button type="button" data-vw="proc" aria-pressed="true">공정 단계</button>
         <button type="button" data-vw="eq" aria-pressed="false">설비 점유</button>
       </div>
-      </div>
       <div class="ctl">
-        <label><input type="checkbox" id="actual"> 시범 생산 실측(LQ001LD2)</label>
-        <label>확대 <input type="range" id="zoom" min="1" max="8" step="0.5" value="1"></label>
+        <label for="actual"><input type="checkbox" id="actual"> 시범 생산 실측 (LQ001LD2)</label>
+        <label for="zoom">확대 <input type="range" id="zoom" min="1" max="8" step="0.5" value="1"></label>
       </div>
     </div>
     <div class="legend" id="legend"></div>
@@ -200,9 +222,9 @@ details.panel[open] summary{margin-bottom:4px}
     </div>
   </section>
 
-  <section class="panel">
-    <h2>밀린 단계와 원인 · 확인 필요</h2>
-    <ul class="warns" id="warns"></ul>
+  <section class="panel" aria-label="확인할 것">
+    <h2 id="list-h">확인할 것</h2>
+    <div id="list"></div>
   </section>
 
   <details class="panel" open>
@@ -215,25 +237,22 @@ details.panel[open] summary{margin-bottom:4px}
         <button class="btn" type="button" data-preset="none">전부 시료 병행</button>
       </div>
     </div>
-    <div class="tbl"><table id="t-hold"></table></div>
+    <div class="tbl"><table class="set" id="t-hold"></table></div>
   </details>
 
   <details class="panel">
-    <summary>평가 대상 설비 · DHT / CHT 조건</summary>
-    <div class="tbl"><table id="t-eq"></table></div>
+    <summary>평가 대상 설비와 DHT/CHT 조건</summary>
+    <div class="tbl"><table class="set" id="t-eq"></table></div>
   </details>
 
   <div class="cols">
     <details class="panel">
       <summary>공정 소요시간 (예상 공정 시간표, h)</summary>
-      <div class="tbl"><table id="t-step"></table></div>
+      <div class="tbl"><table class="set" id="t-step"></table></div>
     </details>
     <details class="panel">
-      <summary>근무 시간 · 계산 가정</summary>
+      <summary>계산 가정</summary>
       <div class="workset">
-        <label for="ws">근무 시작 <input type="number" id="ws" min="0" max="23" data-k="workStart"> 시</label>
-        <label for="we">근무 종료 <input type="number" id="we" min="1" max="24" data-k="workEnd"> 시</label>
-        <label for="wm">적용 <select id="wm" data-k="workMode"><option value="full">공정이 근무 종료 전에 끝나야 함</option><option value="start">공정은 근무시간 안에 시작만 하면 됨</option></select></label>
         <label for="sd">D1 날짜 <input type="date" id="sd" data-k="startDate"></label>
         <button class="btn" type="button" id="reset">처음 값으로</button>
       </div>
@@ -586,28 +605,6 @@ function simulateOps(R){
   });
   return { res:base.res, bars, holdRes:base.holdRes, end:base.end, horizon:Math.max(base.horizon, ...bars.map(b => b.end)), issues, adds };
 }
-function renderOps(R){
-  const o = R.ops, nRe = o.adds.filter(a => a.kind === 'reclean').length, nEarly = o.adds.filter(a => a.kind === 'early').length;
-  const nNight = o.issues.filter(i => i.kind === 'night').length, nHold = o.issues.filter(i => i.kind === 'hold').length;
-  const ok = !nNight && !nHold;
-  const applied = [S.tg.hts ? '홀드 목표' : '', S.tg.dht ? 'DHT' : '', S.tg.cht ? 'CHT' : ''].filter(Boolean);
-  const [ws, we] = workSpan();
-  let h = `<div class="ops-head"><div class="verdict ${ok ? 'ok' : 'bad'}"><span class="ic">${ok ? '✓' : '!'}</span><div><b>${ok ? '현재 근무시간으로 운영 가능' : '근무시간 안에서 운영 불가 · 조정 필요'}</b><span>${applied.length ? applied.join(' · ') + ' 기준' : '켜진 평가 항목 없음'} · 근무 ${ws}~${we}시 · 계획 일정 D1~D${dayOf(o.end)}</span></div></div>
-    <div class="ops-stats"><div><b class="mono">${nRe}</b><span>추가 재세척 (CHT)</span></div><div><b class="mono">${nEarly}</b><span>당일로 앞당긴 세척 (DHT)</span></div><div><b class="mono">${nNight}</b><span>근무시간 밖 작업</span></div><div><b class="mono">${nHold}</b><span>보관 기준 초과</span></div></div></div>`;
-  const li = [];
-  o.issues.forEach(i => {
-    if (i.kind === 'hold') li.push(`<li class="crit"><div class="h"><span>${esc(i.x.h.name)}</span><span class="tagc">! 보관 기준 초과</span></div><div class="w">계획상 보관 ${fmtGap(i.x.actual)} &gt; 평가 목표 ${fmtGap(num(i.x.h.t))}</div><div>평가한 홀드타임보다 계획 일정의 보관이 깁니다. 홀드 목표를 늘리거나 계획을 당겨야 합니다.</div></li>`);
-    else li.push(`<li class="crit"><div class="h"><span>${esc(i.what)}</span><span class="tagc">! 근무시간 밖</span></div><div class="w">${stamp(i.start)} → ${stamp(i.end)}</div><div>기준을 지키려면 근무시간(${ws}~${we}시) 밖에 해야 합니다. 근무시간이나 평가 값을 조정해야 합니다.</div></li>`);
-  });
-  o.adds.forEach(a => {
-    if (a.kind === 'reclean') li.push(`<li class="warn"><div class="h"><span>${esc(a.e.name)}</span><span class="tagw">재세척 추가</span></div><div class="w">${stamp(a.start)} → ${stamp(a.end)} · ${esc(a.step.name)} 전</div><div>${esc(a.prev.name)} 후 세척하고 다음 사용 전 세척까지 ${fmtGap(a.idle)} 비어 CHT ${fmtGap(num(a.e.chtT))}를 넘습니다. 사용 직전에 한 번 더 세척합니다.</div></li>`);
-    else if (a.kind === 'early') li.push(`<li class="warn"><div class="h"><span>${esc(a.e.name)}</span><span class="tagw">당일 세척</span></div><div class="w">${stamp(a.start)} → ${stamp(a.end)} · ${esc(a.step.name)} 후</div><div>평소처럼 다음 날 아침에 세척하면 DHT ${fmtGap(a.dhtT)}를 넘어서 공정 당일 바로 세척합니다.</div></li>`);
-  });
-  if (!li.length) li.push(`<li class="none">평가한 값으로 운영해도 지금 계획 일정과 근무시간 안에서 추가 작업 없이 운영할 수 있습니다.</li>`);
-  h += `<ul class="warns">${li.join('')}</ul>`;
-  document.getElementById('ops').innerHTML = h;
-}
-
 /* 단계가 밀린 원인 → 평가 항목 색 */
 function causeOf(r){
   if (r.bind.type === 'hold') return r.bind.hts ? 'hts' : 'chain';
@@ -617,73 +614,80 @@ function causeOf(r){
     if (cht) return 'cht'; if (dht) return 'dht'; return 'chain'; }
   return 'chain';
 }
-const causeColor = c => COLOR[c] || 'var(--muted)';
-const causeName = c => LABEL[c] || '연쇄';
+const causeColor = c => COLOR[c] || 'var(--ink-3)';
+const causeName = c => ({ hts:'홀드', dht:'DHT', cht:'CHT' })[c] || '앞 단계 지연';
+const chip = (c, text) => `<span class="chip" style="--c:${causeColor(c)}">${esc(text)}</span>`;
+const sev = (k, text) => `<span class="sev ${k}">${k === 'crit' ? '! ' : ''}${esc(text)}</span>`;
+const table = (heads, rows) => `<div class="list-wrap"><table class="list"><thead><tr>${heads.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table></div>`;
 
-/* ---------- 스위치 · 히어로 ---------- */
+/* ---------- 조건 스위치 · 요약 ---------- */
 function renderSwitches(R){
   KEYS.forEach(k => {
     const card = document.getElementById('card-' + k), d = document.getElementById('d-' + k);
     card.classList.toggle('off', !S.tg[k]);
     if (S.tg[k]){
       const st = R.steps.find(x => x.k === k), inc = st ? st.inc : 0;
-      d.innerHTML = `<b>${inc > 0.01 ? '+' + days1(inc) + '일' : '±0일'}</b><span>누적 기여</span>`;
+      d.innerHTML = `<b>${inc > 0.01 ? '+' + days1(inc) + '일' : '±0일'}</b><span>추가 지연</span>`;
     } else {
       const m = R.marg[k] || 0;
-      d.innerHTML = `<b>${m > 0.01 ? '+' + days1(m) + '일' : '±0일'}</b><span>켜면 추가</span>`;
+      d.innerHTML = `<b>${m > 0.01 ? '+' + days1(m) + '일' : '±0일'}</b><span>켜면</span>`;
     }
   });
   const d = R.cur.end - R.base.end;
   const dl = t => { const s = dateLabel(dayOf(t)); return s ? ` (${s})` : ''; };
+  const night = S.steps.filter(st => { const r = R.cur.res[st.id]; return r.nightTry && r.nightTry.night > 0.01; }).length;
   document.getElementById('hero').innerHTML = `
-    <div><div class="eyebrow">원액 소분 완료 지연</div><div class="big${d > 0.01 ? '' : ' zero'}" style="${d > 0.01 ? 'color:var(--ink)' : ''}">${d > 0.01 ? '+' + days1(d) + '일' : '지연 없음'}</div></div>
-    <div class="path">계획 <b>D${dayOf(R.base.end)} ${hm(R.base.end)}</b>${dl(R.base.end)} → 평가 반영 <b>D${dayOf(R.cur.end)} ${hm(R.cur.end)}</b>${dl(R.cur.end)}</div>`;
+    <span class="big${d > 0.01 ? '' : ' zero'}">${d > 0.01 ? '+' + days1(d) + '일' : '지연 없음'}</span>
+    <span class="path">원액 소분 완료 계획 <b>D${dayOf(R.base.end)} ${hm(R.base.end)}</b>${dl(R.base.end)}에서 <b>D${dayOf(R.cur.end)} ${hm(R.cur.end)}</b>${dl(R.cur.end)}로</span>
+    ${night ? `<span class="path">야간 작업을 피하려고 다음 날로 미룬 공정 ${night}건</span>` : ''}`;
 }
 
-/* ---------- 지연 브리지 ---------- */
+/* ---------- 지연 누적 타임라인 ---------- */
 function renderBridge(R){
   const svg = document.getElementById('brsvg'), wrap = svg.parentNode;
-  const rows = [{ kind:'plan', label:'계획 (운영 스케줄)', from:0, to:R.base.end }];
+  const rows = [{ kind:'plan', label:'계획', from:0, to:R.base.end }];
   KEYS.forEach(k => {
     const st = R.steps.find(x => x.k === k);
-    if (st) rows.push({ kind:k, label:`+ ${LABEL[k]}`, from:st.from, to:st.to, inc:st.inc, on:true });
-    else rows.push({ kind:k, label:`+ ${LABEL[k]}`, from:R.cur.end, to:R.cur.end + Math.max(0, R.marg[k] || 0), inc:R.marg[k] || 0, on:false });
+    const name = { hts:'+ 홀드타임', dht:'+ DHT', cht:'+ CHT' }[k];
+    if (st) rows.push({ kind:k, label:name, from:st.from, to:st.to, inc:st.inc, on:true });
+    else rows.push({ kind:k, label:name, from:R.cur.end, to:R.cur.end + Math.max(0, R.marg[k] || 0), inc:R.marg[k] || 0, on:false });
   });
   rows.push({ kind:'total', label:'평가 반영', from:0, to:R.cur.end });
   const maxT = Math.max(...rows.map(r => r.to)) + 24;
-  const W = Math.max(330, wrap.clientWidth), narrow = W < 600, LW = narrow ? 86 : 132, RW = narrow ? 96 : 118, PW = W - LW - RW;
-  const RH = 34, TOP = 22, Hh = TOP + rows.length * RH + 6;
+  const W = Math.max(330, wrap.clientWidth), narrow = W < 600, LW = narrow ? 76 : 104, RW = narrow ? 104 : 124, PW = W - LW - RW;
+  const RH = 32, TOP = 24, Hh = TOP + rows.length * RH + 4;
   const X = t => LW + t / maxT * PW;
   let g = '';
-  const dayStep = [1,2,4,7].find(s => s * 24 / maxT * PW >= 34) || 7;
+  const dayStep = [1,2,4,7].find(s => s * 24 / maxT * PW >= 30) || 7;
   for (let d = 1; (d - 1) * 24 <= maxT; d += dayStep){
     const x = X((d - 1) * 24).toFixed(1);
-    g += `<line x1="${x}" x2="${x}" y1="${TOP - 4}" y2="${Hh - 6}" style="stroke:var(--line);stroke-width:1"/>`;
-    g += `<text x="${(+x + 3).toFixed(1)}" y="${TOP - 8}" style="fill:var(--muted);font:500 10.5px var(--f-mono)">D${d}</text>`;
+    g += `<line x1="${x}" x2="${x}" y1="${TOP - 4}" y2="${Hh - 4}" style="stroke:var(--line);stroke-width:1"/>`;
+    g += `<text x="${(+x + 3).toFixed(1)}" y="${TOP - 9}" style="fill:var(--ink-3);font:500 11px var(--f)">D${d}</text>`;
   }
   const px = X(R.base.end).toFixed(1);
-  g += `<line x1="${px}" x2="${px}" y1="${TOP - 4}" y2="${Hh - 6}" style="stroke:var(--muted);stroke-width:1.2;stroke-dasharray:3 3"/>`;
+  g += `<line x1="${px}" x2="${px}" y1="${TOP - 4}" y2="${Hh - 4}" style="stroke:var(--ink-3);stroke-width:1.2;stroke-dasharray:3 3"/>`;
   rows.forEach((r, i) => {
-    const y = TOP + i * RH, bh = 18, by = y + (RH - bh) / 2;
-    const bold = r.kind === 'plan' || r.kind === 'total';
-    g += `<text x="0" y="${by + 13}" style="fill:${r.on === false ? 'var(--faint)' : 'var(--ink)'};font:${bold ? 600 : 500} ${narrow ? 11.5 : 12.5}px var(--f-sans)">${esc(narrow && r.kind === 'plan' ? '계획' : r.label)}</text>`;
+    const y = TOP + i * RH, bh = r.kind === 'total' ? 20 : 14, by = y + (RH - bh) / 2;
+    const strong = r.kind === 'total';
+    g += `<text x="0" y="${y + RH / 2 + 4.5}" style="fill:${r.on === false ? 'var(--ink-3)' : 'var(--ink)'};font:${strong ? 700 : 500} ${narrow ? 12 : 13}px var(--f)">${esc(r.label)}</text>`;
+    const val = (x, text, w8, col) => `<text x="${(x + 8).toFixed(1)}" y="${y + RH / 2 + 4.5}" style="fill:${col || 'var(--ink)'};font:${w8} ${strong ? 15 : 13}px var(--f)">${text}</text>`;
     if (r.kind === 'plan'){
-      g += `<rect x="${X(0)}" y="${by}" width="${(X(r.to) - X(0)).toFixed(1)}" height="${bh}" rx="3" style="fill:var(--plan)"><title>계획 원액 소분 완료 ${stamp(r.to)}</title></rect>`;
-      g += `<text x="${(X(r.to) + 8).toFixed(1)}" y="${by + 13}" style="fill:var(--ink);font:600 12px var(--f-mono)">D${dayOf(r.to)}</text>`;
+      g += `<rect x="${X(0)}" y="${by}" width="${(X(r.to) - X(0)).toFixed(1)}" height="${bh}" rx="4" style="fill:var(--plan)"><title>계획 원액 소분 완료 ${stamp(r.to)}</title></rect>`;
+      g += val(X(r.to), `D${dayOf(r.to)}`, 600);
     } else if (r.kind === 'total'){
-      g += `<rect x="${X(0)}" y="${by}" width="${(X(R.base.end) - X(0)).toFixed(1)}" height="${bh}" rx="3" style="fill:var(--plan)"/>`;
-      R.steps.forEach(st => { if (st.inc > 0.01) g += `<rect x="${(X(st.from) + 1).toFixed(1)}" y="${by}" width="${Math.max(1, X(st.to) - X(st.from) - 2).toFixed(1)}" height="${bh}" rx="2" style="fill:${COLOR[st.k]}"><title>${LABEL[st.k]} +${days1(st.inc)}일</title></rect>`; });
+      g += `<rect x="${X(0)}" y="${by}" width="${(X(R.base.end) - X(0)).toFixed(1)}" height="${bh}" rx="4" style="fill:var(--plan)"/>`;
+      R.steps.forEach(st => { if (st.inc > 0.01) g += `<rect x="${(X(st.from) + 1).toFixed(1)}" y="${by}" width="${Math.max(1, X(st.to) - X(st.from) - 2).toFixed(1)}" height="${bh}" rx="3" style="fill:${COLOR[st.k]}"><title>${LABEL[st.k]} +${days1(st.inc)}일</title></rect>`; });
       const d = r.to - R.base.end;
-      g += `<text x="${(X(r.to) + 8).toFixed(1)}" y="${by + 13}" style="fill:var(--ink);font:600 12px var(--f-mono)">D${dayOf(r.to)}${d > 0.01 ? ` · +${days1(d)}일` : ''}</text>`;
+      g += val(X(r.to), `D${dayOf(r.to)}${d > 0.01 ? `  +${days1(d)}일` : ''}`, 700);
     } else {
       const w = X(r.to) - X(r.from);
-      g += `<line x1="${X(r.from).toFixed(1)}" x2="${X(r.from).toFixed(1)}" y1="${by - 8}" y2="${by + bh}" style="stroke:var(--faint);stroke-width:1;stroke-dasharray:2 2"/>`;
       if (r.on){
-        if (w > 0.5) g += `<rect x="${X(r.from).toFixed(1)}" y="${by}" width="${w.toFixed(1)}" height="${bh}" rx="3" style="fill:${COLOR[r.kind]}"><title>${LABEL[r.kind]} 추가 +${days1(r.inc)}일 · ${stamp(r.from)} → ${stamp(r.to)}</title></rect>`;
-        g += `<text x="${(X(r.to) + 8).toFixed(1)}" y="${by + 13}" style="fill:var(--ink);font:600 12px var(--f-mono)">${r.inc > 0.01 ? '+' + days1(r.inc) + '일' : '±0일'}</text>`;
+        if (w > 0.5) g += `<rect x="${X(r.from).toFixed(1)}" y="${by}" width="${w.toFixed(1)}" height="${bh}" rx="3" style="fill:${COLOR[r.kind]}"><title>${LABEL[r.kind]} 추가 +${days1(r.inc)}일, ${stamp(r.from)} → ${stamp(r.to)}</title></rect>`;
+        else g += `<line x1="${X(r.from).toFixed(1)}" x2="${X(r.from).toFixed(1)}" y1="${by}" y2="${by + bh}" style="stroke:${COLOR[r.kind]};stroke-width:2"/>`;
+        g += val(X(Math.max(r.to, r.from)), r.inc > 0.01 ? '+' + days1(r.inc) + '일' : '±0일', 600);
       } else {
-        if (w > 0.5) g += `<rect x="${X(r.from).toFixed(1)}" y="${by + 1}" width="${w.toFixed(1)}" height="${bh - 2}" rx="3" style="fill:none;stroke:${COLOR[r.kind]};stroke-width:1.5;stroke-dasharray:4 3"><title>꺼짐 · 켜면 +${days1(r.inc)}일</title></rect>`;
-        g += `<text x="${(X(r.to) + 8).toFixed(1)}" y="${by + 13}" style="fill:var(--faint);font:500 11.5px var(--f-mono)">${narrow ? '꺼짐' : '꺼짐 · 켜면'} +${days1(Math.max(0, r.inc))}일</text>`;
+        if (w > 0.5) g += `<rect x="${X(r.from).toFixed(1)}" y="${by + 1}" width="${w.toFixed(1)}" height="${bh - 2}" rx="3" style="fill:none;stroke:${COLOR[r.kind]};stroke-width:1.4;stroke-dasharray:4 3"><title>꺼짐, 켜면 +${days1(r.inc)}일</title></rect>`;
+        g += val(X(r.to), `꺼짐${narrow ? '' : ', 켜면'} +${days1(Math.max(0, r.inc))}일`, 500, 'var(--ink-3)');
       }
     }
   });
@@ -692,9 +696,10 @@ function renderBridge(R){
 }
 
 /* ---------- 간트 ---------- */
-const ROW = 36, HEAD = 40, EROW = 30;
+const ROW = 36, HEAD = 44;
 function renderGantt(R){
-  const cur = V.sc === 'ops' ? R.ops : R.cur, base = R.base;
+  const ops = V.sc === 'ops';
+  const cur = ops ? R.ops : R.cur, base = R.base;
   const gs = document.getElementById('gs'), svg = document.getElementById('gsvg'), gl = document.getElementById('gl');
   const days = Math.max(dayOf(cur.horizon), dayOf(base.horizon), 17) + 1;
   const maxT = days * H;
@@ -703,173 +708,186 @@ function renderGantt(R){
   const X = t => (t * pxh).toFixed(2);
   const labels = [`<div class="lr head" style="height:${HEAD}px">공정 단계</div>`];
   let body = '', y = HEAD;
-  const rect = (t0, t1, yy, h, fill, title, label, extra) => {
+  const rect = (t0, t1, yy, h, fill, title, extra, rx) => {
     if (t1 <= t0 + 1e-9) return '';
     const w = Math.max(3, (t1 - t0) * pxh);
-    let s = `<rect x="${X(t0)}" y="${yy}" width="${w.toFixed(2)}" height="${h}" rx="2" style="fill:${fill}${extra || ''}"><title>${esc(title)}</title></rect>`;
-    if (label && w > label.length * 6.8 + 8) s += `<text x="${(t0 * pxh + 4).toFixed(2)}" y="${yy + h/2 + 3.6}" style="fill:var(--on-bar);font:500 10.5px var(--f-sans);pointer-events:none">${esc(label)}</text>`;
-    return s;
+    return `<rect x="${X(t0)}" y="${yy}" width="${w.toFixed(2)}" height="${h}" rx="${rx == null ? 3 : rx}" style="fill:${fill}${extra || ''}"><title>${esc(title)}</title></rect>`;
   };
   const delayBand = cur.end > base.end + 0.01;
+  const short = id => { const e = S.equipment.find(q => q.id === id); return e ? e.name.replace(/\s*\(.*\)/, '') : id; };
+  const [ws1, we1] = workSpan();
 
-  if (V.vw === 'proc'){
-    S.steps.forEach(s => {
-      const r = cur.res[s.id], b = base.res[s.id];
-      const shift = r.start - b.start, cause = causeOf(r);
-      labels.push(`<div class="lr" style="height:${ROW}px"><span class="t">${esc(s.name)}${shift > 0.01 ? `<span class="pill" style="--c:${causeColor(cause)}">+${days1(shift)}일</span>` : ''}</span><span class="s">D${dayOf(r.start)} ${hm(r.start)}${shift > 0.01 ? ` · 계획 D${dayOf(b.start)}` : ''}</span></div>`);
-      body += `<line x1="0" x2="${W}" y1="${y + ROW - 0.5}" y2="${y + ROW - 0.5}" style="stroke:var(--line)"/>`;
-      /* 계획 막대(위, 연회색) */
-      body += rect(b.start, b.end, y + 5, 9, 'var(--plan)', `계획 ${s.name}\n${stamp(b.start)} → ${stamp(b.end)}`);
-      /* 공정액 보관 */
-      cur.holdRes.filter(x => x.h.from === s.id).forEach(x => {
-        const bx = base.holdRes.find(y => y.h === x.h), usual = Math.max(x.base, bx ? bx.actual : 0);
+  S.steps.forEach(s => {
+    const r = cur.res[s.id], b = base.res[s.id], shift = r.start - b.start, cause = causeOf(r);
+    const eqs = [s.sys, s.media].filter(Boolean);
+    const sub = V.vw === 'eq' ? (eqs.length ? eqs.map(short).join(', ') : (s.anchor ? '배양 수확' : '싱글유즈'))
+      : shift > 0.01 ? `D${dayOf(b.start)} → D${dayOf(r.start)} ${hm(r.start)}` : `D${dayOf(r.start)} ${hm(r.start)}`;
+    labels.push(`<div class="lr" style="height:${ROW}px"><span class="t"><span>${esc(s.name)}</span>${shift > 0.01 ? chip(cause, '+' + days1(shift) + '일') : ''}</span><span class="s">${esc(sub)}</span></div>`);
+    body += `<line x1="0" x2="${W}" y1="${y + ROW - 0.5}" y2="${y + ROW - 0.5}" style="stroke:var(--line)"/>`;
+    const mid = y + ROW / 2;
+
+    if (V.vw === 'proc' || !eqs.length){
+      /* 공정액 보관: 막대 아래 얇은 선. 파랑 = 홀드 시험 보관, 회색 = 추가 대기 */
+      if (V.vw === 'proc') cur.holdRes.filter(x => x.h.from === s.id).forEach(x => {
+        const bx = base.holdRes.find(z => z.h === x.h), usual = Math.max(x.base, bx ? bx.actual : 0);
         const e0 = x.from.end, need = e0 + x.req, go = x.to.start, baseEnd = Math.min(go, e0 + usual);
-        const yy = y + 18, hh = 12;
-        if (x.req > x.base + 1e-9) body += rect(baseEnd, Math.min(go, need), yy + 2, hh - 4, 'url(#pHts)', `${x.h.name} HTS 실공정 보관 · 목표 ${fmtGap(x.h.t)} (평소 ${fmtGap(usual)})`);
-        if (go > Math.max(need, baseEnd) + 0.01) body += rect(Math.max(need, baseEnd), go, yy + 2, hh - 4, 'url(#pWait)', `${x.h.name} 추가 대기 ${fmtGap(go - Math.max(need, baseEnd))} (설비 준비·근무 시간)`);
+        if (x.req > x.base + 1e-9) body += rect(baseEnd, Math.min(go, need), mid + 9, 4, 'var(--hts)', `${x.h.name} 홀드 시험 보관, 목표 ${fmtGap(x.h.t)} (평소 ${fmtGap(usual)})`, '', 2);
+        if (go > Math.max(need, baseEnd) + 0.01) body += rect(Math.max(need, baseEnd), go, mid + 9, 4, 'var(--line-2)', `${x.h.name} 추가 대기 ${fmtGap(go - Math.max(need, baseEnd))} (설비 준비 또는 근무시간)`, '', 2);
       });
-      /* 이동 화살표 */
+      /* 계획 위치 (밀렸을 때만) + 이동선 */
       if (shift > 0.01){
-        const x0 = b.start * pxh, x1 = r.start * pxh, yy = y + 24;
-        body += `<line x1="${x0.toFixed(1)}" x2="${(x1 - 3).toFixed(1)}" y1="${yy}" y2="${yy}" style="stroke:${causeColor(cause)};stroke-width:1.6"/><path d="M${(x1 - 6).toFixed(1)},${yy - 4} L${x1.toFixed(1)},${yy} L${(x1 - 6).toFixed(1)},${yy + 4}" style="fill:none;stroke:${causeColor(cause)};stroke-width:1.6"/>`;
+        body += rect(b.start, b.end, mid - 7, 14, 'var(--plan)', `계획 ${s.name}: ${stamp(b.start)} → ${stamp(b.end)}`);
+        body += `<line x1="${(b.end * pxh + 2).toFixed(1)}" x2="${(r.start * pxh - 2).toFixed(1)}" y1="${mid}" y2="${mid}" style="stroke:${causeColor(cause)};stroke-width:1.2;stroke-dasharray:2 3"/>`;
       }
-      /* 바로 시작했다면: 점선 막대 + 야간에 걸리는 부분 빨간 빗금 */
-      if (r.nightTry && r.nightTry.night > 0.01){
-        const t0 = r.nightTry.start, t1 = r.nightTry.end, [ws1, we1] = workSpan();
-        body += `<rect x="${X(t0)}" y="${y + 17}" width="${((t1 - t0) * pxh).toFixed(2)}" height="15" rx="2" style="fill:none;stroke:#d03b3b;stroke-width:1.2;stroke-dasharray:3 2"><title>${esc(s.name)}을 ${stamp(t0)}에 바로 시작하면 ${stamp(t1)}에 끝나 야간(근무 ${ws1}~${we1}시 밖) ${fmtGap(r.nightTry.night)}가 생깁니다. 그래서 ${stamp(r.start)}로 미뤘습니다.</title></rect>`;
+      /* 바로 시작했다면 야간에 걸리는 구간 */
+      if (!ops && r.nightTry && r.nightTry.night > 0.01){
+        const t0 = r.nightTry.start, t1 = r.nightTry.end;
+        body += `<rect x="${X(t0)}" y="${mid - 7}" width="${((t1 - t0) * pxh).toFixed(2)}" height="14" rx="3" style="fill:none;stroke:var(--crit);stroke-width:1.2;stroke-dasharray:3 2"><title>${esc(s.name)}을 ${stamp(t0)}에 바로 시작하면 ${stamp(t1)}에 끝나 근무시간(${ws1}~${we1}시) 밖 ${fmtGap(r.nightTry.night)}가 생깁니다. 그래서 ${stamp(r.start)}로 미뤘습니다.</title></rect>`;
         for (let d = Math.floor(t0 / H); d * H < t1; d++){
-          [[d * H, d * H + ws1], [d * H + we1, (d + 1) * H]].forEach(([a, b]) => {
-            const ia = Math.max(a, t0), ib = Math.min(b, t1);
-            if (ib > ia + 1e-9) body += `<rect x="${X(ia)}" y="${y + 18}" width="${((ib - ia) * pxh).toFixed(2)}" height="13" style="fill:url(#pNight);pointer-events:none"/>`;
+          [[d * H, d * H + ws1], [d * H + we1, (d + 1) * H]].forEach(([a, c]) => {
+            const ia = Math.max(a, t0), ib = Math.min(c, t1);
+            if (ib > ia + 1e-9) body += `<rect x="${X(ia)}" y="${mid - 6}" width="${((ib - ia) * pxh).toFixed(2)}" height="12" style="fill:var(--crit-soft);pointer-events:none"/>`;
           });
         }
       }
-      /* 평가 반영 막대(아래, 진한색) */
-      body += rect(r.start, r.end, y + 17, 15, 'var(--proc)', `${s.name} (평가 반영)\n${stamp(r.start)} → ${stamp(r.end)} · ${num(s.proc)} h${shift > 0.01 ? `\n계획보다 +${days1(shift)}일 · 원인 ${causeName(cause)}` : ''}`, s.name);
+      body += rect(r.start, r.end, mid - 7, 14, 'var(--proc)', `${s.name}: ${stamp(r.start)} → ${stamp(r.end)}, ${num(s.proc)} h${shift > 0.01 ? `\n계획보다 +${days1(shift)}일, 원인 ${causeName(cause)}` : ''}`);
       const a = ACTUAL[s.id];
       if (V.actual && a){ const t0 = (a[0]-1)*H + a[1], t1 = (a[0]-1)*H + a[2];
-        body += `<rect x="${X(t0)}" y="${y + ROW - 3}" width="${Math.max(1,(t1 - t0) * pxh).toFixed(2)}" height="2.5" style="fill:var(--act)"><title>시범 생산 실측 D${a[0]} · ${esc(a[3])}</title></rect>`; }
-      y += ROW;
-    });
-  } else {
-    /* 설비 점유: 왼쪽 축은 공정 단계 그대로. 위 줄 = 시스템(UF System·AKTA·Nano Vessel), 아래 줄 = 막·컬럼 */
-    const typeName = { pre:'사용 전 세척·평형화', dht:'사후 대기 (오염 상태)', cip:'사후 세척', cht:'CHT (청정 보관)', reclean:'CHT 초과로 추가 재세척' };
-    const typeCol = { pre:'var(--wait-bg)', dht:'var(--dht)', cip:'var(--cip)', cht:'var(--cht)', reclean:'url(#pRe)' };
-    const short = id => { const e = S.equipment.find(q => q.id === id); return e ? e.name.replace(/\s*\(.*\)/, '') : id; };
-    S.steps.forEach(s => {
-      const r = cur.res[s.id], b = base.res[s.id], shift = r.start - b.start, cause = causeOf(r);
-      const eqs = [s.sys, s.media].filter(Boolean);
-      labels.push(`<div class="lr" style="height:${ROW}px"><span class="t">${esc(s.name)}${shift > 0.01 ? `<span class="pill" style="--c:${causeColor(cause)}">+${days1(shift)}일</span>` : ''}</span><span class="s">${eqs.length ? esc(eqs.map(short).join(' · ')) : (s.anchor ? '배양 수확' : '싱글유즈')}</span></div>`);
-      body += `<line x1="0" x2="${W}" y1="${y + ROW - 0.5}" y2="${y + ROW - 0.5}" style="stroke:var(--line)"/>`;
-      if (!eqs.length){
-        body += rect(r.start, r.end, y + 11, ROW - 22, 'var(--proc)', `${s.name}\n${stamp(r.start)} → ${stamp(r.end)} · 평가 대상 설비 없음`, s.name);
-      }
-      eqs.forEach((eid, li) => {
-        const lane = eqs.length === 1 ? { y:y + 9, h:ROW - 18 } : { y:y + 4 + li * 14, h:12 };
+        body += `<rect x="${X(t0)}" y="${y + 3}" width="${Math.max(1,(t1 - t0) * pxh).toFixed(2)}" height="3" style="fill:var(--ink)"><title>시범 생산 실측 D${a[0]}: ${esc(a[3])}</title></rect>`; }
+    } else {
+      /* 설비 점유: 위 = 시스템, 아래 = 막·컬럼 */
+      const typeName = { pre:'사용 전 세척·평형화', dht:'사용 후 대기', cip:'사후 세척', cht:'CHT 청정 보관', reclean:'CHT 초과로 재세척' };
+      const typeCol = { pre:'var(--sunk)', dht:'var(--dht)', cip:'var(--cip)', cht:'var(--cht)', reclean:'url(#pRe)' };
+      [s.sys, s.media].filter(Boolean).forEach((eid, li, arr) => {
+        const lane = arr.length === 1 ? { y:mid - 7, h:14 } : { y:y + 5 + li * 14, h:11 };
         const eName = (S.equipment.find(q => q.id === eid) || { name:eid }).name;
         cur.bars.filter(q => q.eq === eid && q.step === s).forEach(q => {
-          if (q.type === 'use') body += rect(q.start, q.end, lane.y, lane.h, 'var(--proc)', `${eName} · ${s.name} 사용\n${stamp(q.start)} → ${stamp(q.end)}`, li === 0 ? s.name : '');
+          if (q.type === 'use') body += rect(q.start, q.end, lane.y, lane.h, 'var(--proc)', `${eName}, ${s.name} 사용: ${stamp(q.start)} → ${stamp(q.end)}`);
           else {
-            const col = q.type === 'dht' && !q.study ? 'var(--wait)' : typeCol[q.type];
-            body += rect(q.start, q.end, lane.y + 2, lane.h - 4, col, `${eName} · ${s.name} ${q.type === 'reclean' ? '전' : '후'} ${typeName[q.type]} ${fmtGap(q.end - q.start)}${q.type === 'dht' ? (q.study ? ' · DHT 평가' : ' · 평소') : ''}${q.night ? ' · 근무시간 밖' : ''}\n${stamp(q.start)} → ${stamp(q.end)}`, '', q.night ? ';stroke:#d03b3b;stroke-width:2' : q.type === 'pre' ? ';stroke:var(--wait);stroke-width:1' : '');
+            const col = q.type === 'dht' && !q.study ? 'var(--line-2)' : typeCol[q.type];
+            const extra = q.night ? ';stroke:var(--crit);stroke-width:2' : q.type === 'pre' ? ';stroke:var(--line-2);stroke-width:1' : '';
+            body += rect(q.start, q.end, lane.y + 1.5, lane.h - 3, col, `${eName}, ${s.name} ${q.type === 'reclean' || q.type === 'pre' ? '전' : '후'} ${typeName[q.type]} ${fmtGap(q.end - q.start)}${q.type === 'dht' ? (q.study ? ' (DHT 평가)' : ' (평소)') : ''}${q.night ? ', 근무시간 밖' : ''}\n${stamp(q.start)} → ${stamp(q.end)}`, extra, 2);
           }
         });
       });
-      y += ROW;
-    });
-  }
+    }
+    y += ROW;
+  });
 
-  /* 축 · 지연 구간 */
-  const step = [1,2,7].find(d => d * H * pxh >= 30) || 7;
+  /* 축 · 근무시간 외 · 지연 구간 */
+  const step = [1,2,7].find(d => d * H * pxh >= 34) || 7;
   let axis = `<rect x="0" y="0" width="${W}" height="${HEAD}" style="fill:var(--surface)"/>`;
+  for (let d = 0; d < days; d++){
+    if (ws1 > 0) axis += `<rect x="${X(d * H)}" y="${HEAD}" width="${(ws1 * pxh).toFixed(2)}" height="${y - HEAD}" style="fill:var(--night)"/>`;
+    if (we1 < 24) axis += `<rect x="${X(d * H + we1)}" y="${HEAD}" width="${((24 - we1) * pxh).toFixed(2)}" height="${y - HEAD}" style="fill:var(--night)"/>`;
+  }
   for (let d = 1; d <= days; d++){
     const xx = ((d - 1) * H * pxh).toFixed(2);
-    axis += `<line x1="${xx}" x2="${xx}" y1="${HEAD - 6}" y2="${y}" style="stroke:var(--line);stroke-width:${(d - 1) % 7 === 0 ? 1.1 : 0.6}"/>`;
-    if ((d - 1) % step === 0){
-      axis += `<text x="${(+xx + 3).toFixed(2)}" y="${HEAD - 8}" style="fill:var(--muted);font:500 10.5px var(--f-mono)">D${d}${dateLabel(d) ? ' ' + dateLabel(d) : ''}</text>`;
-    }
+    axis += `<line x1="${xx}" x2="${xx}" y1="${HEAD - 6}" y2="${y}" style="stroke:var(--line);stroke-width:${(d - 1) % 7 === 0 ? 1.2 : 0.7}"/>`;
+    if ((d - 1) % step === 0) axis += `<text x="${(+xx + 4).toFixed(2)}" y="${HEAD - 9}" style="fill:var(--ink-3);font:500 11px var(--f)">D${d}${dateLabel(d) ? ' ' + dateLabel(d) : ''}</text>`;
   }
-  axis += `<line x1="0" x2="${W}" y1="${HEAD - 0.5}" y2="${HEAD - 0.5}" style="stroke:var(--line)"/>`;
-  const [wsh, weh] = workSpan();
-  for (let d = 0; d < days; d++){
-    if (wsh > 0) axis += `<rect x="${X(d * H)}" y="${HEAD}" width="${(wsh * pxh).toFixed(2)}" height="${y - HEAD}" style="fill:var(--night)"/>`;
-    if (weh < 24) axis += `<rect x="${X(d * H + weh)}" y="${HEAD}" width="${((24 - weh) * pxh).toFixed(2)}" height="${y - HEAD}" style="fill:var(--night)"/>`;
-  }
+  axis += `<line x1="0" x2="${W}" y1="${HEAD - 0.5}" y2="${HEAD - 0.5}" style="stroke:var(--line-2)"/>`;
   const pX = base.end * pxh, cX = cur.end * pxh;
-  let band = '';
-  if (delayBand) band += `<rect x="${pX.toFixed(1)}" y="${HEAD}" width="${(cX - pX).toFixed(1)}" height="${y - HEAD}" style="fill:var(--band)"/>`;
-  let marks = `<line x1="${pX.toFixed(1)}" x2="${pX.toFixed(1)}" y1="${HEAD - 22}" y2="${y}" style="stroke:var(--muted);stroke-width:1.2;stroke-dasharray:3 3"/>`;
-  marks += `<text x="${(pX - 4).toFixed(1)}" y="${HEAD - 24}" text-anchor="end" style="fill:var(--muted);font:600 10.5px var(--f-mono)">계획 완료 D${dayOf(base.end)}</text>`;
+  let band = delayBand ? `<rect x="${pX.toFixed(1)}" y="${HEAD}" width="${(cX - pX).toFixed(1)}" height="${y - HEAD}" style="fill:var(--band)"/>` : '';
+  let marks = `<line x1="${pX.toFixed(1)}" x2="${pX.toFixed(1)}" y1="${HEAD - 26}" y2="${y}" style="stroke:var(--ink-3);stroke-width:1.2;stroke-dasharray:3 3"/>`;
+  marks += `<text x="${(pX - 5).toFixed(1)}" y="${HEAD - 28}" text-anchor="end" style="fill:var(--ink-2);font:600 11px var(--f)">계획 완료 D${dayOf(base.end)}</text>`;
   if (delayBand){
-    marks += `<line x1="${cX.toFixed(1)}" x2="${cX.toFixed(1)}" y1="${HEAD - 22}" y2="${y}" style="stroke:var(--ink);stroke-width:1.6"/>`;
-    marks += `<text x="${(cX + 4).toFixed(1)}" y="${HEAD - 24}" style="fill:var(--ink);font:600 10.5px var(--f-mono)">반영 완료 D${dayOf(cur.end)} · +${days1(cur.end - base.end)}일</text>`;
+    marks += `<line x1="${cX.toFixed(1)}" x2="${cX.toFixed(1)}" y1="${HEAD - 26}" y2="${y}" style="stroke:var(--ink);stroke-width:1.6"/>`;
+    marks += `<text x="${(cX + 5).toFixed(1)}" y="${HEAD - 28}" style="fill:var(--ink);font:700 11px var(--f)">반영 완료 D${dayOf(cur.end)}  +${days1(cur.end - base.end)}일</text>`;
   }
-  const defs = `<defs>
-    <pattern id="pWait" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" style="fill:var(--wait-bg)"/><rect width="2" height="6" style="fill:var(--wait)"/></pattern>
-    <pattern id="pNight" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" style="fill:rgba(208,59,59,.15)"/><rect width="2" height="5" style="fill:#d03b3b"/></pattern>
-    <pattern id="pRe" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)"><rect width="6" height="6" style="fill:var(--surface)"/><rect width="3" height="6" style="fill:var(--cht)"/></pattern>
-    <pattern id="pHts" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" style="fill:var(--hts-bg)"/><rect width="3" height="6" style="fill:var(--hts)"/></pattern></defs>`;
-  const topPad = 18;
-  svg.setAttribute('width', W); svg.setAttribute('height', y);
-  svg.setAttribute('viewBox', `0 0 ${W} ${y}`);
+  const defs = `<defs><pattern id="pRe" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)"><rect width="6" height="6" style="fill:var(--surface)"/><rect width="3" height="6" style="fill:var(--cht)"/></pattern></defs>`;
+  svg.setAttribute('width', W); svg.setAttribute('height', y); svg.setAttribute('viewBox', `0 0 ${W} ${y}`);
   svg.innerHTML = defs + axis + band + body + marks;
   gl.innerHTML = labels.join('');
+  const L = (cls, t) => `<span><i class="k ${cls}"></i>${t}</span>`;
   document.getElementById('legend').innerHTML = V.vw === 'proc'
-    ? `<span><i class="sw plan"></i>계획</span><span><i class="sw proc"></i>평가 반영</span><span><i class="sw hts"></i>HTS 실공정 보관</span><span><i class="sw wait"></i>추가 대기</span><span><i class="sw band"></i>지연 구간</span><span><i class="sw night"></i>근무시간 외</span><span><i class="sw ntry"></i>바로 시작하면 야간에 걸리는 구간 (그래서 다음 날로 미룸)</span><span>화살표·배지 색 = 밀린 원인 (<b style="color:var(--hts)">HTS</b> · <b style="color:var(--dht)">DHT</b> · <b style="color:var(--cht)">CHT</b> · 회색 연쇄)</span>${V.actual ? '<span><i class="sw act"></i>시범 생산 실측</span>' : ''}`
-    : `<span><i class="sw proc"></i>공정 사용</span><span><i class="sw wait"></i>사용 전 세척·평형화 / 평소 사후 대기</span><span><i class="sw dht"></i>DHT 평가 대기</span><span><i class="sw cip"></i>사후 세척 (막·컬럼 → 시스템)</span><span><i class="sw cht"></i>CHT 평가</span><span><i class="sw re"></i>CHT 초과 재세척 (운영)</span><span><i class="sw nightw"></i>근무시간 밖 작업</span><span><i class="sw night"></i>근무시간 외</span><span><i class="sw band"></i>지연 구간</span><span class="muted">두 줄 = 위 시스템 · 아래 막/컬럼</span>`;
+    ? L('proc', '공정') + L('plan', '원래 계획 위치') + L('hts', '홀드 시험 보관') + L('wait', '추가 대기') + (ops ? '' : L('ntry', '바로 했다면 근무시간 밖에 걸리는 부분')) + L('night', '근무시간 외') + (delayBand ? L('band', '늦어진 구간') : '') + (V.actual ? L('act', '시범 생산 실측') : '') + `<span>지연 원인 <span class="dot" style="--c:var(--hts)"></span>홀드 <span class="dot" style="--c:var(--dht)"></span>DHT <span class="dot" style="--c:var(--cht)"></span>CHT <span class="dot"></span>앞 단계</span>`
+    : L('proc', '공정') + L('wait', '사용 전 세척·평형화, 평소 대기') + L('dht', 'DHT 평가 대기') + L('cip', '사후 세척 (막·컬럼 → 시스템)') + L('cht', 'CHT 평가 보관') + (ops ? L('re', 'CHT 초과 재세척') + L('nightw', '근무시간 밖 작업') : '') + L('night', '근무시간 외') + '<span>두 줄이면 위가 시스템, 아래가 막·컬럼</span>';
 }
 
-/* ---------- 밀린 단계 ---------- */
-function renderWarns(R){
-  const w = [];
-  S.steps.forEach(s => {
-    const r = R.cur.res[s.id], b = R.base.res[s.id];
-    const sh = r.start - b.start; if (sh < 0.01) return;
-    const c = causeOf(r);
-    let why = '';
-    if (r.bind.type === 'hold') why = r.bind.hts ? `${esc(r.bind.h.name)}을 ${fmtGap(r.bind.req)} 보관 (평소 ${fmtGap(r.bind.base)})` : `앞 단계(${esc(r.bind.h.name)})가 밀린 영향`;
-    else if (r.bind.type === 'eq'){
-      const f = r.bind.why, parts = [];
-      if (f && f.dhtPush) parts.push(`DHT ${fmtGap(f.dhtH)}`);
-      if (f && f.chtOn) parts.push(`CHT ${fmtGap(f.chtH)}`);
-      why = `${esc(f ? f.e.name : r.bind.eq)}이 ${esc(f ? f.step.name : '')} 사용 후 ${parts.length ? parts.join(' + ') : '세척'} 동안 묶임`;
-    } else why = '앞 단계가 밀린 영향';
-    if (r.nightTry && r.nightTry.night > 0.01) why += ` · ${stamp(r.nightTry.start)}에 바로 시작하면 ${stamp(r.nightTry.end)}까지 야간 작업 ${fmtGap(r.nightTry.night)}가 생겨 ${stamp(r.start)}로 미룸`;
-    else if (r.start - r.earliest > 0.01) why += ` · 근무시간에 맞춰 ${stamp(r.start)}로 미룸`;
-    w.push(`<li style="--c:${causeColor(c)}"><div class="h"><span>${esc(s.name)} <span class="pill" style="--c:${causeColor(c)}">${causeName(c)}</span></span><span class="mono">+${days1(sh)}일</span></div><div class="w">D${dayOf(b.start)} ${hm(b.start)} → D${dayOf(r.start)} ${hm(r.start)}</div><div>${why}</div></li>`);
-  });
-  /* 확인 필요: 실제 보관 시간이 목표·기준을 넘는 공정액, 계획 자체가 근무시간 밖인 작업 */
-  const alerts = [];
-  const [ws0, we0] = workSpan();
+/* ---------- 확인할 것 (평가 진행) ---------- */
+function studyRows(R){
+  const rows = [], [ws0, we0] = workSpan();
   R.cur.holdRes.forEach(x => {
     if (x.actual <= num(x.h.t) + 0.01) return;
     const q = x.to, nx = S.steps.find(z => z.id === q.id) || { name:'', proc:0 };
     let why, src;
     if (q.bind.type === 'eq'){
-      const f = q.bind.why, by = f && f.chtOn && f.chtH > 1e-9 ? 'CHT 평가 보관' : f && f.dhtPush ? 'DHT 평가 후 세척' : '평소 사후 세척';
+      const f = q.bind.why, by = f && f.chtOn && f.chtH > 1e-9 ? 'CHT 보관' : f && f.dhtPush ? 'DHT 뒤 세척' : '평소 세척';
       src = f && (f.chtOn || f.dhtPush) ? 'CV 평가' : '설비 대기';
-      why = `${esc(nx.name)}이 ${esc(f ? f.e.name : '설비')}의 ${by}이 끝나기를 기다려 ${stamp(q.start)}에 시작합니다.`;
+      why = `${esc(nx.name)}이 ${esc(f ? f.e.name : '설비')}의 ${by}을 기다려 ${stamp(q.start)}에 시작합니다.`;
     } else if (q.start > q.earliest + 0.01){
-      src = '야간 회피';
-      const nt = q.nightTry;
-      why = `보관이 끝나는 ${stamp(q.earliest)}에 ${esc(nx.name)}(${num(nx.proc)} h)을 바로 시작하면 ${nt ? stamp(nt.end) : ''}에 끝나 근무 종료 ${we0}시를 넘깁니다(야간 작업 ${nt ? fmtGap(nt.night) : ''}). 야간 작업을 피해 ${stamp(q.start)}에 시작하므로 보관이 길어집니다. DHT·CHT와는 관계없고 근무시간 때문입니다. 간트의 빨간 점선이 바로 시작했을 때의 야간 구간입니다.`;
-    } else { src = '연쇄'; why = `앞 단계가 밀려 ${esc(nx.name)}이 ${stamp(q.start)}에 시작합니다.`; }
+      src = '근무시간'; const nt = q.nightTry;
+      why = `보관 후 바로 ${esc(nx.name)}을 하면 ${nt ? stamp(nt.end) : ''}에 끝나 ${we0}시를 넘깁니다. 그래서 ${stamp(q.start)}에 시작합니다. DHT·CHT와는 관계없습니다.`;
+    } else { src = '앞 단계 지연'; why = `앞 단계가 밀려 ${esc(nx.name)}이 ${stamp(q.start)}에 시작합니다.`; }
     const study = S.tg.hts && x.h.on;
-    if (study) alerts.push(`<li class="warn"><div class="h"><span>${esc(x.h.name)}</span><span class="tagw">보관 연장 · ${src}</span></div><div class="w">HTS 목표 ${fmtGap(num(x.h.t))} → 실제 보관 ${fmtGap(x.actual)}</div><div>${why} HTS 시험 시점을 실제 보관 시간으로 잡거나 목표를 늘려야 합니다.</div></li>`);
-    else alerts.push(`<li class="crit"><div class="h"><span>${esc(x.h.name)}</span><span class="tagc">! 보관 초과 · ${src}</span></div><div class="w">실제 보관 ${fmtGap(x.actual)} &gt; 기준 ${fmtGap(num(x.h.t))}</div><div>${why} 기존 보관 기준을 넘으므로 일정 조정이 필요합니다.</div></li>`);
+    rows.push(`<tr><td>${study ? sev('warn', '보관 연장') : sev('crit', '보관 초과')}</td><td class="what">${esc(x.h.name)}</td><td class="when">${study ? '목표' : '기준'} ${fmtGap(num(x.h.t))} → 실제 ${fmtGap(x.actual)}</td><td class="why">${why}${study ? ' 홀드 시험 시점을 실제 보관 시간으로 잡거나 목표를 늘리세요.' : ' 일정 조정이 필요합니다.'} <span class="tag">${src}</span></td></tr>`);
   });
-  const [ws, we] = workSpan();
   S.steps.forEach(st => {
     const b = R.base.res[st.id]; if (st.anchor) return;
     const tod = b.start - Math.floor(b.start / H) * H, endTod = tod + num(st.proc);
-    if (tod < ws - 1e-9 || (S.workMode !== 'start' && endTod > we + 1e-9) || (S.workMode === 'start' && tod >= we))
-      alerts.push(`<li class="info"><div class="h"><span>${esc(st.name)}</span><span class="tag">계획 · 근무시간 밖</span></div><div class="w">계획 ${stamp(b.start)} → ${stamp(b.end)}</div><div>계획 일정은 그대로 두고 계산합니다. 근무시간(${ws}~${we}시)에 맞추려면 계획일·시각을 조정하세요.</div></li>`);
+    if (tod < ws0 - 1e-9 || (S.workMode !== 'start' && endTod > we0 + 1e-9) || (S.workMode === 'start' && tod >= we0))
+      rows.push(`<tr><td>${sev('info', '계획이 근무시간 밖')}</td><td class="what">${esc(st.name)}</td><td class="when">${stamp(b.start)} → ${stamp(b.end)}</td><td class="why">계획은 그대로 두고 계산합니다. 근무시간(${ws0}~${we0}시)에 맞추려면 계획 시각을 조정하세요.</td></tr>`);
   });
-  const nightMoved = S.steps.filter(st => { const r = R.cur.res[st.id]; return r.nightTry && r.nightTry.night > 0.01; });
-  if (nightMoved.length) alerts.unshift(`<li class="warn"><div class="h"><span>야간 작업 회피 ${nightMoved.length}건</span><span class="tagw">근무시간</span></div><div class="w">${nightMoved.map(st => esc(st.name)).join(' · ')}</div><div>평가 때문에 늦게 시작하게 된 공정을 바로 하면 근무 종료 ${workSpan()[1]}시를 넘겨 야간 작업이 됩니다. 그래서 다음 날 ${workSpan()[0]}시로 미뤘고, 이 때문에 앞 공정액 보관이 길어집니다. 간트에서 빨간 점선·빗금으로 보입니다.</div></li>`);
-  w.unshift(...alerts);
-  if (!w.length) w.push(`<li class="none">${KEYS.some(k => S.tg[k]) ? '켜진 평가 항목이 계획 일정 안에서 소화됩니다.' : '평가 항목이 모두 꺼져 있습니다. 위 스위치를 켜 보세요.'}</li>`);
-  document.getElementById('warns').innerHTML = w.join('');
+  return rows;
+}
+function shiftRows(R){
+  const rows = [];
+  S.steps.forEach(s => {
+    const r = R.cur.res[s.id], b = R.base.res[s.id], sh = r.start - b.start; if (sh < 0.01) return;
+    const c = causeOf(r);
+    let why;
+    if (r.bind.type === 'hold') why = r.bind.hts ? `${esc(r.bind.h.name)}을 ${fmtGap(r.bind.req)} 보관 (평소 ${fmtGap(r.bind.base)})` : `${esc(r.bind.h.name)}이 늦게 나옴`;
+    else if (r.bind.type === 'eq'){
+      const f = r.bind.why, parts = [];
+      if (f && f.dhtPush) parts.push(`DHT ${fmtGap(f.dhtH)}`);
+      if (f && f.chtOn && f.chtH > 1e-9) parts.push(`CHT ${fmtGap(f.chtH)}`);
+      why = `${esc(f ? f.e.name : r.bind.eq)}이 ${esc(f ? f.step.name : '')} 뒤 ${parts.length ? parts.join(', ') : '세척'} 동안 묶임`;
+    } else why = '앞 단계가 늦어짐';
+    if (r.nightTry && r.nightTry.night > 0.01) why += `. 바로 하면 ${hm(r.nightTry.end)}에 끝나 근무시간을 넘겨서 다음 날로 미룸`;
+    else if (r.start - r.earliest > 0.01) why += '. 근무시간에 맞춰 미룸';
+    rows.push(`<tr><td class="what">${esc(s.name)}</td><td class="when">D${dayOf(b.start)} ${hm(b.start)}</td><td class="when">D${dayOf(r.start)} ${hm(r.start)}</td><td class="d">+${days1(sh)}일</td><td>${chip(c, causeName(c))}</td><td class="why">${why}</td></tr>`);
+  });
+  return rows;
+}
+
+/* ---------- 평가 완료 후 운영 ---------- */
+function renderOps(R){
+  const o = R.ops, nRe = o.adds.filter(a => a.kind === 'reclean').length, nEarly = o.adds.filter(a => a.kind === 'early').length;
+  const nNight = o.issues.filter(i => i.kind === 'night').length, nHold = o.issues.filter(i => i.kind === 'hold').length;
+  const ok = !nNight && !nHold;
+  const applied = [S.tg.hts ? '홀드 목표' : '', S.tg.dht ? 'DHT' : '', S.tg.cht ? 'CHT' : ''].filter(Boolean);
+  const [ws, we] = workSpan();
+  const st = (n, t) => `<div><b class="${n ? '' : 'zero'}">${n}</b><span>${t}</span></div>`;
+  document.getElementById('ops-head').innerHTML = `<div style="display:grid;gap:12px">
+    <div class="verdict ${ok ? 'ok' : 'bad'}"><span class="ic">${ok ? '✓' : '!'}</span><div><b>${ok ? '지금 근무시간으로 운영할 수 있습니다' : '근무시간 안에서는 운영할 수 없습니다'}</b><span>${applied.length ? applied.join(', ') + '을 운영 기준으로 두고' : '켜진 평가 항목이 없어 기준 없이'} 계획 일정 D1~D${dayOf(o.end)}, 근무 ${ws}~${we}시로 점검했습니다.</span></div></div>
+    <div class="stats">${st(nRe, 'CHT 때문에 추가하는 재세척')}${st(nEarly, 'DHT 때문에 당일로 당긴 세척')}${st(nNight, '근무시간 밖 작업')}${st(nHold, '보관 기준 초과')}</div></div>`;
+  const rows = [];
+  o.issues.forEach(i => {
+    if (i.kind === 'hold') rows.push(`<tr><td>${sev('crit', '보관 기준 초과')}</td><td class="what">${esc(i.x.h.name)}</td><td class="when">계획상 ${fmtGap(i.x.actual)}, 목표 ${fmtGap(num(i.x.h.t))}</td><td class="why">평가한 홀드타임보다 계획의 보관이 깁니다. 홀드 목표를 늘리거나 계획을 당기세요.</td></tr>`);
+    else rows.push(`<tr><td>${sev('crit', '근무시간 밖')}</td><td class="what">${esc(i.what)}</td><td class="when">${stamp(i.start)} → ${stamp(i.end)}</td><td class="why">기준을 지키려면 ${ws}~${we}시 밖에 해야 합니다. 근무시간이나 평가 값을 조정하세요.</td></tr>`);
+  });
+  o.adds.forEach(a => {
+    if (a.kind === 'reclean') rows.push(`<tr><td>${sev('warn', '재세척 추가')}</td><td class="what">${esc(a.e.name)}</td><td class="when">${stamp(a.start)} → ${stamp(a.end)}</td><td class="why">${esc(a.prev.name)} 뒤 세척하고 ${esc(a.step.name)} 사용 전 세척까지 ${fmtGap(a.idle)} 비어 CHT ${fmtGap(num(a.e.chtT))}를 넘습니다. 사용 직전에 한 번 더 세척합니다.</td></tr>`);
+    else if (a.kind === 'early') rows.push(`<tr><td>${sev('warn', '당일 세척')}</td><td class="what">${esc(a.e.name)}</td><td class="when">${stamp(a.start)} → ${stamp(a.end)}</td><td class="why">${esc(a.step.name)} 뒤 다음 날 아침에 세척하면 DHT ${fmtGap(a.dhtT)}를 넘어서 당일에 바로 세척합니다.</td></tr>`);
+  });
+  return rows;
+}
+
+function renderList(R){
+  const opsRows = renderOps(R);
+  const box = document.getElementById('list'), h = document.getElementById('list-h');
+  if (V.sc === 'ops'){
+    h.textContent = '운영할 때 추가로 할 일';
+    box.innerHTML = opsRows.length ? table(['구분', '대상', '시각', '내용'], opsRows) : `<p class="empty">추가 작업 없이 계획 일정과 근무시간 안에서 운영할 수 있습니다.</p>`;
+    return;
+  }
+  h.textContent = '확인할 것';
+  const a = studyRows(R), b = shiftRows(R);
+  let html = a.length ? table(['구분', '대상', '시간', '내용'], a) : '';
+  html += b.length ? `<h3 class="group-h">늦어진 단계 ${b.length}개</h3>` + table(['단계', '계획', '평가 반영', '지연', '원인', '이유'], b)
+    : `<p class="empty">${KEYS.some(k => S.tg[k]) ? '켜진 평가 항목이 계획 일정 안에서 처리됩니다.' : '평가 항목이 모두 꺼져 있습니다. 위에서 켜 보세요.'}</p>`;
+  box.innerHTML = html;
 }
 
 /* ---------- 입력 표 ---------- */
@@ -917,7 +935,7 @@ function onField(el){
 document.addEventListener('input', ev => onField(ev.target));
 document.addEventListener('change', ev => { if (ev.target.tagName === 'SELECT' || ev.target.type === 'checkbox' || ev.target.type === 'date') onField(ev.target); });
 KEYS.forEach(k => document.getElementById('tg-' + k).addEventListener('change', e => { S.tg[k] = e.target.checked; save(); render(); }));
-document.querySelectorAll('[data-sc]').forEach(bt => bt.addEventListener('click', () => { V.sc = bt.dataset.sc; if (V.sc === 'ops') V.vw = 'eq'; document.querySelectorAll('[data-sc]').forEach(x => x.setAttribute('aria-pressed', x === bt)); document.querySelectorAll('[data-vw]').forEach(x => x.setAttribute('aria-pressed', x.dataset.vw === V.vw)); render(); }));
+document.querySelectorAll('[data-sc]').forEach(bt => bt.addEventListener('click', () => { V.sc = bt.dataset.sc; if (V.sc === 'ops') V.vw = 'eq'; document.querySelectorAll('[data-sc]').forEach(x => x.setAttribute('aria-selected', x === bt)); document.querySelectorAll('[data-vw]').forEach(x => x.setAttribute('aria-pressed', x.dataset.vw === V.vw)); document.getElementById('sum-study').hidden = V.sc === 'ops'; document.getElementById('sum-ops').hidden = V.sc !== 'ops'; render(); }));
 document.querySelectorAll('[data-vw]').forEach(bt => bt.addEventListener('click', () => { V.vw = bt.dataset.vw; document.querySelectorAll('[data-vw]').forEach(x => x.setAttribute('aria-pressed', x === bt)); render(); }));
 document.querySelectorAll('[data-preset]').forEach(bt => bt.addEventListener('click', () => {
   const p = bt.dataset.preset; S.holds.forEach(h => { h.on = p === 'all' ? true : p === 'none' ? false : num(h.t) <= 48; });
@@ -930,7 +948,7 @@ let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTime
 
 function render(){
   const R = computeAll();
-  renderSwitches(R); renderBridge(R); renderOps(R); renderGantt(R); renderWarns(R);
+  renderSwitches(R); renderBridge(R); renderGantt(R); renderList(R);
   S.holds.forEach((x, i) => {
     const bh = R.base.holdRes.find(y => y.h === x); const g = document.getElementById('ho-g-' + i); if (g) g.textContent = bh ? fmtGap(bh.actual) : '';
     const d = document.getElementById('ho-d-' + i); if (d) d.textContent = days1(num(x.t));
