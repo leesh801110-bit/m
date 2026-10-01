@@ -86,6 +86,19 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .sw.wait{background:repeating-linear-gradient(45deg,var(--wait) 0 2px,var(--wait-bg) 2px 6px)}
 .sw.dht{background:var(--dht)}.sw.cip{background:var(--cip)}.sw.cht{background:var(--cht)}
 .sw.night{background:var(--night);border:1px solid var(--line)}
+.sw.re{background:repeating-linear-gradient(-45deg,var(--cht) 0 3px,var(--surface) 3px 6px)}
+.sw.nightw{border:2px solid #d03b3b;height:10px}
+.ops-head{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:stretch}
+.verdict{display:flex;gap:12px;align-items:center;padding:10px 14px;border-radius:6px;border:1px solid var(--line);background:var(--sunk);min-width:0;flex:1 1 320px}
+.verdict .ic{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:700;color:#fff;flex:none}
+.verdict.ok .ic{background:#0ca30c}.verdict.bad .ic{background:#d03b3b}
+.verdict b{display:block;font-size:1rem}
+.verdict span{font-size:.76rem;color:var(--muted)}
+.ops-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:6px;overflow:hidden;flex:2 1 420px}
+.ops-stats div{background:var(--surface);padding:8px 10px;display:grid;gap:2px;min-width:0}
+.ops-stats b{font-size:1.3rem;font-weight:600}
+.ops-stats span{font-size:.7rem;color:var(--muted)}
+@media (max-width:520px){.ops-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .sw.band{background:var(--band);border:1px dashed var(--hts)}
 .sw.act{height:3px;background:var(--act)}
 .pill{display:inline-block;font-family:var(--f-mono);font-size:.68rem;font-weight:600;padding:0 5px;border-radius:3px;color:var(--on-bar);background:var(--c,var(--muted));margin-left:4px;vertical-align:1px}
@@ -114,9 +127,9 @@ input[type=number]{width:64px;text-align:right;font-family:var(--f-mono)}
 .warns li .h .mono{color:var(--ink)}
 .warns li .w{color:var(--muted)}
 .warns li.crit{border-left-color:#d03b3b}
-.warns li.crit .h .tagc{font-family:var(--f-mono);font-size:.68rem;font-weight:600;color:#fff;background:#d03b3b;border-radius:3px;padding:0 5px}
+.warns li.crit .h .tagc{font-family:var(--f-mono);font-size:.68rem;font-weight:600;color:#fff;background:#d03b3b;border-radius:3px;padding:0 5px;white-space:nowrap;flex:none;align-self:flex-start}
 .warns li.warn{border-left-color:#fab219}
-.warns li.warn .h .tagw{font-family:var(--f-mono);font-size:.68rem;font-weight:600;color:#141b1a;background:#fab219;border-radius:3px;padding:0 5px}
+.warns li.warn .h .tagw{font-family:var(--f-mono);font-size:.68rem;font-weight:600;color:#141b1a;background:#fab219;border-radius:3px;padding:0 5px;white-space:nowrap;flex:none;align-self:flex-start}
 .warns li.info{border-left-color:var(--faint)}
 .warns li.none{border-left-color:var(--cht)}
 .tag{font-family:var(--f-mono);font-size:.68rem;padding:1px 6px;border-radius:3px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
@@ -156,11 +169,23 @@ details.panel[open] summary{margin-bottom:4px}
     <div class="br-wrap"><svg id="brsvg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="계획 대비 평가 항목별 누적 지연"></svg></div>
   </section>
 
+  <section class="panel" aria-label="평가 완료 후 운영">
+    <h2>평가 완료 후 운영 점검</h2>
+    <p class="notes" style="padding:0;list-style:none">설정한 홀드 목표·DHT·CHT로 평가가 끝나면 그 값이 운영 기준이 됩니다. 계획 일정(D1~D16) 그대로 운영할 때 기준을 지키려면 세척을 언제 해야 하는지, 근무시간 안에서 가능한지 확인합니다. 간트에서 '평가 완료 후 운영'을 고르면 그 일정이 보입니다.</p>
+    <div id="ops"></div>
+  </section>
+
   <section class="panel" aria-label="간트 차트">
     <div class="toolbar">
+      <div class="ctl">
+      <div class="seg" role="group" aria-label="일정">
+        <button type="button" data-sc="study" aria-pressed="true">평가 진행 일정</button>
+        <button type="button" data-sc="ops" aria-pressed="false">평가 완료 후 운영</button>
+      </div>
       <div class="seg" role="group" aria-label="보기">
         <button type="button" data-vw="proc" aria-pressed="true">공정 단계</button>
         <button type="button" data-vw="eq" aria-pressed="false">설비 점유</button>
+      </div>
       </div>
       <div class="ctl">
         <label><input type="checkbox" id="actual"> 시범 생산 실측(LQ001LD2)</label>
@@ -296,7 +321,7 @@ let S = null;
 try { S = JSON.parse(localStorage.getItem(STORE)); } catch (e) {}
 if (!S || !Array.isArray(S.steps) || !Array.isArray(S.holds) || !Array.isArray(S.equipment)) S = clone(DEF);
 if (S.workEnd === undefined){ S.workEnd = 22; S.workMode = 'full'; delete S.latestStart; }
-const V = { vw:'proc', zoom:1, actual:false };
+const V = { vw:'proc', zoom:1, actual:false, sc:'study' };
 function save(){ try { localStorage.setItem(STORE, JSON.stringify(S)); } catch (e) {} }
 const num = v => { const n = Number(v); return isFinite(n) && n >= 0 ? n : 0; };
 
@@ -461,7 +486,113 @@ function computeAll(){
   const cur = prev;
   const marg = {}; KEYS.forEach(k => { if (!S.tg[k]) marg[k] = simulate({ ...S.tg, [k]: true }, g0).end - cur.end; });
   const solo = {}; KEYS.forEach(k => { solo[k] = simulate({ ...off, [k]: true }, g0).end - base.end; });
-  return { base, cur, steps, marg, solo, g0 };
+  const out = { base, cur, steps, marg, solo, g0 };
+  out.ops = simulateOps(out);
+  return out;
+}
+
+/* ---------- 평가 완료 후 운영 ----------
+   평가가 끝나면 설정한 값이 운영 기준이 된다.
+   · 공정액 보관 ≤ 홀드 목표(HTS를 켠 경우)
+   · 사용 후 세척 시작 ≤ 사용 종료 + DHT(DHT를 켠 경우)
+   · 세척 후 다음 사용 전 세척까지 ≤ CHT(CHT를 켠 경우). 넘으면 사용 전에 재세척
+   계획 일정은 그대로 두고, 이 기준을 지키려면 세척을 언제 해야 하는지와 근무시간 안에서 가능한지 본다 */
+function inHours(a, b){
+  const [ws, we] = workSpan();
+  if (b - a >= we - ws - 1e-9) return true;
+  const d = Math.floor(a / H);
+  return a - d * H >= ws - 1e-9 && b - d * H <= we + 1e-9;
+}
+function simulateOps(R){
+  const base = R.base, lim = { hts:S.tg.hts, dht:S.tg.dht, cht:S.tg.cht };
+  const eqMap = Object.fromEntries(S.equipment.map(e => [e.id, e]));
+  const issues = [], adds = [], bars = [], last = {};
+  S.steps.forEach(s => {
+    const r = base.res[s.id], pre = num(s.pre);
+    const sysE = s.sys ? eqMap[s.sys] : null, medE = s.media ? eqMap[s.media] : null;
+    const eqs = [medE, sysE].filter(Boolean);
+    /* CHT: 지난 세척 후 이번 사용 전 세척까지 비는 시간이 CHT를 넘으면 재세척 */
+    eqs.forEach(e => {
+      const L = last[e.id]; if (!L || !(lim.cht && e.cht && e.kind !== 'membrane')) return;
+      const idle = r.preStart - L.ce; if (idle <= num(e.chtT) + 1e-9) return;
+      let rs = latestFit(r.preStart, L.dur), night = false;
+      if (rs < L.ce - 1e-9 || r.preStart - (rs + L.dur) > num(e.chtT) + 1e-9){ rs = Math.max(L.ce, r.preStart - L.dur); night = !inHours(rs, rs + L.dur); }
+      bars.push({ eq:e.id, type:'reclean', start:rs, end:rs + L.dur, step:s, night });
+      adds.push({ kind:'reclean', e, step:s, prev:L.step, start:rs, end:rs + L.dur, idle, night });
+      if (night) issues.push({ kind:'night', what:`${e.name} 재세척 (${s.name} 전)`, start:rs, end:rs + L.dur });
+    });
+    eqs.forEach(e => {
+      bars.push({ eq:e.id, type:'pre', start:r.preStart, end:r.preStart + pre, step:s });
+      bars.push({ eq:e.id, type:'use', start:r.start, end:r.end, step:s });
+    });
+    if (!eqs.length) return;
+    const end = r.end;
+    /* 사후 세척: 평소 시점에 하되 DHT 기준을 넘으면 당일로 앞당기고, 그래도 안 되면 야간 작업 */
+    let mediaEnd = end;
+    if (medE){
+      const dur = num(s.post), grouped = sysE && sysE.rule === 'next' && medE.rule === 'next' ? num(s.cip) : 0;
+      let ms = medE.rule === 'now' ? end : fitWork(nextWork(end), dur + grouped, true), how = '';
+      const dl = lim.dht && medE.dht ? end + num(medE.dhtT) : Infinity;
+      if (ms > dl + 1e-9){
+        const same = fitWork(end, dur + grouped, true);
+        if (same <= dl + 1e-9){ ms = same; how = 'early'; } else { ms = end; how = 'night'; }
+      }
+      mediaEnd = ms + dur;
+      if (ms > end + 1e-9) bars.push({ eq:medE.id, type:'dht', start:end, end:ms, step:s, study:false });
+      bars.push({ eq:medE.id, type:'cip', start:ms, end:mediaEnd, step:s, night: how === 'night' });
+      if (how) adds.push({ kind:how, e:medE, step:s, start:ms, end:mediaEnd, dhtT:num(medE.dhtT) });
+      if (how === 'night') issues.push({ kind:'night', what:`${medE.name} 세척 (${s.name} 후)`, start:ms, end:mediaEnd });
+      last[medE.id] = { ce:mediaEnd, dur, step:s };
+    }
+    if (sysE){
+      const dur = num(s.cip);
+      let ss = fitWork(Math.max(sysE.rule === 'now' ? end : fitWork(nextWork(end), dur, true), mediaEnd), dur, true), how = '';
+      const dl = lim.dht && sysE.dht ? end + num(sysE.dhtT) : Infinity;
+      if (ss > dl + 1e-9){
+        const same = fitWork(mediaEnd, dur, true);
+        if (same <= dl + 1e-9){ ss = same; how = 'early'; } else { ss = mediaEnd; how = 'night'; }
+      }
+      const se = ss + dur;
+      if (medE){
+        if (ss > mediaEnd + 1e-9) bars.push({ eq:sysE.id, type:'dht', start:mediaEnd, end:ss, step:s, study:false });
+        bars.push({ eq:sysE.id, type:'cip', start:Math.min(ss, bars.filter(b => b.eq === medE.id && b.step === s && b.type === 'cip')[0].start), end:mediaEnd, step:s });
+        if (Math.min(ss, mediaEnd) > end + 1e-9) bars.push({ eq:sysE.id, type:'dht', start:end, end:bars.filter(b => b.eq === medE.id && b.step === s && b.type === 'cip')[0].start, step:s, study:false });
+      } else if (ss > end + 1e-9) bars.push({ eq:sysE.id, type:'dht', start:end, end:ss, step:s, study:false });
+      bars.push({ eq:sysE.id, type:'cip', start:ss, end:se, step:s, night: how === 'night' });
+      if (how) adds.push({ kind:how, e:sysE, step:s, start:ss, end:se, dhtT:num(sysE.dhtT) });
+      if (how === 'night') issues.push({ kind:'night', what:`${sysE.name} 세척 (${s.name} 후)`, start:ss, end:se });
+      last[sysE.id] = { ce:se, dur, step:s };
+    }
+  });
+  if (lim.hts) base.holdRes.forEach(x => { if (x.actual > num(x.h.t) + 0.01) issues.push({ kind:'hold', x }); });
+  S.steps.forEach(s => {
+    if (s.anchor) return;
+    const r = base.res[s.id];
+    if (S.workMode !== 'start' && !inHours(r.start, r.end)) issues.push({ kind:'night', what:`${s.name} 공정`, start:r.start, end:r.end });
+    if (num(s.pre) > 0 && (s.sys || s.media) && !inHours(r.preStart, r.preStart + num(s.pre))) issues.push({ kind:'night', what:`${s.name} 사용 전 세척·평형화`, start:r.preStart, end:r.preStart + num(s.pre) });
+  });
+  return { res:base.res, bars, holdRes:base.holdRes, end:base.end, horizon:Math.max(base.horizon, ...bars.map(b => b.end)), issues, adds };
+}
+function renderOps(R){
+  const o = R.ops, nRe = o.adds.filter(a => a.kind === 'reclean').length, nEarly = o.adds.filter(a => a.kind === 'early').length;
+  const nNight = o.issues.filter(i => i.kind === 'night').length, nHold = o.issues.filter(i => i.kind === 'hold').length;
+  const ok = !nNight && !nHold;
+  const applied = [S.tg.hts ? '홀드 목표' : '', S.tg.dht ? 'DHT' : '', S.tg.cht ? 'CHT' : ''].filter(Boolean);
+  const [ws, we] = workSpan();
+  let h = `<div class="ops-head"><div class="verdict ${ok ? 'ok' : 'bad'}"><span class="ic">${ok ? '✓' : '!'}</span><div><b>${ok ? '현재 근무시간으로 운영 가능' : '근무시간 안에서 운영 불가 · 조정 필요'}</b><span>${applied.length ? applied.join(' · ') + ' 기준' : '켜진 평가 항목 없음'} · 근무 ${ws}~${we}시 · 계획 일정 D1~D${dayOf(o.end)}</span></div></div>
+    <div class="ops-stats"><div><b class="mono">${nRe}</b><span>추가 재세척 (CHT)</span></div><div><b class="mono">${nEarly}</b><span>당일로 앞당긴 세척 (DHT)</span></div><div><b class="mono">${nNight}</b><span>근무시간 밖 작업</span></div><div><b class="mono">${nHold}</b><span>보관 기준 초과</span></div></div></div>`;
+  const li = [];
+  o.issues.forEach(i => {
+    if (i.kind === 'hold') li.push(`<li class="crit"><div class="h"><span>${esc(i.x.h.name)}</span><span class="tagc">! 보관 기준 초과</span></div><div class="w">계획상 보관 ${fmtGap(i.x.actual)} &gt; 평가 목표 ${fmtGap(num(i.x.h.t))}</div><div>평가한 홀드타임보다 계획 일정의 보관이 깁니다. 홀드 목표를 늘리거나 계획을 당겨야 합니다.</div></li>`);
+    else li.push(`<li class="crit"><div class="h"><span>${esc(i.what)}</span><span class="tagc">! 근무시간 밖</span></div><div class="w">${stamp(i.start)} → ${stamp(i.end)}</div><div>기준을 지키려면 근무시간(${ws}~${we}시) 밖에 해야 합니다. 근무시간이나 평가 값을 조정해야 합니다.</div></li>`);
+  });
+  o.adds.forEach(a => {
+    if (a.kind === 'reclean') li.push(`<li class="warn"><div class="h"><span>${esc(a.e.name)}</span><span class="tagw">재세척 추가</span></div><div class="w">${stamp(a.start)} → ${stamp(a.end)} · ${esc(a.step.name)} 전</div><div>${esc(a.prev.name)} 후 세척하고 다음 사용 전 세척까지 ${fmtGap(a.idle)} 비어 CHT ${fmtGap(num(a.e.chtT))}를 넘습니다. 사용 직전에 한 번 더 세척합니다.</div></li>`);
+    else if (a.kind === 'early') li.push(`<li class="warn"><div class="h"><span>${esc(a.e.name)}</span><span class="tagw">당일 세척</span></div><div class="w">${stamp(a.start)} → ${stamp(a.end)} · ${esc(a.step.name)} 후</div><div>평소처럼 다음 날 아침에 세척하면 DHT ${fmtGap(a.dhtT)}를 넘어서 공정 당일 바로 세척합니다.</div></li>`);
+  });
+  if (!li.length) li.push(`<li class="none">평가한 값으로 운영해도 지금 계획 일정과 근무시간 안에서 추가 작업 없이 운영할 수 있습니다.</li>`);
+  h += `<ul class="warns">${li.join('')}</ul>`;
+  document.getElementById('ops').innerHTML = h;
 }
 
 /* 단계가 밀린 원인 → 평가 항목 색 */
@@ -550,7 +681,7 @@ function renderBridge(R){
 /* ---------- 간트 ---------- */
 const ROW = 36, HEAD = 40, EROW = 30;
 function renderGantt(R){
-  const cur = R.cur, base = R.base;
+  const cur = V.sc === 'ops' ? R.ops : R.cur, base = R.base;
   const gs = document.getElementById('gs'), svg = document.getElementById('gsvg'), gl = document.getElementById('gl');
   const days = Math.max(dayOf(cur.horizon), dayOf(base.horizon), 17) + 1;
   const maxT = days * H;
@@ -598,8 +729,8 @@ function renderGantt(R){
     });
   } else {
     /* 설비 점유: 왼쪽 축은 공정 단계 그대로. 위 줄 = 시스템(UF System·AKTA·Nano Vessel), 아래 줄 = 막·컬럼 */
-    const typeName = { pre:'사용 전 세척·평형화', dht:'사후 대기 (오염 상태)', cip:'사후 세척', cht:'CHT (청정 보관)' };
-    const typeCol = { pre:'var(--wait-bg)', dht:'var(--dht)', cip:'var(--cip)', cht:'var(--cht)' };
+    const typeName = { pre:'사용 전 세척·평형화', dht:'사후 대기 (오염 상태)', cip:'사후 세척', cht:'CHT (청정 보관)', reclean:'CHT 초과로 추가 재세척' };
+    const typeCol = { pre:'var(--wait-bg)', dht:'var(--dht)', cip:'var(--cip)', cht:'var(--cht)', reclean:'url(#pRe)' };
     const short = id => { const e = S.equipment.find(q => q.id === id); return e ? e.name.replace(/\s*\(.*\)/, '') : id; };
     S.steps.forEach(s => {
       const r = cur.res[s.id], b = base.res[s.id], shift = r.start - b.start, cause = causeOf(r);
@@ -616,7 +747,7 @@ function renderGantt(R){
           if (q.type === 'use') body += rect(q.start, q.end, lane.y, lane.h, 'var(--proc)', `${eName} · ${s.name} 사용\n${stamp(q.start)} → ${stamp(q.end)}`, li === 0 ? s.name : '');
           else {
             const col = q.type === 'dht' && !q.study ? 'var(--wait)' : typeCol[q.type];
-            body += rect(q.start, q.end, lane.y + 2, lane.h - 4, col, `${eName} · ${s.name} 후 ${typeName[q.type]} ${fmtGap(q.end - q.start)}${q.type === 'dht' ? (q.study ? ' · DHT 평가' : ' · 평소') : ''}\n${stamp(q.start)} → ${stamp(q.end)}`, '', q.type === 'pre' ? ';stroke:var(--wait);stroke-width:1' : '');
+            body += rect(q.start, q.end, lane.y + 2, lane.h - 4, col, `${eName} · ${s.name} ${q.type === 'reclean' ? '전' : '후'} ${typeName[q.type]} ${fmtGap(q.end - q.start)}${q.type === 'dht' ? (q.study ? ' · DHT 평가' : ' · 평소') : ''}${q.night ? ' · 근무시간 밖' : ''}\n${stamp(q.start)} → ${stamp(q.end)}`, '', q.night ? ';stroke:#d03b3b;stroke-width:2' : q.type === 'pre' ? ';stroke:var(--wait);stroke-width:1' : '');
           }
         });
       });
@@ -651,6 +782,7 @@ function renderGantt(R){
   }
   const defs = `<defs>
     <pattern id="pWait" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" style="fill:var(--wait-bg)"/><rect width="2" height="6" style="fill:var(--wait)"/></pattern>
+    <pattern id="pRe" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)"><rect width="6" height="6" style="fill:var(--surface)"/><rect width="3" height="6" style="fill:var(--cht)"/></pattern>
     <pattern id="pHts" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" style="fill:var(--hts-bg)"/><rect width="3" height="6" style="fill:var(--hts)"/></pattern></defs>`;
   const topPad = 18;
   svg.setAttribute('width', W); svg.setAttribute('height', y);
@@ -659,7 +791,7 @@ function renderGantt(R){
   gl.innerHTML = labels.join('');
   document.getElementById('legend').innerHTML = V.vw === 'proc'
     ? `<span><i class="sw plan"></i>계획</span><span><i class="sw proc"></i>평가 반영</span><span><i class="sw hts"></i>HTS 실공정 보관</span><span><i class="sw wait"></i>추가 대기</span><span><i class="sw band"></i>지연 구간</span><span><i class="sw night"></i>근무시간 외</span><span>화살표·배지 색 = 밀린 원인 (<b style="color:var(--hts)">HTS</b> · <b style="color:var(--dht)">DHT</b> · <b style="color:var(--cht)">CHT</b> · 회색 연쇄)</span>${V.actual ? '<span><i class="sw act"></i>시범 생산 실측</span>' : ''}`
-    : `<span><i class="sw proc"></i>공정 사용</span><span><i class="sw wait"></i>사용 전 세척·평형화 / 평소 사후 대기</span><span><i class="sw dht"></i>DHT 평가 대기</span><span><i class="sw cip"></i>사후 세척 (막·컬럼 → 시스템)</span><span><i class="sw cht"></i>CHT 평가</span><span><i class="sw night"></i>근무시간 외</span><span><i class="sw band"></i>지연 구간</span><span class="muted">두 줄 = 위 시스템 · 아래 막/컬럼</span>`;
+    : `<span><i class="sw proc"></i>공정 사용</span><span><i class="sw wait"></i>사용 전 세척·평형화 / 평소 사후 대기</span><span><i class="sw dht"></i>DHT 평가 대기</span><span><i class="sw cip"></i>사후 세척 (막·컬럼 → 시스템)</span><span><i class="sw cht"></i>CHT 평가</span><span><i class="sw re"></i>CHT 초과 재세척 (운영)</span><span><i class="sw nightw"></i>근무시간 밖 작업</span><span><i class="sw night"></i>근무시간 외</span><span><i class="sw band"></i>지연 구간</span><span class="muted">두 줄 = 위 시스템 · 아래 막/컬럼</span>`;
 }
 
 /* ---------- 밀린 단계 ---------- */
@@ -756,6 +888,7 @@ function onField(el){
 document.addEventListener('input', ev => onField(ev.target));
 document.addEventListener('change', ev => { if (ev.target.tagName === 'SELECT' || ev.target.type === 'checkbox' || ev.target.type === 'date') onField(ev.target); });
 KEYS.forEach(k => document.getElementById('tg-' + k).addEventListener('change', e => { S.tg[k] = e.target.checked; save(); render(); }));
+document.querySelectorAll('[data-sc]').forEach(bt => bt.addEventListener('click', () => { V.sc = bt.dataset.sc; if (V.sc === 'ops') V.vw = 'eq'; document.querySelectorAll('[data-sc]').forEach(x => x.setAttribute('aria-pressed', x === bt)); document.querySelectorAll('[data-vw]').forEach(x => x.setAttribute('aria-pressed', x.dataset.vw === V.vw)); render(); }));
 document.querySelectorAll('[data-vw]').forEach(bt => bt.addEventListener('click', () => { V.vw = bt.dataset.vw; document.querySelectorAll('[data-vw]').forEach(x => x.setAttribute('aria-pressed', x === bt)); render(); }));
 document.querySelectorAll('[data-preset]').forEach(bt => bt.addEventListener('click', () => {
   const p = bt.dataset.preset; S.holds.forEach(h => { h.on = p === 'all' ? true : p === 'none' ? false : num(h.t) <= 48; });
@@ -768,7 +901,7 @@ let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTime
 
 function render(){
   const R = computeAll();
-  renderSwitches(R); renderBridge(R); renderGantt(R); renderWarns(R);
+  renderSwitches(R); renderBridge(R); renderOps(R); renderGantt(R); renderWarns(R);
   S.holds.forEach((x, i) => {
     const bh = R.base.holdRes.find(y => y.h === x); const g = document.getElementById('ho-g-' + i); if (g) g.textContent = bh ? fmtGap(bh.actual) : '';
     const d = document.getElementById('ho-d-' + i); if (d) d.textContent = days1(num(x.t));
