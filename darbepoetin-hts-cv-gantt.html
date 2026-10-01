@@ -118,6 +118,12 @@ header.top{display:grid;gap:4px;padding-bottom:4px}
 .k.night{background:var(--night);border:1px solid var(--line)}
 .k.band{background:var(--band);border:1px dashed var(--hts)}
 .k.act{height:3px;background:var(--ink)}
+.dia{width:9px;height:9px;transform:rotate(45deg);background:var(--c,var(--ink-3));display:inline-block;flex:none;margin:0 2px}
+.dia.night{background:var(--surface);outline:2px solid var(--crit);outline-offset:-2px}
+.list td.smp{min-width:150px;font-size:.82rem}
+.list td.smp > div + div{margin-top:6px}
+.list td.smp .sev{padding:0 5px;font-size:.68rem}
+.s2{color:var(--ink-3);font-size:.76rem}
 .dot{width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--c,var(--ink-3));flex:none}
 .gantt{display:grid;grid-template-columns:176px minmax(0,1fr);border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
 @media (max-width:620px){.gantt{grid-template-columns:118px minmax(0,1fr)}.g-labels .lr{padding:0 8px}.g-labels .lr .t{font-size:.78rem}.g-labels .lr .s{display:none}.g-labels .lr .t{flex-wrap:wrap;gap:0 4px;white-space:normal;line-height:1.25}}
@@ -220,6 +226,12 @@ input[type=number]{width:64px;text-align:right}
       <div class="g-labels" id="gl"></div>
       <div class="g-scroll" id="gs"><svg id="gsvg" xmlns="http://www.w3.org/2000/svg"></svg></div>
     </div>
+  </section>
+
+  <section class="panel" aria-label="공정별 시각">
+    <h2 id="sched-h">공정별 예상 시각과 샘플링</h2>
+    <p class="sub" id="sched-note"></p>
+    <div id="sched"></div>
   </section>
 
   <section class="panel" aria-label="확인할 것">
@@ -716,9 +728,11 @@ function renderGantt(R){
   const delayBand = cur.end > base.end + 0.01;
   const short = id => { const e = S.equipment.find(q => q.id === id); return e ? e.name.replace(/\s*\(.*\)/, '') : id; };
   const [ws1, we1] = workSpan();
+  const rowY = {};
 
   S.steps.forEach(s => {
     const r = cur.res[s.id], b = base.res[s.id], shift = r.start - b.start, cause = causeOf(r);
+    rowY[s.id] = y;
     const eqs = [s.sys, s.media].filter(Boolean);
     const sub = V.vw === 'eq' ? (eqs.length ? eqs.map(short).join(', ') : (s.anchor ? '배양 수확' : '싱글유즈'))
       : shift > 0.01 ? `D${dayOf(b.start)} → D${dayOf(r.start)} ${hm(r.start)}` : `D${dayOf(r.start)} ${hm(r.start)}`;
@@ -797,12 +811,14 @@ function renderGantt(R){
   }
   const defs = `<defs><pattern id="pRe" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)"><rect width="6" height="6" style="fill:var(--surface)"/><rect width="3" height="6" style="fill:var(--cht)"/></pattern></defs>`;
   svg.setAttribute('width', W); svg.setAttribute('height', y); svg.setAttribute('viewBox', `0 0 ${W} ${y}`);
-  svg.innerHTML = defs + axis + band + body + marks;
+  const smp = ops ? '' : sampleMarks(samplings(cur), rowY, pxh);
+  svg.innerHTML = defs + axis + band + body + smp + marks;
   gl.innerHTML = labels.join('');
   const L = (cls, t) => `<span><i class="k ${cls}"></i>${t}</span>`;
+  const SM = ops ? '' : `<span>샘플링 <i class="dia" style="--c:var(--hts)"></i>홀드 <i class="dia" style="--c:var(--dht)"></i>DHT <i class="dia" style="--c:var(--cht)"></i>CHT <i class="dia night"></i>근무시간 밖</span>`;
   document.getElementById('legend').innerHTML = V.vw === 'proc'
-    ? L('proc', '공정') + L('plan', '원래 계획 위치') + L('hts', '홀드 시험 보관') + L('wait', '추가 대기') + (ops ? '' : L('ntry', '바로 했다면 근무시간 밖에 걸리는 부분')) + L('night', '근무시간 외') + (delayBand ? L('band', '늦어진 구간') : '') + (V.actual ? L('act', '시범 생산 실측') : '') + `<span>지연 원인 <span class="dot" style="--c:var(--hts)"></span>홀드 <span class="dot" style="--c:var(--dht)"></span>DHT <span class="dot" style="--c:var(--cht)"></span>CHT <span class="dot"></span>앞 단계</span>`
-    : L('proc', '공정') + L('wait', '사용 전 세척·평형화, 평소 대기') + L('dht', 'DHT 평가 대기') + L('cip', '사후 세척 (막·컬럼 → 시스템)') + L('cht', 'CHT 평가 보관') + (ops ? L('re', 'CHT 초과 재세척') + L('nightw', '근무시간 밖 작업') : '') + L('night', '근무시간 외') + '<span>두 줄이면 위가 시스템, 아래가 막·컬럼</span>';
+    ? L('proc', '공정') + L('plan', '원래 계획 위치') + L('hts', '홀드 시험 보관') + L('wait', '추가 대기') + (ops ? '' : L('ntry', '바로 했다면 근무시간 밖에 걸리는 부분')) + L('night', '근무시간 외') + (delayBand ? L('band', '늦어진 구간') : '') + (V.actual ? L('act', '시범 생산 실측') : '') + SM + `<span>지연 원인 <span class="dot" style="--c:var(--hts)"></span>홀드 <span class="dot" style="--c:var(--dht)"></span>DHT <span class="dot" style="--c:var(--cht)"></span>CHT <span class="dot"></span>앞 단계</span>`
+    : L('proc', '공정') + L('wait', '사용 전 세척·평형화, 평소 대기') + L('dht', 'DHT 평가 대기') + L('cip', '사후 세척 (막·컬럼 → 시스템)') + L('cht', 'CHT 평가 보관') + (ops ? L('re', 'CHT 초과 재세척') + L('nightw', '근무시간 밖 작업') : '') + L('night', '근무시간 외') + SM + '<span>두 줄이면 위가 시스템, 아래가 막·컬럼</span>';
 }
 
 /* ---------- 확인할 것 (평가 진행) ---------- */
@@ -872,6 +888,68 @@ function renderOps(R){
     else if (a.kind === 'early') rows.push(`<tr><td>${sev('warn', '당일 세척')}</td><td class="what">${esc(a.e.name)}</td><td class="when">${stamp(a.start)} → ${stamp(a.end)}</td><td class="why">${esc(a.step.name)} 뒤 다음 날 아침에 세척하면 DHT ${fmtGap(a.dhtT)}를 넘어서 당일에 바로 세척합니다.</td></tr>`);
   });
   return rows;
+}
+
+/* ---------- 샘플링 시각 ----------
+   홀드: 보관 시작(T0)과 목표 시간 도달 시각에 공정액 채취. 체크한 지점은 실제 배치, 아니면 따로 떼어 둔 시료
+   DHT: 사용 후 방치가 끝나고 세척을 시작하기 직전에 설비 표면 채취
+   CHT: 세척 후 청정 보관이 끝나는 시각에 채취 */
+function isWork(t){ const [ws, we] = workSpan(), tod = t - Math.floor(t / H) * H; return tod >= ws - 1e-9 && tod <= we + 1e-9; }
+function samplings(sim){
+  const out = { hold:[], dht:[], cht:[] };
+  if (S.tg.hts) sim.holdRes.forEach(x => {
+    if (num(x.h.t) <= 0) return;
+    const t0 = x.from.end, t = t0 + num(x.h.t);
+    out.hold.push({ step:x.h.from, name:x.h.name, t0, t, onBatch:x.h.on, target:num(x.h.t), night:!isWork(t) });
+  });
+  const seen = {};
+  sim.bars.forEach(b => {
+    const key = b.eq + '|' + b.step.id;
+    if (b.type === 'dht' && b.study && !seen['d' + key]){
+      seen['d' + key] = 1;
+      /* 그 설비 자신의 세척이 시작되기 직전에 채취. 막·컬럼 세척에 바로 이어지는 시스템 CIP면 그 연속 세척의 시작 시각 */
+      const cips = sim.bars.filter(q => q.eq === b.eq && q.step === b.step && q.type === 'cip').sort((a, c) => a.start - c.start);
+      let k = cips.length - 1; while (k > 0 && Math.abs(cips[k - 1].end - cips[k].start) < 1e-6) k--;
+      const cip = cips[k];
+      const use = sim.bars.find(q => q.eq === b.eq && q.step === b.step && q.type === 'use');
+      if (cip && use){ const e = S.equipment.find(q => q.id === b.eq);
+        out.dht.push({ step:b.step.id, eq:b.eq, name:e ? e.name : b.eq, t:cip.start, actual:cip.start - use.end, target:e ? num(e.dhtT) : 0, night:!isWork(cip.start) }); }
+    }
+    if (b.type === 'cht' && b.study){
+      const e = S.equipment.find(q => q.id === b.eq);
+      out.cht.push({ step:b.step.id, eq:b.eq, name:e ? e.name : b.eq, t0:b.start, t:b.end, target:b.end - b.start, night:!isWork(b.end) });
+    }
+  });
+  return out;
+}
+function renderSched(R){
+  const ops = V.sc === 'ops', sim = ops ? R.ops : R.cur, sp = ops ? { hold:[], dht:[], cht:[] } : samplings(sim);
+  const nightTag = n => n ? ` <span class="sev crit">근무시간 밖</span>` : '';
+  const shortName = n => n.replace(/\s*\(.*\)/, '');
+  const rows = S.steps.map(s => {
+    const r = sim.res[s.id];
+    const h = sp.hold.filter(x => x.step === s.id).map(x => `<div><b>${hm(x.t)}</b> <span class="s2">D${dayOf(x.t)}</span>${nightTag(x.night)}<div class="s2">${esc(x.name)} ${fmtGap(x.target)}, ${x.onBatch ? '실제 배치' : '시료'} · T0 ${stamp(x.t0)}</div></div>`).join('');
+    const d = sp.dht.filter(x => x.step === s.id).map(x => `<div><b>${hm(x.t)}</b> <span class="s2">D${dayOf(x.t)}</span>${nightTag(x.night)}<div class="s2">${esc(shortName(x.name))} · 실제 ${fmtGap(x.actual)}${x.actual > x.target + 0.01 ? ` (목표 ${fmtGap(x.target)})` : ''}</div></div>`).join('');
+    const c = sp.cht.filter(x => x.step === s.id).map(x => `<div><b>${hm(x.t)}</b> <span class="s2">D${dayOf(x.t)}</span>${nightTag(x.night)}<div class="s2">${esc(shortName(x.name))} · 세척 완료 ${stamp(x.t0)}</div></div>`).join('');
+    const dash = '<span class="s2">—</span>';
+    return `<tr><td class="what">${esc(s.name)}</td><td class="when"><b>${hm(r.start)}</b> <span class="s2">D${dayOf(r.start)}${dateLabel(dayOf(r.start)) ? ' ' + dateLabel(dayOf(r.start)) : ''}</span></td><td class="when"><b>${hm(r.end)}</b> <span class="s2">D${dayOf(r.end)}</span></td>${ops ? '' : `<td class="smp hts">${h || dash}</td><td class="smp dht">${d || dash}</td><td class="smp cht">${c || dash}</td>`}</tr>`;
+  });
+  const heads = ['공정', '시작', '종료'].concat(ops ? [] : ['<span class="dot" style="--c:var(--hts)"></span> 홀드 샘플링', '<span class="dot" style="--c:var(--dht)"></span> DHT 샘플링', '<span class="dot" style="--c:var(--cht)"></span> CHT 샘플링']);
+  const nNight = sp.hold.concat(sp.dht, sp.cht).filter(x => x.night).length;
+  const [ws, we] = workSpan();
+  document.getElementById('sched-h').textContent = ops ? '공정별 운영 시각' : '공정별 예상 시각과 샘플링';
+  document.getElementById('sched-note').innerHTML = ops ? '평가가 끝난 뒤 계획대로 운영할 때의 시작·종료 시각입니다.'
+    : `총 샘플링 ${sp.hold.length + sp.dht.length + sp.cht.length}회 (홀드 ${sp.hold.length}, DHT ${sp.dht.length}, CHT ${sp.cht.length})${nNight ? `. <b style="color:var(--crit)">${nNight}회는 근무시간(${ws}~${we}시) 밖</b>이라 채취 인원 배치나 목표 시간 조정이 필요합니다` : '. 모두 근무시간 안입니다'}.`;
+  document.getElementById('sched').innerHTML = table(heads, rows);
+}
+/* 간트 위 샘플링 표시: 행 위쪽에 작은 마름모 */
+function sampleMarks(sp, rowY, pxh){
+  let g = '';
+  const dia = (t, y, col, title, night) => { const x = t * pxh; return `<path d="M${x.toFixed(1)},${y - 5} L${(x + 5).toFixed(1)},${y} L${x.toFixed(1)},${y + 5} L${(x - 5).toFixed(1)},${y} Z" style="fill:${col};stroke:${night ? 'var(--crit)' : 'var(--surface)'};stroke-width:${night ? 2 : 1.2}"><title>${esc(title)}</title></path>`; };
+  sp.hold.forEach(x => { const y = rowY[x.step]; if (y != null) g += dia(x.t, y + 7, 'var(--hts)', `홀드 샘플링 ${stamp(x.t)}: ${x.name} ${fmtGap(x.target)}${x.night ? ' (근무시간 밖)' : ''}`, x.night); });
+  sp.dht.forEach(x => { const y = rowY[x.step]; if (y != null) g += dia(x.t, y + 7, 'var(--dht)', `DHT 샘플링 ${stamp(x.t)}: ${x.name}, 실제 ${fmtGap(x.actual)}${x.night ? ' (근무시간 밖)' : ''}`, x.night); });
+  sp.cht.forEach(x => { const y = rowY[x.step]; if (y != null) g += dia(x.t, y + 7, 'var(--cht)', `CHT 샘플링 ${stamp(x.t)}: ${x.name}${x.night ? ' (근무시간 밖)' : ''}`, x.night); });
+  return g;
 }
 
 function renderList(R){
@@ -948,7 +1026,7 @@ let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTime
 
 function render(){
   const R = computeAll();
-  renderSwitches(R); renderBridge(R); renderGantt(R); renderList(R);
+  renderSwitches(R); renderBridge(R); renderGantt(R); renderSched(R); renderList(R);
   S.holds.forEach((x, i) => {
     const bh = R.base.holdRes.find(y => y.h === x); const g = document.getElementById('ho-g-' + i); if (g) g.textContent = bh ? fmtGap(bh.actual) : '';
     const d = document.getElementById('ho-d-' + i); if (d) d.textContent = days1(num(x.t));
