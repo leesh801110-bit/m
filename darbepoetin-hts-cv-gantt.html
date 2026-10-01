@@ -686,16 +686,18 @@ function renderWarns(R){
   R.cur.holdRes.forEach(x => {
     if (x.actual <= num(x.h.t) + 0.01) return;
     const q = x.to, nx = S.steps.find(z => z.id === q.id) || { name:'', proc:0 };
-    let why;
+    let why, src;
     if (q.bind.type === 'eq'){
-      const f = q.bind.why;
-      why = `${esc(nx.name)}이 ${esc(f ? f.e.name : '설비')} 세척${f && f.chtOn ? '·CHT 보관' : ''}이 끝나기를 기다려 ${stamp(q.start)}에 시작합니다.`;
+      const f = q.bind.why, by = f && f.chtOn && f.chtH > 1e-9 ? 'CHT 평가 보관' : f && f.dhtPush ? 'DHT 평가 후 세척' : '평소 사후 세척';
+      src = f && (f.chtOn || f.dhtPush) ? 'CV 평가' : '설비 대기';
+      why = `${esc(nx.name)}이 ${esc(f ? f.e.name : '설비')}의 ${by}이 끝나기를 기다려 ${stamp(q.start)}에 시작합니다.`;
     } else if (q.start > q.earliest + 0.01){
-      why = `보관이 끝나는 ${stamp(q.earliest)}에 ${esc(nx.name)}(${num(nx.proc)} h)을 시작하면 근무 종료 ${we0}시 전에 끝나지 않아 다음 날 ${hm(q.start)}에 시작합니다.`;
-    } else why = `앞 단계가 밀려 ${esc(nx.name)}이 ${stamp(q.start)}에 시작합니다.`;
+      src = '근무시간';
+      why = `보관이 끝나는 ${stamp(q.earliest)}에 ${esc(nx.name)}(${num(nx.proc)} h)을 시작하면 근무 종료 ${we0}시 전에 끝나지 않아 다음 날 ${hm(q.start)}에 시작합니다. DHT·CHT와는 관계없습니다.`;
+    } else { src = '연쇄'; why = `앞 단계가 밀려 ${esc(nx.name)}이 ${stamp(q.start)}에 시작합니다.`; }
     const study = S.tg.hts && x.h.on;
-    if (study) alerts.push(`<li class="warn"><div class="h"><span>${esc(x.h.name)}</span><span class="tagw">보관 연장</span></div><div class="w">HTS 목표 ${fmtGap(num(x.h.t))} → 실제 보관 ${fmtGap(x.actual)}</div><div>${why} HTS 시험 시점을 실제 보관 시간으로 잡거나 목표를 늘려야 합니다.</div></li>`);
-    else alerts.push(`<li class="crit"><div class="h"><span>${esc(x.h.name)}</span><span class="tagc">! 보관 초과</span></div><div class="w">실제 보관 ${fmtGap(x.actual)} &gt; 기준 ${fmtGap(num(x.h.t))}</div><div>${why} 기존 보관 기준을 넘으므로 일정 조정이 필요합니다.</div></li>`);
+    if (study) alerts.push(`<li class="${src === '근무시간' ? 'info' : 'warn'}"><div class="h"><span>${esc(x.h.name)}</span><span class="${src === '근무시간' ? 'tag' : 'tagw'}">보관 연장 · ${src}</span></div><div class="w">HTS 목표 ${fmtGap(num(x.h.t))} → 실제 보관 ${fmtGap(x.actual)}</div><div>${why} HTS 시험 시점을 실제 보관 시간으로 잡거나 목표를 늘려야 합니다.</div></li>`);
+    else alerts.push(`<li class="crit"><div class="h"><span>${esc(x.h.name)}</span><span class="tagc">! 보관 초과 · ${src}</span></div><div class="w">실제 보관 ${fmtGap(x.actual)} &gt; 기준 ${fmtGap(num(x.h.t))}</div><div>${why} 기존 보관 기준을 넘으므로 일정 조정이 필요합니다.</div></li>`);
   });
   const [ws, we] = workSpan();
   S.steps.forEach(st => {
