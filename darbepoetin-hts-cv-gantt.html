@@ -226,16 +226,17 @@ const DEF = {
   workStart: 8, latestStart: 13, startDate: '',
   tg: { hts: true, dht: true, cht: true },
   equipment: [
-    { id:'AKTA1', name:'AKTA Process (Axichrom 450)', kind:'system', rule:'next', dht:true, cht:true, dhtT:24, chtT:72, dhtUse:'all', chtUse:'all' },
-    { id:'AKTA2', name:'AKTA Process (Axichrom 300)', kind:'system', rule:'next', dht:true, cht:true, dhtT:24, chtT:72, dhtUse:'all', chtUse:'all' },
-    { id:'COL1',  name:'Column · Q FF (1차 크로)', kind:'column', rule:'now', dht:true, cht:true, dhtT:24, chtT:72, dhtUse:'all', chtUse:'all' },
-    { id:'COL2',  name:'Column · CHT (2차 크로)', kind:'column', rule:'now', dht:true, cht:true, dhtT:24, chtT:72, dhtUse:'all', chtUse:'all' },
-    { id:'COL3',  name:'Column · Source 30Q (3차 크로)', kind:'column', rule:'now', dht:true, cht:true, dhtT:24, chtT:72, dhtUse:'all', chtUse:'all' },
-    { id:'UFS',   name:'UF System', kind:'system', rule:'next', dht:true, cht:true, dhtT:24, chtT:72, dhtUse:'all', chtUse:'all' },
-    { id:'MEM1',  name:'UF Membrane (1차 UF)', kind:'membrane', rule:'next', dht:true, cht:false, dhtT:24, chtT:0, dhtUse:'all', chtUse:'all' },
-    { id:'MEM2',  name:'UF Membrane (2차 UF)', kind:'membrane', rule:'next', dht:true, cht:false, dhtT:24, chtT:0, dhtUse:'all', chtUse:'all' },
-    { id:'MEM3',  name:'UF Membrane (3차 UF)', kind:'membrane', rule:'next', dht:true, cht:false, dhtT:24, chtT:0, dhtUse:'all', chtUse:'all' },
-    { id:'NANO',  name:'Nano Vessel', kind:'system', rule:'next', dht:true, cht:true, dhtT:24, chtT:72, dhtUse:'all', chtUse:'all' }
+    { id:'AKTA1', name:'AKTA (1차·2차 크로 공용)', kind:'system', rule:'next', dht:true, cht:true, dhtT:24, chtT:72, dhtUse:'all', chtUse:'all' },
+    { id:'AKTA2', name:'AKTA (3차 크로 전용)', kind:'system', rule:'next', dht:true, cht:true, dhtT:24, chtT:72, dhtUse:'all', chtUse:'all' },
+    { id:'COL1',  name:'Column · Q FF (1차 크로 1~3)', kind:'column', rule:'now', dht:true, cht:true, dhtT:24, chtT:72, dhtUse:'all', chtUse:'all' },
+    { id:'COL2',  name:'Column · CHT (2차 크로 전용)', kind:'column', rule:'now', dht:true, cht:true, dhtT:24, chtT:72, dhtUse:'all', chtUse:'all' },
+    { id:'COL3',  name:'Column · Source 30Q (3차 크로 전용)', kind:'column', rule:'now', dht:true, cht:true, dhtT:24, chtT:72, dhtUse:'all', chtUse:'all' },
+    { id:'UFS',   name:'UF System (1차·2차 UF 공용)', kind:'system', rule:'next', dht:true, cht:true, dhtT:24, chtT:72, dhtUse:'all', chtUse:'all' },
+    { id:'UFS3',  name:'UF System (3차 UF 전용)', kind:'system', rule:'next', dht:true, cht:true, dhtT:24, chtT:72, dhtUse:'all', chtUse:'all' },
+    { id:'MEM1',  name:'UF Membrane (1차 UF 1~3 공용)', kind:'membrane', rule:'next', dht:true, cht:false, dhtT:24, chtT:0, dhtUse:'all', chtUse:'all' },
+    { id:'MEM2',  name:'UF Membrane (2차 UF 전용)', kind:'membrane', rule:'next', dht:true, cht:false, dhtT:24, chtT:0, dhtUse:'all', chtUse:'all' },
+    { id:'MEM3',  name:'UF Membrane (3차 UF 전용)', kind:'membrane', rule:'next', dht:true, cht:false, dhtT:24, chtT:0, dhtUse:'all', chtUse:'all' },
+    { id:'NANO',  name:'Nano Vessel (바이러스 여과 전용)', kind:'system', rule:'next', dht:true, cht:true, dhtT:24, chtT:72, dhtUse:'all', chtUse:'all' }
   ],
   steps: [
     { id:'ccf1', name:'CCF-1', day:1, at:8, anchor:true, pre:0, proc:3, post:0, cip:0 },
@@ -250,7 +251,7 @@ const DEF = {
     { id:'uf2nd', name:'2차 UF', day:11, at:8, pre:6, proc:6, post:4, cip:2, sys:'UFS', media:'MEM2' },
     { id:'ch2', name:'2차 크로', day:11, after:'uf2nd', pre:3, proc:3, post:2, cip:1, sys:'AKTA1', media:'COL2' },
     { id:'ch3', name:'3차 크로', day:12, at:8, pre:3, proc:7.5, post:3, cip:1, sys:'AKTA2', media:'COL3' },
-    { id:'uf3rd', name:'3차 UF', day:14, at:8, pre:6, proc:6, post:4, cip:6.5, sys:'UFS', media:'MEM3' },
+    { id:'uf3rd', name:'3차 UF', day:14, at:8, pre:6, proc:6, post:4, cip:6.5, sys:'UFS3', media:'MEM3' },
     { id:'vf', name:'바이러스 여과', day:15, at:8, pre:24, proc:9, post:0, cip:2, sys:'NANO' },
     { id:'mf', name:'제균 여과', day:15, after:'vf', pre:0, proc:3, post:0, cip:0 },
     { id:'disp', name:'원액 소분', day:16, at:8, pre:0, proc:4, post:0, cip:0 }
@@ -281,7 +282,7 @@ const ACTUAL = {
   uf2nd:[11,8.42,14.07,'09.17 08:25~14:04'], ch2:[12,12.93,16.37,'09.18 12:56~16:22'], ch3:[13,7.42,16.63,'09.19 07:25~16:38'],
   uf3rd:[15,12.08,19,'09.21 12:05~19:00'], vf:[16,9,15.87,'09.22 09:00~15:52'], mf:[16,16.03,18.6,'09.22 16:02~18:36'], disp:[17,8.08,12.08,'09.23 08:05~12:05']
 };
-const STORE = 'darbe-lq001ld2-v3';
+const STORE = 'darbe-lq001ld2-v4';
 const clone = o => JSON.parse(JSON.stringify(o));
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 let S = null;
@@ -619,7 +620,7 @@ function buildTables(){
   let s = `<thead><tr><th>공정</th><th class="n">계획일</th><th class="n">Pre CIP &amp; EQ</th><th class="n">Process</th><th class="n">Post Mem/Resin</th><th class="n">Post CIP</th></tr></thead><tbody>`;
   S.steps.forEach((x, i) => {
     const f = (k, lab) => `<td class="n"><input type="number" id="st-${k}-${i}" min="0" step="0.5" data-k="steps.${i}.${k}" value="${x[k]}" aria-label="${esc(x.name)} ${lab}"></td>`;
-    s += `<tr><td>${esc(x.name)}${x.anchor ? ' <span class="tag">수확일 고정</span>' : ''}</td><td class="n mono">D${x.day}</td>${f('pre','Pre CIP')}${f('proc','Process')}${f('post','Post')}${f('cip','Post CIP')}</tr>`;
+    s += `<tr><td>${esc(x.name)}${x.anchor ? ' <span class="tag">수확일 고정</span>' : ''}${!x.anchor && !x.sys && !x.media ? ' <span class="tag">싱글유즈</span>' : ''}</td><td class="n mono">D${x.day}</td>${f('pre','Pre CIP')}${f('proc','Process')}${f('post','Post')}${f('cip','Post CIP')}</tr>`;
   });
   document.getElementById('t-step').innerHTML = s + '</tbody>';
   ['workStart','latestStart','startDate'].forEach(k => { document.querySelector(`[data-k="${k}"]`).value = S[k]; });
