@@ -442,6 +442,15 @@ function dateLabel(d){
   const b = new Date((dn + d - 1) * DAYMS); return `${b.getUTCMonth()+1}/${b.getUTCDate()}`;
 }
 const stamp = t => `D${dayOf(t)} ${hm(t)}`;
+/* 같은 장비를 여러 공정이 쓰므로 어느 공정의 장비인지 붙여 부른다: 1차 UF-1 Membrane, 2차 UF System, 2차 크로 AKTA */
+function eqAt(id, stepId){
+  const e = S.equipment.find(q => q.id === id), st = S.steps.find(z => z.id === stepId);
+  if (!e) return id;
+  let b = e.name.replace(/\s*\(.*\)/, '');
+  if (!st) return b;
+  if (/UF/.test(st.name)) b = b.replace(/^UF\s+/, '');
+  return `${st.name} ${b}`;
+}
 const tenths = h => Math.round(h / 2.4 + 1e-9);
 const days1 = h => (tenths(h) / 10).toFixed(1);
 const fmtGap = h => h >= 24 ? `${days1(h)}일` : `${Math.round(h*10)/10} h`;
@@ -696,7 +705,7 @@ function simulateOps(R){
       if (e === medE && sysE) bars.push({ eq:sysE.id, type:'reclean', start:rs, end:rs + L.dur, step:s, night, part:'med' });
       if (e === sysE) sysRe = { start:rs };
       adds.push({ kind:'reclean', e, step:s, prev:L.step, start:rs, end:rs + L.dur, idle, night });
-      if (night) issues.push({ kind:'night', what:`${e.name} 재세척 (${s.name} 전)`, start:rs, end:rs + L.dur });
+      if (night) issues.push({ kind:'night', what:`${eqAt(e.id, s.id)} 재세척 (사용 전)`, start:rs, end:rs + L.dur });
     });
     bars.push(...base.bars.filter(b => b.step === s && (b.type === 'pre' || b.type === 'use')));
     if (!eqs.length) return;
@@ -720,7 +729,7 @@ function simulateOps(R){
       if (ms > end + 1e-9) bars.push({ eq:medE.id, type:'dht', start:end, end:ms, step:s, study:false });
       bars.push({ eq:medE.id, type:'cip', start:ms, end:mediaEnd, step:s, night: how === 'night' });
       if (how) adds.push({ kind:how, e:medE, step:s, start:ms, end:mediaEnd, dhtT:num(medE.dhtT) });
-      if (how === 'night') issues.push({ kind:'night', what:`${medE.name} 세척 (${s.name} 후)`, start:ms, end:mediaEnd });
+      if (how === 'night') issues.push({ kind:'night', what:`${eqAt(medE.id, s.id)} 세척 (사용 후)`, start:ms, end:mediaEnd });
       last[medE.id] = { ce:mediaEnd, dur, step:s };
     }
     if (sysE){
@@ -739,7 +748,7 @@ function simulateOps(R){
       } else if (ss > end + 1e-9) bars.push({ eq:sysE.id, type:'dht', start:end, end:ss, step:s, study:false });
       bars.push({ eq:sysE.id, type:'cip', start:ss, end:se, step:s, night: how === 'night' });
       if (how) adds.push({ kind:how, e:sysE, step:s, start:ss, end:se, dhtT:num(sysE.dhtT) });
-      if (how === 'night') issues.push({ kind:'night', what:`${sysE.name} 세척 (${s.name} 후)${ss > dlSys + 1e-9 ? ' · DHT 기한 초과' : ''}`, start:ss, end:se });
+      if (how === 'night') issues.push({ kind:'night', what:`${eqAt(sysE.id, s.id)} 세척 (사용 후)${ss > dlSys + 1e-9 ? ' · DHT 기한 초과' : ''}`, start:ss, end:se });
       last[sysE.id] = { ce:se, dur, step:s };
     }
   });
@@ -868,7 +877,6 @@ function renderGantt(R){
     return `<rect x="${X(t0)}" y="${yy}" width="${w.toFixed(2)}" height="${h}" rx="${rx == null ? 3 : rx}" style="fill:${fill}${extra || ''}"><title>${esc(title)}</title></rect>`;
   };
   const delayBand = cur.end > base.end + 0.01;
-  const short = id => { const e = S.equipment.find(q => q.id === id); return e ? e.name.replace(/\s*\(.*\)/, '') : id; };
   const [ws1, we1] = workSpan();
   const rowY = {};
 
@@ -876,7 +884,7 @@ function renderGantt(R){
     const r = cur.res[s.id], b = base.res[s.id], shift = r.start - b.start, cause = causeOf(r);
     rowY[s.id] = y;
     const eqs = [s.sys, s.media].filter(Boolean);
-    const sub = V.vw === 'eq' ? (eqs.length ? eqs.map(short).join(', ') : (s.anchor ? '배양 수확' : '싱글유즈'))
+    const sub = V.vw === 'eq' ? (eqs.length ? eqs.map(id => { const e = S.equipment.find(q => q.id === id); if (!e) return id; const n = e.name.replace(/\s*\(.*\)/, '').replace(/^UF Membrane$/, '막').replace(/^Column · /, ''); return n + (S.steps.filter(z => z.sys === id || z.media === id).length > 1 ? ' 공용' : ''); }).join(' · ') : (s.anchor ? '배양 수확' : '싱글유즈'))
       : shift > 0.01 ? `D${dayOf(b.start)} → D${dayOf(r.start)} ${hm(r.start)}` : `D${dayOf(r.start)} ${hm(r.start)}`;
     labels.push(`<div class="lr" style="height:${ROW}px"><span class="t"><span>${esc(s.name)}</span>${shift > 0.01 ? chip(cause, '+' + days1(shift) + '일') : ''}</span><span class="s">${esc(sub)}</span></div>`);
     body += `<line x1="${LX0}" x2="${LX1}" y1="${y + ROW - 0.5}" y2="${y + ROW - 0.5}" style="stroke:var(--line)"/>`;
@@ -991,7 +999,7 @@ function studyRows(R){
     if (q.bind.type === 'eq'){
       const f = q.bind.why, by = f && f.chtOn && f.chtH > 1e-9 ? 'CHT 보관' : f && f.dhtPush ? 'DHT 뒤 세척' : '평소 세척';
       src = f && (f.chtOn || f.dhtPush) ? 'CV 평가' : '설비 대기';
-      why = `${esc(nx.name)}이 ${esc(f ? f.e.name : '설비')}의 ${by}을 기다려 ${stamp(q.start)}에 시작합니다.`;
+      why = `${esc(nx.name)}이 ${esc(f ? eqAt(f.e.id, f.step.id) : '설비')}의 ${by}을 기다려 ${stamp(q.start)}에 시작합니다.`;
     } else if (q.start > q.earliest + 0.01){
       src = '근무시간'; const nt = q.nightTry;
       why = `보관 후 바로 ${esc(nx.name)}을 하면 ${nt ? stamp(nt.end) : ''}에 끝나 ${we0}시를 넘깁니다. 그래서 ${stamp(q.start)}에 시작합니다. DHT·CHT와는 관계없습니다.`;
@@ -1020,7 +1028,7 @@ function shiftRows(R){
       const f = r.bind.why, parts = [];
       if (f && f.dhtPush) parts.push(`DHT ${fmtGap(f.dhtH)}`);
       if (f && f.chtOn && f.chtH > 1e-9) parts.push(`CHT ${fmtGap(f.chtH)}`);
-      why = `${esc(f ? f.e.name : r.bind.eq)}이 ${esc(f ? f.step.name : '')} 뒤 ${parts.length ? parts.join(', ') : '세척'} 동안 묶임`;
+      why = `${esc(f ? eqAt(f.e.id, f.step.id) : r.bind.eq)}이 사용 후 ${parts.length ? parts.join(', ') : '세척'} 동안 묶임`;
     } else why = '앞 단계가 늦어짐';
     if (r.nightTry && r.nightTry.night > 0.01) why += `. 바로 하면 ${hm(r.nightTry.end)}에 끝나 근무시간을 넘겨서 다음 날로 미룸`;
     else if (r.start - r.earliest > 0.01) why += '. 근무시간에 맞춰 미룸';
@@ -1046,8 +1054,8 @@ function renderOps(R){
     else rows.push(`<tr><td>${sev('crit', '근무시간 밖')}</td><td class="what">${esc(i.what)}</td><td class="when">${stamp(i.start)} → ${stamp(i.end)}</td><td class="why">기준을 지키려면 ${ws}~${we}시 밖에 해야 합니다. 근무시간이나 평가 값을 조정하세요.</td></tr>`);
   });
   o.adds.forEach(a => {
-    if (a.kind === 'reclean') rows.push(`<tr><td>${sev('warn', '재세척 추가')}</td><td class="what">${esc(a.e.name)}</td><td class="when">${stamp(a.start)} → ${stamp(a.end)}</td><td class="why">${esc(a.prev.name)} 뒤 세척하고 ${esc(a.step.name)} 사용 전 세척까지 ${fmtGap(a.idle)} 비어 CHT ${fmtGap(num(a.e.chtT))}를 넘습니다. 사용 직전에 한 번 더 세척합니다.</td></tr>`);
-    else if (a.kind === 'early') rows.push(`<tr><td>${sev('warn', '당일 세척')}</td><td class="what">${esc(a.e.name)}</td><td class="when">${stamp(a.start)} → ${stamp(a.end)}</td><td class="why">${esc(a.step.name)} 뒤 다음 날 아침에 세척하면 DHT ${fmtGap(a.dhtT)}를 넘어서 당일에 바로 세척합니다.</td></tr>`);
+    if (a.kind === 'reclean') rows.push(`<tr><td>${sev('warn', '재세척 추가')}</td><td class="what">${esc(a.step ? eqAt(a.e.id, a.step.id) : a.e.name)}</td><td class="when">${stamp(a.start)} → ${stamp(a.end)}</td><td class="why">${esc(a.prev.name)} 뒤 세척하고 ${esc(a.step.name)} 사용 전 세척까지 ${fmtGap(a.idle)} 비어 CHT ${fmtGap(num(a.e.chtT))}를 넘습니다. 사용 직전에 한 번 더 세척합니다.</td></tr>`);
+    else if (a.kind === 'early') rows.push(`<tr><td>${sev('warn', '당일 세척')}</td><td class="what">${esc(a.step ? eqAt(a.e.id, a.step.id) : a.e.name)}</td><td class="when">${stamp(a.start)} → ${stamp(a.end)}</td><td class="why">${esc(a.step.name)} 뒤 다음 날 아침에 세척하면 DHT ${fmtGap(a.dhtT)}를 넘어서 당일에 바로 세척합니다.</td></tr>`);
   });
   return rows;
 }
@@ -1077,7 +1085,6 @@ function samplings(sim, hts){
 function renderSched(R){
   const ops = V.sc === 'ops', sim = ops ? R.ops : R.cur, sp = ops ? { hold:[], dht:[], cht:[] } : samplings(sim);
   const nightTag = n => n ? ` <span class="sev crit">근무시간 밖</span>` : '';
-  const shortName = n => n.replace(/\s*\(.*\)/, '');
   const rows = S.steps.map(s => {
     const r = sim.res[s.id];
     const win = x => `<div class="s2">${stamp(x.open)}부터${isFinite(x.close) ? ` ${stamp(x.close)} ${esc(x.closeWhat)} 전까지` : ''}${x.t > x.open + 0.01 ? ` · ${x.after != null && x.after > x.open + 0.01 ? '막·컬럼 CIP가 끝난 뒤' : '근무시간에 맞춰'} ${fmtGap(x.t - x.t0)} 시점에 채취, ${fmtGap(x.target)}로 설정` : ''}</div>`;
@@ -1085,8 +1092,8 @@ function renderSched(R){
     const winD = x => `<div class="s2">${stamp(x.open)}부터 세척 가능 · 세척 ${stamp(x.cs)}–${hm(x.ce)} (오염 보관 ${fmtGap(x.cs - x.t0)}${x.cs > x.open + 0.01 ? `, ${x.after != null && x.after > x.open + 0.01 ? '막·컬럼 세척·샘플 뒤' : '근무시간에 맞춰'}` : ''}) → 세척 직후 채취, ${fmtGap(x.target)}로 설정</div>`;
     const cell = (x, label) => `<div><b>${hm(x.t)}</b> <span class="s2">D${dayOf(x.t)}</span>${nightTag(x.night)}<div class="s2">${label}</div>${x.cs != null ? winD(x) : win(x)}</div>`;
     const h = sp.hold.filter(x => x.step === s.id).map(x => cell(x, `${esc(x.name)} ${fmtGap(x.target)}, ${x.onBatch ? '실제 배치' : '시료'}`)).join('');
-    const d = sp.dht.filter(x => x.step === s.id).map(x => cell(x, `${esc(shortName(x.name))} DHT ${fmtGap(x.target)}`)).join('');
-    const c = sp.cht.filter(x => x.step === s.id).map(x => cell(x, `${esc(shortName(x.name))} CHT ${fmtGap(x.target)}`)).join('');
+    const d = sp.dht.filter(x => x.step === s.id).map(x => cell(x, `${esc(eqAt(x.eq, x.step))} DHT ${fmtGap(x.target)}`)).join('');
+    const c = sp.cht.filter(x => x.step === s.id).map(x => cell(x, `${esc(eqAt(x.eq, x.step))} CHT ${fmtGap(x.target)}`)).join('');
     const dash = '<span class="s2">—</span>';
     return `<tr><td class="what">${esc(s.name)}</td><td class="when"><b>${hm(r.start)}</b> <span class="s2">D${dayOf(r.start)}${dateLabel(dayOf(r.start)) ? ' ' + dateLabel(dayOf(r.start)) : ''}</span></td><td class="when"><b>${hm(r.end)}</b> <span class="s2">D${dayOf(r.end)}</span></td>${ops ? '' : `<td class="smp hts">${h || dash}</td><td class="smp dht">${d || dash}</td><td class="smp cht">${c || dash}</td>`}</tr>`;
   });
@@ -1107,7 +1114,7 @@ function sampleMarks(sp, rowY, pxh, fmt, laneY, noSpan){
   /* 옅은 선 = 시작점(공정 종료·세척 종료)부터 목표 시간까지. 채취 가능 구간(다음 단계 전까지)은 그리지 않고 툴팁에만 둔다 */
   const span = (x, y, col) => x.open > x.t0 + 1e-9 ? `<line x1="${(x.t0 * pxh).toFixed(1)}" x2="${(x.open * pxh).toFixed(1)}" y1="${y}" y2="${y}" style="stroke:${col};stroke-width:2;stroke-opacity:.5;stroke-linecap:round"/>` : '';
   const add = (list, col, kind) => list.forEach(x => { if (rowY[x.step] == null) return; const y = laneY(x);
-    g += (noSpan ? '' : span(x, y, col)) + dia(x.t, y, col, `${kind} 샘플링 ${fmt(x.t)}: ${x.name}\n${kind} ${fmtGap(x.target)}: ${fmt(x.t0)} → ${fmt(x.open)}${isFinite(x.close) ? '\n' + fmt(x.close) + ' 전까지 채취' : ''}${x.night ? '\n근무시간 안에 채취할 수 없음' : ''}`, x.night); });
+    g += (noSpan ? '' : span(x, y, col)) + dia(x.t, y, col, `${kind} 샘플링 ${fmt(x.t)}: ${x.eq ? eqAt(x.eq, x.step) : x.name}\n${kind} ${fmtGap(x.target)}: ${fmt(x.t0)} → ${fmt(x.open)}${isFinite(x.close) ? '\n' + fmt(x.close) + ' 전까지 채취' : ''}${x.night ? '\n근무시간 안에 채취할 수 없음' : ''}`, x.night); });
   add(sp.hold, 'var(--hts)', '홀드'); add(sp.dht, 'var(--dht)', 'DHT'); add(sp.cht, 'var(--cht)', 'CHT');
   return g;
 }
@@ -1163,7 +1170,7 @@ function renderPV(R){
       if (sx && x.actual <= sx.actual + 0.01) return;
     }
     const q = x.to, f = q.bind && q.bind.type === 'eq' ? q.bind.why : null, ob = f && f.b != null && f.b !== b.i ? `${f.b + 1}배치 ` : '';
-    over.push(`<li><span class="dot" style="--c:${BCOL[b.i]}"></span> <b>${b.i + 1}배치 ${esc(x.h.name)}</b> ${fmtGap(x.actual)} 보관 <span class="s2">(${x.h.on ? '목표' : '기존 기준'} ${fmtGap(num(x.h.t))})</span> · ${esc((S.steps.find(z => z.id === x.h.to) || {}).name || '')} ${pvStamp(P, q.start)} 시작${q.bind && q.bind.type === 'eq' ? ` · ${ob}${esc(f ? f.e.name : '설비')} 사용을 기다림` : ''}</li>`);
+    over.push(`<li><span class="dot" style="--c:${BCOL[b.i]}"></span> <b>${b.i + 1}배치 ${esc(x.h.name)}</b> ${fmtGap(x.actual)} 보관 <span class="s2">(${x.h.on ? '목표' : '기존 기준'} ${fmtGap(num(x.h.t))})</span> · ${esc((S.steps.find(z => z.id === x.h.to) || {}).name || '')} ${pvStamp(P, q.start)} 시작${q.bind && q.bind.type === 'eq' ? ` · ${ob}${esc(f ? eqAt(f.e.id, f.step.id) : '설비')} 사용을 기다림` : ''}</li>`);
   }); });
   sumEl.innerHTML = table(['배치', 'D1 (CCF-1)', '계획 원액 소분', '평가 반영 원액 소분', '지연', '샘플링', '평가 항목'], rows)
     + (over.length ? `<div class="pv-over"><b><span class="sev crit">보관 초과 ${over.length}곳</span> 다음 공정이 늦어져 공정액 보관이 기준(목표)보다 깁니다. 다른 배치의 설비 사용을 기다리는 경우 배치 간격을 늘리세요.</b><ul>${over.join('')}</ul></div>` : '');
@@ -1215,13 +1222,13 @@ function renderCal(P){
     if (V.calProc) S.steps.forEach(s => { const r = b.sim.res[s.id]; add(r.start, { kind:'proc', b:b.i, text:`${s.name}`, sub:`${hm(r.start)}–${dayOf(r.end) !== dayOf(r.start) ? mdw(P, r.end) + ' ' : ''}${hm(r.end)}`, tag }); });
     if (V.calSamp && b.on){ const sp = samplings(b.sim, b.tg.hts);
       sp.hold.forEach(x => add(x.t, { kind:'hts', b:b.i, text:`홀드 ${x.name}`, sub:hm(x.t), night:x.night, tag }));
-      sp.dht.forEach(x => add(x.t, { kind:'dht', b:b.i, text:`DHT ${x.name.replace(/\s*\(.*\)/, '')}`, sub:hm(x.t), night:x.night, tag }));
-      sp.cht.forEach(x => add(x.t, { kind:'cht', b:b.i, text:`CHT ${x.name.replace(/\s*\(.*\)/, '')}`, sub:hm(x.t), night:x.night, tag }));
+      sp.dht.forEach(x => add(x.t, { kind:'dht', b:b.i, text:`DHT ${eqAt(x.eq, x.step)}`, sub:hm(x.t), night:x.night, tag }));
+      sp.cht.forEach(x => add(x.t, { kind:'cht', b:b.i, text:`CHT ${eqAt(x.eq, x.step)}`, sub:hm(x.t), night:x.night, tag }));
     }
     if (V.calCip) b.sim.bars.filter(q => q.type === 'cip' || q.type === 'pre').forEach(q => {
       if (q.type === 'cip' && q.part === 'med' && S.equipment.find(e => e.id === q.eq && e.kind !== 'membrane' && e.kind !== 'column')) return;
       if (q.type === 'pre' && q.part === 'med' && S.equipment.find(e => e.id === q.eq && e.kind === 'system')) return;
-      add(q.start, { kind:'cip', b:b.i, text:`${q.type === 'pre' ? '사용 전 ' : ''}${(S.equipment.find(e => e.id === q.eq) || { name:q.eq }).name.replace(/\s*\(.*\)/, '')} ${q.type === 'pre' && q.part === 'med' ? 'CIP·EQ' : 'CIP'}`, sub:`${hm(q.start)}–${dayOf(q.end - 1e-9) !== dayOf(q.start) ? mdw(P, q.end) + ' ' : ''}${hm(q.end)}`, tag });
+      add(q.start, { kind:'cip', b:b.i, text:`${q.type === 'pre' ? '사용 전 ' : ''}${eqAt(q.eq, q.step.id)} ${q.type === 'pre' && q.part === 'med' ? 'CIP·EQ' : 'CIP'}`, sub:`${hm(q.start)}–${dayOf(q.end - 1e-9) !== dayOf(q.start) ? mdw(P, q.end) + ' ' : ''}${hm(q.end)}`, tag });
     });
   });
   const first = P.ref + Math.floor((P.start || 0) / H), last = P.ref + Math.ceil(P.horizon / H);
