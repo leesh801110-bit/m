@@ -157,6 +157,18 @@ header.top{display:grid;gap:4px;padding-bottom:4px}
 .sev.good{background:var(--good-soft);color:var(--good)}
 .list-wrap{overflow-x:auto}
 .empty{color:var(--ink-2);padding:6px 2px}
+.ev[data-s]{cursor:grab;touch-action:none}
+.ev.man{outline:1.5px dashed var(--ink-2);outline-offset:-1px}
+.ev.bad{box-shadow:inset 0 0 0 1.5px var(--crit)}
+.ev.dragging{opacity:.35}
+.ev.ghost{position:fixed;z-index:70;pointer-events:none;width:150px;box-shadow:0 6px 18px rgba(0,0,0,.25);background:var(--surface)}
+.cal-d.drop{background:var(--band);box-shadow:inset 0 0 0 2px var(--focus)}
+.cal-tip{margin:0 0 8px}.ov-hint{margin-top:10px}
+.ov-pop{position:fixed;z-index:80;background:var(--surface);color:var(--ink);border:1px solid var(--line-2);border-radius:10px;padding:12px 14px;box-shadow:0 10px 30px rgba(0,0,0,.22);width:min(340px,calc(100vw - 24px));display:grid;gap:8px;font-size:.84rem}
+.ov-pop[hidden]{display:none}.ov-in{display:flex;flex-wrap:wrap;gap:8px 12px}.ov-in label{display:inline-flex;gap:6px;align-items:center}
+.ovw{font-size:.78rem;margin-top:3px;padding-left:16px}.ovw.crit{color:var(--crit)}.ovw.warn{color:var(--warn)}
+.pv-man{margin-top:12px;padding:10px 12px;border:1px solid var(--line);border-left:3px solid var(--focus);border-radius:8px;background:var(--surface);font-size:.84rem}
+.pv-man ul{margin:6px 0 0;padding-left:4px;list-style:none;display:grid;gap:6px}
 .pv-over{margin-top:12px;padding:10px 12px;border:1px solid var(--line);border-left:3px solid var(--crit);border-radius:8px;background:var(--surface);font-size:.84rem}
 .pv-over b{font-weight:600} .pv-over ul{margin:6px 0 0;padding-left:4px;list-style:none;display:grid;gap:4px}
 .group-h{font-size:.84rem;font-weight:600;color:var(--ink-2);margin-top:2px}
@@ -177,6 +189,8 @@ table.set td.src{font-size:.74rem;color:var(--ink-3);min-width:150px}
 input[type=number],select,input[type=date]{font-size:.82rem;color:var(--ink);background:var(--sunk);border:1px solid var(--line-2);border-radius:6px;padding:3px 6px}
 input[type=number]{width:64px;text-align:right}
 .tag{font-size:.7rem;padding:1px 6px;border-radius:4px;border:1px solid var(--line-2);color:var(--ink-3);white-space:nowrap}
+.v-warn{color:var(--warn);font-weight:600}.v-crit{color:var(--crit);font-weight:600}
+.fix{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.btn.sm{font-size:.76rem;padding:3px 8px}
 .btn{font-size:.82rem;border:1px solid var(--line-2);background:var(--surface);border-radius:6px;padding:5px 10px;cursor:pointer}
 .btn:hover{background:var(--sunk)}
 .btns{display:flex;flex-wrap:wrap;gap:6px}
@@ -272,7 +286,14 @@ input[type=number]{width:64px;text-align:right}
       <label for="cal-s"><input type="checkbox" id="cal-s" checked> 샘플링</label>
       <label for="cal-c"><input type="checkbox" id="cal-c"> 세척</label>
     </div></div>
+    <p class="s2 cal-tip">공정을 끌어 다른 날로 옮기거나, 눌러서 시작 시각을 바꿀 수 있습니다. ✎는 수동으로 옮긴 공정입니다.</p>
     <div class="cal-wrap"><div class="cal" id="cal"></div></div>
+    <div class="ov-pop" id="ov-pop" role="dialog" aria-label="공정 시작 시각 조정" hidden>
+      <b id="ov-title"></b><span class="s2" id="ov-sub"></span>
+      <div class="ov-in"><label>날짜 <input type="date" id="ov-d" min="2000-01-01" max="2100-12-31"></label><label>시각 <input type="time" id="ov-h" step="900"></label></div>
+      <div id="ov-warn"></div>
+      <div class="fix"><button class="btn sm" type="button" id="ov-ok">적용</button><button class="btn sm" type="button" id="ov-clr">자동 일정으로</button><button class="btn sm" type="button" id="ov-x">닫기</button></div>
+    </div>
   </section>
 
   <section class="panel single" aria-label="간트 차트">
@@ -337,7 +358,7 @@ input[type=number]{width:64px;text-align:right}
       <ul class="notes">
         <li>CCF 1·2·3은 배양 수확일(D1·D5·D9)에 고정합니다. 나머지 단계는 앞 공정 종료, 공정액 보관, 설비 준비가 모두 끝난 뒤 시작합니다.</li>
         <li>밀린 단계와 평가 때문에 시점이 바뀐 사후 세척은 근무시간 안에서만 진행합니다. 근무 종료 전에 끝낼 수 없으면 다음 날 근무 시작 시각으로 넘어갑니다(새벽 작업 없음). 계획 일정 자체는 그대로 둡니다.</li>
-        <li>사용 전: 시스템 CIP(UF System·AKTA) → 막 장착 → 막·컬럼 CIP·평형화 순서입니다. 시스템 CIP 시간은 사후 시스템 CIP와 같게 보고, Pre CIP &amp; EQ의 나머지를 막·컬럼 몫으로 나눴습니다. 각각 근무시간 안에서 끊지 않고 하며, 가능하면 전날로 당겨 잡습니다.</li><li>사용 후: 사용 종료부터 DHT 목표 시간만큼 오염 상태로 둔 뒤 막·컬럼 CIP → 막·컬럼 DHT 샘플 → 시스템 CIP(UF System·AKTA) → 시스템 DHT 샘플 순서입니다. DHT 샘플은 세척이 끝난 뒤 장비마다 따로 채취하고, 세척과 그 샘플은 근무시간 안에서 함께 끝나야 합니다. CHT 샘플도 막·컬럼(컬럼만, UF 막 제외)과 시스템을 각각 채취하고, 그다음 사용 전 세척을 시작합니다.</li><li>세척(사용 전 세척·평형화, 막·컬럼 세척, 시스템 CIP)은 중간에 끊어서 나눠 할 수 없습니다. 근무 종료 전에 한 번에 끝낼 수 없으면 통째로 다음 날 근무 시작 시각으로 넘깁니다. 위 '적용' 설정과 관계없이 항상 이 규칙을 씁니다. 단, 크로마토그래피 메소드 안에서 이어지는 컬럼 CIP는 공정과 연속이라 예외입니다.</li>
+        <li>사용 전: 시스템 CIP(UF System·AKTA) → 막 장착 → 막·컬럼 CIP·평형화 순서입니다. 시스템 CIP 시간은 사후 시스템 CIP와 같게 보고, Pre CIP &amp; EQ의 나머지를 막·컬럼 몫으로 나눴습니다. 각각 근무시간 안에서 끊지 않고 하며, 사용 전날 근무 시작부터(설비가 비는 대로) 바로 시작합니다.</li><li>사용 후: 사용 종료부터 DHT 목표 시간만큼 오염 상태로 둔 뒤 막·컬럼 CIP → 막·컬럼 DHT 샘플 → 시스템 CIP(UF System·AKTA) → 시스템 DHT 샘플 순서입니다. DHT 샘플은 세척이 끝난 뒤 장비마다 따로 채취하고, 세척과 그 샘플은 근무시간 안에서 함께 끝나야 합니다. CHT 샘플도 막·컬럼(컬럼만, UF 막 제외)과 시스템을 각각 채취하고, 그다음 사용 전 세척을 시작합니다.</li><li>세척(사용 전 세척·평형화, 막·컬럼 세척, 시스템 CIP)은 중간에 끊어서 나눠 할 수 없습니다. 근무 종료 전에 한 번에 끝낼 수 없으면 통째로 다음 날 근무 시작 시각으로 넘깁니다. 위 '적용' 설정과 관계없이 항상 이 규칙을 씁니다. 단, 크로마토그래피 메소드 안에서 이어지는 컬럼 CIP는 공정과 연속이라 예외입니다.</li>
         <li>샘플링은 목표 시간(홀드·DHT·CHT)이 지난 순간부터 가능합니다. 목표보다 늦게 채취해도 설정값은 목표 시간 그대로이므로 경고하지 않습니다. 채취 소요 시간(위 '샘플링' 값)만큼 근무시간 안에서 채취를 마친 뒤에 다음 공정, 세척, 사용 준비를 시작합니다.</li><li>DHT 평가를 켜면 사후 세척 시작이 사용 종료 + 목표 DHT 이후로 밀리고, 세척이 끝난 뒤 채취합니다. CHT 평가를 켜면 세척한 설비를 목표 CHT + 채취가 끝날 때까지 다음 사용에 쓰지 않습니다.</li>
         <li>앞 공정과 다음 공정의 계획상 관계(같은 날 이어서 / 며칠 뒤 같은 시각)는 유지합니다. HTS를 켜면 앞 공정 종료 + 홀드 목표보다 일찍 시작하지 않습니다. 둘 중 늦은 쪽이 기준입니다.</li><li>여러 공정액이 모이는 2차 UF는 가장 늦게 끝나는 1차 크로-3과의 관계만 지킵니다. 먼저 끝난 1차 크로-1·2 용출액은 기다리기만 하고 2차 UF를 늦추지 않습니다.</li><li>HTS·DHT·CHT는 서로 독립적으로 더하지 않고 한 일정 안에서 함께 계산합니다. 각 단계는 공정액 보관, 설비 세척(DHT), 청정 보관(CHT), 근무시간 조건 중 가장 늦은 것에 맞춰 시작합니다. 그래서 항목별 단독 영향의 합과 전체 지연이 다를 수 있습니다.</li><li>설비 대기나 근무시간 때문에 다음 공정이 늦게 시작하면 공정액의 실제 보관 시간이 목표보다 길어집니다. HTS로 실공정 보관하는 지점은 '보관 연장'(시험 시점을 실제 시간으로 잡아야 함)으로, HTS를 하지 않는 지점은 기존 기준을 넘으면 '보관 초과'로 표시합니다.</li>
         <li>누적 막대는 HTS → DHT → CHT 순서로 하나씩 더했을 때 늘어나는 일수입니다. 항목끼리 겹치는 대기가 있어서 단독 영향의 합과 다를 수 있습니다.</li>
@@ -353,7 +374,7 @@ const KEYS = ['hts','dht','cht'];
 const LABEL = { hts:'HTS', dht:'DHT', cht:'CHT' };
 const COLOR = { hts:'var(--hts)', dht:'var(--dht)', cht:'var(--cht)' };
 const DEF = {
-  workStart: 8, workEnd: 22, workMode: 'full', sampH: 0.5, startDate: '2026-11-02', pv: { dates:['2026-11-02','2026-11-23','2026-12-14'], tg:[{ hts:true, dht:true, cht:true }, { hts:true, dht:true, cht:true }, { hts:true, dht:true, cht:true }] },
+  workStart: 8, workEnd: 22, workMode: 'full', sampH: 0.5, startDate: '2026-11-02', pv: { dates:['2026-11-02','2026-11-23','2026-12-14'], tg:[{ hts:true, dht:true, cht:true }, { hts:true, dht:true, cht:true }, { hts:true, dht:true, cht:true }], ov:[{}, {}, {}] },
   tg: { hts: true, dht: true, cht: true },
   equipment: [
     { id:'AKTA1', name:'AKTA (1차·2차 크로 공용)', kind:'system', rule:'next', dht:true, cht:true, dhtT:24, chtT:72, dhtUse:'all', chtUse:'all' },
@@ -430,6 +451,8 @@ while (S.pv.dates.length < 3) S.pv.dates.push('');
 if (typeof S.startDate !== 'string') S.startDate = S.pv.dates[0] || DEF.startDate;
 if (!Array.isArray(S.pv.tg)) S.pv.tg = [0,1,2].map(i => { const on = !Array.isArray(S.pv.on) || S.pv.on[i] !== false; return { hts:on && S.tg.hts, dht:on && S.tg.dht, cht:on && S.tg.cht }; });
 for (let i = 0; i < 3; i++) S.pv.tg[i] = { hts:false, dht:false, cht:false, ...(S.pv.tg[i] || {}) };
+if (!Array.isArray(S.pv.ov)) S.pv.ov = [{}, {}, {}];
+for (let i = 0; i < 3; i++) if (!S.pv.ov[i] || typeof S.pv.ov[i] !== 'object') S.pv.ov[i] = {};
 const V = { vw:'proc', zoom:1, actual:false, sc:'study', pvZoom:1, calProc:true, calSamp:true, calCip:false };
 function save(){ try { localStorage.setItem(STORE, JSON.stringify(S)); } catch (e) {} }
 const num = v => { const n = Number(v); return isFinite(n) && n >= 0 ? n : 0; };
@@ -521,25 +544,43 @@ function simulate(tg, g0, ctx){
     /* 크로마토그래피 메소드 안의 컬럼 CIP는 공정과 이어서 돌므로 근무시간 판단에 함께 넣는다 */
     const runDur = num(s.proc) + (medE && medE.rule === 'now' ? num(s.post) : 0);
     let start = s.anchor ? fitWork(plan, num(s.proc)) : snap(earliest, plan, runDur);
+    /* 수동 조정(달력에서 옮김): 요청 시각에 시작한다. 공정액이 아직 없거나(앞 공정 종료 전) 설비가 비지 않으면 그때로 밀린다.
+       홀드 목표·근무시간·계획 관계는 따르지 않고 경고만 한다 */
+    const ovReq = ctx && ctx.ov && ctx.ov[s.id] != null && isFinite(+ctx.ov[s.id]) ? +ctx.ov[s.id] + offH : null;
+    let ov = null;
+    if (ovReq != null){
+      const prev = Math.max(-Infinity, ...S.holds.filter(h => h.to === s.id && res[h.from]).map(h => res[h.from].end));
+      start = Math.max(ovReq, prev); earliest = start;
+      ov = { req:ovReq, prev: prev > ovReq + 1e-9 ? prev : null, eq:null };
+      bind = { type:'manual' };
+    }
     const back = st => { const m = lf(st, preMed), y = lf(m, preSys); return { m, y }; };
-    let P = back(start);
+    /* 사용 전 세척은 사용 전날 근무 시작부터(설비가 비는 대로) 바로 한다. 전날 안에 못 끝내면 사용 직전에 맞춰 잡는다 */
+    const early = st => {
+      const y0 = (Math.floor(st / H) - 1) * H + workSpan()[0];
+      const y = sysE ? fw(Math.max(y0, fSys), preSys) : null;
+      const m = fw(Math.max(sysE ? y + preSys : y0, fMed), preMed);
+      return m + preMed <= st + 1e-9 ? { m, y: sysE ? y : m } : null;
+    };
+    const place = st => early(st) || back(st);
+    let P = place(start);
     if ((sysE || medE) && (P.y < fSys - 1e-9 || P.m < fMed - 1e-9)){
       const yS = fw(fSys === -Infinity ? P.y : Math.max(fSys, P.y), preSys);
       const mS = fw(Math.max(yS + preSys, fMed), preMed);
       const need = mS + preMed;
-      if (!s.anchor && need > start + 1e-9){
+      if ((!s.anchor || ov) && need > start + 1e-9){
         const limMed = fMed > yS + preSys + 1e-9;
         const id = limMed ? medE.id : sysE.id;
         earliest = Math.max(earliest, need);
-        start = snap(need, plan, runDur);
-        bind = { type:'eq', eq:id, why:freeWhy[id] };
+        if (ov){ start = fitWork(need, runDur); ov.eq = { id, why:freeWhy[id], at:start }; }
+        else { start = snap(need, plan, runDur); bind = { type:'eq', eq:id, why:freeWhy[id] }; }
       }
-      P = back(start);
+      P = place(start);
     }
     const end = start + num(s.proc);
-    const nightTry = !s.anchor && start > earliest + 0.01 && start > plan + 1e-9 ? { start:earliest, end:earliest + runDur, night:nightHours(earliest, runDur) } : null;
+    const nightTry = !s.anchor && !ov && start > earliest + 0.01 && start > plan + 1e-9 ? { start:earliest, end:earliest + runDur, night:nightHours(earliest, runDur) } : null;
     const preStart = sysE ? P.y : P.m;
-    res[s.id] = { id:s.id, plan, earliest, start, end, preStart, preSys:[P.y, P.y + preSys], preMed:[P.m, P.m + preMed], bind, nightTry };
+    res[s.id] = { id:s.id, plan, earliest, start, end, preStart, preSys:[P.y, P.y + preSys], preMed:[P.m, P.m + preMed], bind, nightTry, ov };
     /* 직전 CHT 샘플은 이번 사용 전 세척 전까지 채취해야 한다 */
     if (sysE && pendCht[sysE.id]){ pendCht[sysE.id].close = P.y; delete pendCht[sysE.id]; }
     if (medE && pendCht[medE.id]){ pendCht[medE.id].close = P.m; delete pendCht[medE.id]; }
@@ -987,13 +1028,31 @@ function renderGantt(R){
 }
 
 /* ---------- 확인할 것 (평가 진행) ---------- */
+/* 실공정 홀드 지점의 목표를 바꿔 '채취 직후 다음 공정'이 되는 값을 찾는다.
+   down: 목표를 줄여 근무시간 안에서 채취 후 바로 다음 공정 (당일 공정 원칙: 24 h 이상이던 목표는 24 h 밑으로 내리지 않음)
+   up: 목표를 실제 보관 시간까지 늘려 채취 시점이 다음 공정 직전이 되게 */
+function holdFix(R, x){
+  const h = x.h, orig = h.t, t0 = num(orig), sd = num(S.sampH), lo = t0 >= 24 ? 24 : 0.5, out = {};
+  const tryC = c => { h.t = c; const sim = simulate({ ...S.tg }, R.g0), y = sim.holdRes.find(z => z.h === h), p = samplings(sim).hold.find(z => z.h === h);
+    return y && p && !p.night && y.actual <= c + sd + 0.01 ? { c, dEnd: sim.end - R.cur.end } : null; };
+  try {
+    for (let c = Math.ceil(t0 * 2) / 2 - 0.5; c >= Math.max(lo, t0 - 24) - 1e-9; c -= 0.5){ const r = tryC(c); if (r){ out.down = r; break; } }
+    for (let c = Math.floor(t0 * 2) / 2 + 0.5; c <= x.actual + 24 + 1e-9; c += 0.5){ const r = tryC(c); if (r){ out.up = r; break; } }
+  } finally { h.t = orig; }
+  return out;
+}
 function studyRows(R){
   const rows = [], [ws0, we0] = workSpan();
   R.cur.holdRes.forEach(x => {
     /* 실공정 홀드 지점은 목표 시간 이상에서 채취하고 목표 시간으로 설정하므로 더 오래 보관돼도 문제가 아니다.
        실공정 지점(체크)은 평가 전에는 정해진 기준이 없으므로 보지 않는다. 체크하지 않은 지점만 기존 보관 기준(제조지시서)을 넘는지 본다 */
-    if (x.h.on || num(x.h.t) <= 0) return;
-    if (x.actual <= num(x.h.t) + 0.01) return;
+    if (num(x.h.t) <= 0) return;
+    /* 실공정 홀드 시험 지점: 목표 시간에 채취했어도 다음 공정이 늦게 시작하면 실제 보관은 목표보다 길다 → 알리고 목표를 조정할 수 있게 한다 */
+    const study = S.tg.hts && x.h.on, smp = study ? samplings(R.cur).hold.find(z => z.h === x.h) : null;
+    /* 목표 + 채취 시간 뒤에 다음 공정이 시작하면, 그 사이(근무시간 때문에 늦게 채취한 시간 포함)는 목표를 넘겨 보관한 것이다 */
+    const over = smp ? x.actual - (num(x.h.t) + num(S.sampH)) : 0;
+    if (x.h.on && !(study && over > 0.01)) return;
+    if (!x.h.on && x.actual <= num(x.h.t) + 0.01) return;
     const q = x.to, nx = S.steps.find(z => z.id === q.id) || { name:'', proc:0 };
     let why, src;
     if (q.bind.type === 'eq'){
@@ -1008,7 +1067,13 @@ function studyRows(R){
     } else if (q.start <= q.plan + 0.01){
       src = '계획'; why = `계획 일정 그대로(${esc(nx.name)} ${stamp(q.start)} 시작)도 보관이 기준보다 깁니다.`;
     } else { src = '앞 단계 지연'; why = `앞 단계가 밀려 ${esc(nx.name)}이 ${stamp(q.start)}에 시작합니다.`; }
-    const study = S.tg.hts && x.h.on;
+    if (study){
+      const fx = holdFix(R, x), i = S.holds.indexOf(x.h), sp = smp;
+      const btn = (t, txt) => `<button class="btn sm" type="button" data-hfix="${i}" data-t="${t.c}">${txt}${Math.abs(t.dEnd) > 0.01 ? ` · 완료 ${t.dEnd > 0 ? '+' : '−'}${fmtGap(Math.abs(t.dEnd))}` : ''}</button>`;
+      rows.push(`<tr><td>${sev('warn', '보관 연장')}</td><td class="what">${esc(x.h.name)}</td><td class="when">목표 ${fmtGap(num(x.h.t))} → 실제 ${fmtGap(x.actual)}<div class="s2">목표 + 채취 뒤 ${fmtGap(over)} 더 보관</div></td><td class="why">${sp ? `목표 시각 ${stamp(sp.open)}${sp.t > sp.open + 0.01 ? `, 근무시간에 맞춰 ${stamp(sp.t)}에 채취` : `에 채취`}. ` : ''}${why} 그래서 ${esc(nx.name)}에 들어가는 공정액은 목표(${fmtGap(num(x.h.t))})보다 오래 보관된 상태입니다.
+        <div class="fix">${fx.down ? btn(fx.down, `목표 ${fx.down.c} h로 줄이기 · 채취 후 바로 ${esc(nx.name)}`) : ''}${fx.up ? btn(fx.up, `목표 ${fx.up.c} h로 늘리기 · 실제 보관에 맞춤`) : ''}${!fx.down && !fx.up ? '<span class="s2">근무시간 안에서 맞출 수 있는 목표 값이 없습니다. 아래 홀드 지점 표에서 직접 바꾸세요.</span>' : ''}</div></td></tr>`);
+      return;
+    }
     rows.push(`<tr><td>${study ? sev('warn', '보관 연장') : sev('crit', '보관 초과')}</td><td class="what">${esc(x.h.name)}</td><td class="when">${study ? `목표 ${fmtGap(num(x.h.t))} + 채취 ${fmtGap(num(S.sampH))}` : `기준 ${fmtGap(num(x.h.t))}`} → 실제 ${fmtGap(x.actual)}</td><td class="why">${why}${study ? ' 홀드 시험 시점을 실제 보관 시간으로 잡거나 목표를 늘리세요.' : ' 일정 조정이 필요합니다.'} <span class="tag">${src}</span></td></tr>`);
   });
   S.steps.forEach(st => {
@@ -1077,7 +1142,7 @@ function samplings(sim, hts){
     if (num(x.h.t) <= 0) return;
     const t0 = x.from.end, open = t0 + num(x.h.t), close = x.h.on ? x.to.start : Infinity;
     const t = fitWork(open, sd, true), ok = t + sd <= close + 1e-9;
-    out.hold.push({ step:x.h.from, name:x.h.name, t0, open, close, onBatch:x.h.on, target:num(x.h.t), closeWhat:x.h.on ? (S.steps.find(z => z.id === x.h.to) || {}).name + ' 시작' : '', t: ok ? t : open, night:!ok });
+    out.hold.push({ h:x.h, step:x.h.from, name:x.h.name, t0, open, close, onBatch:x.h.on, target:num(x.h.t), closeWhat:x.h.on ? (S.steps.find(z => z.id === x.h.to) || {}).name + ' 시작' : '', t: ok ? t : open, night:!ok });
   });
   (sim.samps || []).forEach(x => out[x.kind].push({ ...x, night: !inWin(x.t, sd) || x.t + sd > x.close + 1e-9 }));
   return out;
@@ -1128,13 +1193,13 @@ const dnum = s => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || ''); if (!m 
 const PV_SPAN = 400;
 const WK = ['일','월','화','수','목','금','토'];
 /* tg가 없으면 배치마다 고른 평가 항목을 쓴다 */
-function pvSim(R, tg){
+function pvSim(R, tg, noOv){
   const list = S.pv.dates.map((d, i) => { const t = tg || { ...S.pv.tg[i] }; return { i, date:d, dn:dnum(d), t, on:t.hts || t.dht || t.cht }; }).filter(b => b.dn != null).sort((a, b) => a.dn - b.dn);
   if (!list.length) return null;
   if (list[list.length - 1].dn - list[0].dn > PV_SPAN) return { tooFar:true };
   const ref = list[0].dn, state = { free:{}, freeWhy:{}, pendCht:{} }, off = { hts:false, dht:false, cht:false };
   const out = list.map(b => {
-    const sim = simulate(b.t, R.g0, { off:(b.dn - ref) * H, state, batch:b.i });
+    const sim = simulate(b.t, R.g0, { off:(b.dn - ref) * H, state, batch:b.i, ov: tg || noOv ? null : S.pv.ov[b.i] });
     return { ...b, off:(b.dn - ref) * H, sim, tg:b.t };
   });
   /* 샘플링이 마지막 공정·세척보다 늦게 끝날 수 있어 범위에 넣는다 */
@@ -1148,8 +1213,48 @@ const pvStamp = (P, t) => `${mdw(P, t)} ${hm(t)}`;
 const BCOL = ['var(--b1)', 'var(--b2)', 'var(--b3)'];
 const evalChips = t => ['hts','dht','cht'].filter(k => t[k]).map(k => chip(k, ({hts:'홀드',dht:'DHT',cht:'CHT'})[k])).join(' ') || '<span class="s2">없음</span>';
 
+/* 달력에서 옮긴 공정 목록: 자동 일정과 비교하고 경고·되돌리기 */
+function manualPanel(R, P){
+  const auto = pvSim(R, null, true), rows = [];
+  P.batches.forEach(b => S.steps.forEach(st => {
+    const r = b.sim.res[st.id]; if (!r.ov) return;
+    const ab = auto.batches.find(z => z.i === b.i), a = ab ? ab.sim.res[st.id] : null;
+    const ws = V.pvWarn.filter(w => w.b === b.i && w.s === st.id);
+    rows.push(`<li><span class="dot" style="--c:${BCOL[b.i]}"></span> <b>${b.i + 1}배치 ${esc(st.name)}</b> ${pvStamp(P, r.start)} 시작 <span class="s2">(자동 일정 ${a ? pvStamp(P, a.start) : '—'})</span>
+      <button class="btn sm" type="button" data-ovclr="${b.i}|${st.id}">자동으로</button>${ws.map(w => `<div class="ovw ${w.lv}">${w.lv === 'crit' ? '⚠ ' : ''}${esc(w.text)}</div>`).join('')}</li>`);
+  }));
+  if (!rows.length) return `<p class="s2 ov-hint">달력에서 공정을 끌어 날짜를 옮기거나, 눌러서 시작 시각을 직접 바꿀 수 있습니다. 바꾸면 뒤 공정·세척·다른 배치가 모두 다시 계산됩니다.</p>`;
+  const nCrit = V.pvWarn.filter(w => w.lv === 'crit').length;
+  return `<div class="pv-man"><b>수동 조정 ${rows.length}건</b>${nCrit ? ` <span class="sev crit">경고 ${nCrit}</span>` : ''} <button class="btn sm" type="button" data-ovclr="all">모두 자동으로</button><ul>${rows.join('')}</ul></div>`;
+}
+
+/* 수동 조정한 공정을 점검: 요청보다 밀렸는지, 홀드 시험 목표보다 짧아졌는지, 근무시간 밖인지 */
+function pvWarn(P){
+  const out = [], sd = num(S.sampH), stepOf = id => S.steps.find(z => z.id === id) || { name:id };
+  P.batches.forEach(b => S.steps.forEach(st => {
+    const r = b.sim.res[st.id]; if (!r.ov) return;
+    const w = (lv, text) => out.push({ b:b.i, s:st.id, lv, text });
+    if (r.start > r.ov.req + 0.01){
+      const why = [];
+      if (r.ov.prev != null) why.push(`앞 공정이 ${pvStamp(P, r.ov.prev)}에 끝나 그 전에는 공정액이 없고`);
+      if (r.ov.eq) why.push(`${eqAt(r.ov.eq.id, st.id)}의 세척·DHT·CHT가 끝나야 쓸 수 있어`);
+      w('warn', `요청한 ${pvStamp(P, r.ov.req)}에는 시작할 수 없습니다. ${why.join(', ')} ${pvStamp(P, r.start)}로 밀렸습니다.`);
+    }
+    b.sim.holdRes.filter(x => x.h.to === st.id && num(x.h.t) > 0).forEach(x => {
+      if (x.h.on && b.tg.hts && x.actual < num(x.h.t) + sd - 0.01)
+        w('crit', `${x.h.name} 보관이 ${fmtGap(Math.max(0, x.actual))}로 홀드 목표 ${fmtGap(num(x.h.t))}${sd ? ` + 채취 ${fmtGap(sd)}` : ''}보다 짧습니다. 목표 시간에 홀드 샘플을 딸 수 없습니다.`);
+      else if (!x.h.on && x.actual > num(x.h.t) + 0.01)
+        w('crit', `${x.h.name} 보관이 ${fmtGap(x.actual)}로 기존 기준 ${fmtGap(num(x.h.t))}을 넘습니다.`);
+    });
+    const run = num(st.proc);
+    if (run > 0 && !inHours(r.start, r.start + run)) w('warn', `${stepOf(st.id).name}이 근무시간(${workSpan().join('~')}시) 밖에 걸립니다 (${pvStamp(P, r.start)}–${hm(r.end)}).`);
+  }));
+  return out;
+}
+
 function renderPV(R){
   const plan = pvSim(R, { hts:false, dht:false, cht:false }), P = pvSim(R, null);
+  V.pvP = P && !P.tooFar ? P : null; V.pvWarn = V.pvP ? pvWarn(P) : [];
   const sumEl = document.getElementById('pv-sum');
   if (!P || P.tooFar){ sumEl.innerHTML = `<p class="empty">${P ? `배치 D1 사이 간격이 ${PV_SPAN}일을 넘습니다. 날짜를 확인하세요.` : '배치 시작일(D1)을 하나 이상 입력하세요.'}</p>`; document.getElementById('pv-gl').innerHTML = ''; document.getElementById('pv-svg').innerHTML = ''; document.getElementById('cal').innerHTML = ''; document.getElementById('pv-legend').innerHTML = ''; return; }
   /* 요약 표 */
@@ -1173,6 +1278,7 @@ function renderPV(R){
     over.push(`<li><span class="dot" style="--c:${BCOL[b.i]}"></span> <b>${b.i + 1}배치 ${esc(x.h.name)}</b> ${fmtGap(x.actual)} 보관 <span class="s2">(${x.h.on ? '목표' : '기존 기준'} ${fmtGap(num(x.h.t))})</span> · ${esc((S.steps.find(z => z.id === x.h.to) || {}).name || '')} ${pvStamp(P, q.start)} 시작${q.bind && q.bind.type === 'eq' ? ` · ${ob}${esc(f ? eqAt(f.e.id, f.step.id) : '설비')} 사용을 기다림` : ''}</li>`);
   }); });
   sumEl.innerHTML = table(['배치', 'D1 (CCF-1)', '계획 원액 소분', '평가 반영 원액 소분', '지연', '샘플링', '평가 항목'], rows)
+    + manualPanel(R, P)
     + (over.length ? `<div class="pv-over"><b><span class="sev crit">보관 초과 ${over.length}곳</span> 다음 공정이 늦어져 공정액 보관이 기준(목표)보다 깁니다. 다른 배치의 설비 사용을 기다리는 경우 배치 간격을 늘리세요.</b><ul>${over.join('')}</ul></div>` : '');
 
   /* 간트: 행 = 공정 단계, 한 행에 3배치 막대 */
@@ -1200,7 +1306,7 @@ function renderPV(R){
       const r = b.sim.res[s.id], p0 = pb.sim.res[s.id], mid = rowY[s.id] + RH / 2;
       if (r.start - p0.start > 0.01) g += `<rect x="${X(p0.start)}" y="${mid - 6}" width="${Math.max(3, (p0.end - p0.start) * pxh).toFixed(2)}" height="12" rx="3" style="fill:var(--plan)"><title>${b.i + 1}배치 ${esc(s.name)} 계획 ${pvStamp(P, p0.start)}</title></rect><line x1="${(p0.end * pxh + 2).toFixed(1)}" x2="${(r.start * pxh - 2).toFixed(1)}" y1="${mid}" y2="${mid}" style="stroke:${BCOL[b.i]};stroke-width:1;stroke-dasharray:2 3"/>`;
       const w = Math.max(4, (r.end - r.start) * pxh);
-      g += `<rect x="${X(r.start)}" y="${mid - 8}" width="${w.toFixed(2)}" height="16" rx="3" style="fill:${BCOL[b.i]}"><title>${b.i + 1}배치 ${esc(s.name)}\n${pvStamp(P, r.start)} → ${pvStamp(P, r.end)}${r.start - p0.start > 0.01 ? `\n계획보다 +${days1(r.start - p0.start)}일` : ''}</title></rect>`;
+      g += `<rect x="${X(r.start)}" y="${mid - 8}" width="${w.toFixed(2)}" height="16" rx="3" style="fill:${BCOL[b.i]}${r.ov ? ';stroke:var(--ink);stroke-width:1.6;stroke-dasharray:3 2' : ''}"><title>${b.i + 1}배치 ${esc(s.name)}${r.ov ? ' (수동 조정)' : ''}\n${pvStamp(P, r.start)} → ${pvStamp(P, r.end)}${r.start - p0.start > 0.01 ? `\n계획보다 +${days1(r.start - p0.start)}일` : ''}</title></rect>`;
       if (w > 16) g += `<text x="${(r.start * pxh + w / 2).toFixed(1)}" y="${mid + 4}" text-anchor="middle" style="fill:var(--on-proc);font:700 10.5px var(--f);pointer-events:none">${b.i + 1}</text>`;
     });
     if (b.on) g += sampleMarks(samplings(b.sim, b.tg.hts), rowY, pxh, t => pvStamp(P, t));
@@ -1219,7 +1325,7 @@ function renderCal(P){
   const [ws, we] = workSpan();
   P.batches.forEach(b => {
     const tag = `${b.i + 1}배치`;
-    if (V.calProc) S.steps.forEach(s => { const r = b.sim.res[s.id]; add(r.start, { kind:'proc', b:b.i, text:`${s.name}`, sub:`${hm(r.start)}–${dayOf(r.end) !== dayOf(r.start) ? mdw(P, r.end) + ' ' : ''}${hm(r.end)}`, tag }); });
+    if (V.calProc) S.steps.forEach(s => { const r = b.sim.res[s.id]; add(r.start, { kind:'proc', b:b.i, s:s.id, man:!!r.ov, warn:(V.pvWarn || []).some(w => w.b === b.i && w.s === s.id && w.lv === 'crit'), text:`${r.ov ? '✎ ' : ''}${s.name}`, sub:`${hm(r.start)}–${dayOf(r.end) !== dayOf(r.start) ? mdw(P, r.end) + ' ' : ''}${hm(r.end)}`, tag }); });
     if (V.calSamp && b.on){ const sp = samplings(b.sim, b.tg.hts);
       sp.hold.forEach(x => add(x.t, { kind:'hts', b:b.i, text:`홀드 ${x.name}`, sub:hm(x.t), night:x.night, tag }));
       sp.dht.forEach(x => add(x.t, { kind:'dht', b:b.i, text:`DHT ${eqAt(x.eq, x.step)}`, sub:hm(x.t), night:x.night, tag }));
@@ -1242,7 +1348,7 @@ function renderCal(P){
     for (let d = 0; d < nDays; d++){
       const k = mStart + d, wd = (lead + d) % 7, items = (ev[k] || []).sort((a, c) => a.t - c.t);
       const inRange = k >= first && k <= last;
-      cells += `<div class="cal-d${wd === 0 || wd === 6 ? ' we' : ''}${inRange ? '' : ' out'}${k === today ? ' today' : ''}"><div class="n${wd === 0 ? ' sun' : wd === 6 ? ' sat' : ''}">${d + 1}</div>${items.map(it => `<div class="ev ${it.kind}${it.night ? ' night' : ''}" style="--bc:${BCOL[it.b]}" title="${esc(it.tag + ' ' + it.text + ' ' + it.sub)}"><i></i><span class="bn">${it.b + 1}</span><span class="tx">${esc(it.text)}</span><span class="tm">${esc(it.sub)}</span></div>`).join('')}</div>`;
+      cells += `<div class="cal-d${wd === 0 || wd === 6 ? ' we' : ''}${inRange ? '' : ' out'}${k === today ? ' today' : ''}" data-k="${k}"><div class="n${wd === 0 ? ' sun' : wd === 6 ? ' sat' : ''}">${d + 1}</div>${items.map(it => `<div class="ev ${it.kind}${it.night ? ' night' : ''}${it.man ? ' man' : ''}${it.warn ? ' bad' : ''}" style="--bc:${BCOL[it.b]}"${it.s ? ` data-b="${it.b}" data-s="${it.s}" tabindex="0" role="button"` : ''} title="${esc(it.tag + ' ' + it.text + ' ' + it.sub + (it.s ? '\n끌어서 날짜를 옮기거나 눌러서 시각을 바꿀 수 있습니다' : ''))}"><i></i><span class="bn">${it.b + 1}</span><span class="tx">${esc(it.text)}</span><span class="tm">${esc(it.sub)}</span></div>`).join('')}</div>`;
     }
     html += `<div class="cal-m"><h3>${y}년 ${m + 1}월</h3><div class="cal-g">${cells}</div></div>`;
     m++; if (m > 11){ m = 0; y++; }
@@ -1269,12 +1375,12 @@ function renderList(R){
 /* ---------- 입력 표 ---------- */
 function buildTables(){
   const stepName = id => (S.steps.find(s => s.id === id) || { name:id }).name;
-  let h = `<thead><tr><th>실공정</th><th>홀드 지점</th><th>다음 공정</th><th class="n">목표 (h)</th><th class="n">일</th><th class="n">평소 간격</th><th>근거</th></tr></thead><tbody>`;
+  let h = `<thead><tr><th>실공정</th><th>홀드 지점</th><th>다음 공정</th><th class="n">목표 (h)</th><th class="n">일</th><th class="n">평소 간격</th><th class="n">평가 시 실제</th><th>근거</th></tr></thead><tbody>`;
   S.holds.forEach((x, i) => {
     h += `<tr><td><input type="checkbox" id="ho-on-${i}" data-k="holds.${i}.on"${x.on ? ' checked' : ''} aria-label="${esc(x.name)} 실공정 보관"></td>
       <td>${esc(x.name)}</td><td class="muted">${esc(stepName(x.to))}</td>
       <td class="n"><input type="number" id="ho-t-${i}" min="0" step="1" data-k="holds.${i}.t" value="${x.t}" aria-label="${esc(x.name)} 목표 시간"></td>
-      <td class="n mono" id="ho-d-${i}"></td><td class="n mono" id="ho-g-${i}"></td><td class="src">${esc(x.src)}</td></tr>`;
+      <td class="n mono" id="ho-d-${i}"></td><td class="n mono" id="ho-g-${i}"></td><td class="n mono" id="ho-a-${i}"></td><td class="src">${esc(x.src)}</td></tr>`;
   });
   document.getElementById('t-hold').innerHTML = h + '</tbody>';
   const useSel = (k, i, v) => `<select id="eq-${k}-${i}" data-k="equipment.${i}.${k}" aria-label="적용 회차">${[['all','모든 사용'],['first','첫 사용'],['last','마지막 사용']].map(([a,b]) => `<option value="${a}"${a === v ? ' selected' : ''}>${b}</option>`).join('')}</select>`;
@@ -1359,6 +1465,84 @@ function ganttNav(boxId, key, sliderId){
 }
 ganttNav('gs', 'zoom', 'zoom'); ganttNav('pv-gs', 'pvZoom', 'pv-zoom');
 document.getElementById('actual').addEventListener('change', e => { V.actual = e.target.checked; render(); });
+document.getElementById('list').addEventListener('click', ev => {
+  const b = ev.target.closest('[data-hfix]'); if (!b) return;
+  S.holds[+b.dataset.hfix].t = +b.dataset.t; save(); buildTables(); render();
+});
+/* ---------- 달력에서 공정 옮기기 (끌어 놓기 · 눌러서 시각 입력) ---------- */
+const ovRound = t => Math.round(t * 4) / 4;
+function setOv(b, sid, tAbs){
+  const P = V.pvP, bo = P && P.batches.find(z => z.i === b); if (!bo) return;
+  S.pv.ov[b][sid] = ovRound(tAbs - bo.off); save(); render();
+}
+function clearOv(b, sid){ if (b === 'all') S.pv.ov = [{}, {}, {}]; else delete S.pv.ov[b][sid]; save(); render(); }
+const pop = document.getElementById('ov-pop');
+let popAt = null;
+function openPop(b, sid, x, y){
+  const P = V.pvP, bo = P && P.batches.find(z => z.i === b); if (!bo) return;
+  const r = bo.sim.res[sid], st = S.steps.find(z => z.id === sid), d = absDate(P, r.start);
+  popAt = { b, sid, x, y };
+  document.getElementById('ov-title').textContent = `${b + 1}배치 ${st.name} 시작`;
+  document.getElementById('ov-sub').textContent = `지금 ${pvStamp(P, r.start)} → ${hm(r.end)} (${num(st.proc)} h)${r.ov ? ' · 수동 조정됨' : ' · 자동 일정'}`;
+  document.getElementById('ov-d').value = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+  document.getElementById('ov-h').value = hm(r.start);
+  document.getElementById('ov-clr').disabled = !r.ov;
+  const ws = (V.pvWarn || []).filter(w => w.b === b && w.s === sid);
+  document.getElementById('ov-warn').innerHTML = ws.length ? ws.map(w => `<div class="ovw ${w.lv}" style="padding-left:0">${w.lv === 'crit' ? '⚠ ' : ''}${esc(w.text)}</div>`).join('') : (r.ov ? '<div class="ovw" style="padding-left:0;color:var(--good)">홀드·설비·근무시간 조건에 문제가 없습니다.</div>' : '');
+  pop.hidden = false;
+  const pw = pop.offsetWidth, ph = pop.offsetHeight;
+  pop.style.left = Math.max(12, Math.min(innerWidth - pw - 12, x - pw / 2)) + 'px';
+  pop.style.top = Math.max(12, Math.min(innerHeight - ph - 12, y + 14)) + 'px';
+}
+const closePop = () => { pop.hidden = true; popAt = null; };
+const reopen = () => { if (popAt) openPop(popAt.b, popAt.sid, popAt.x, popAt.y); };
+document.getElementById('ov-x').addEventListener('click', closePop);
+document.getElementById('ov-clr').addEventListener('click', () => { if (!popAt) return; clearOv(popAt.b, popAt.sid); reopen(); });
+document.getElementById('ov-ok').addEventListener('click', () => {
+  if (!popAt || !V.pvP) return;
+  const dn = dnum(document.getElementById('ov-d').value), tm = /^(\d{1,2}):(\d{2})/.exec(document.getElementById('ov-h').value || '');
+  if (dn == null || !tm) return;
+  setOv(popAt.b, popAt.sid, (dn - V.pvP.ref) * H + +tm[1] + +tm[2] / 60); reopen();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !pop.hidden) closePop(); });
+document.getElementById('pv-sum').addEventListener('click', e => {
+  const bt = e.target.closest('[data-ovclr]'); if (!bt) return;
+  const [b, sid] = bt.dataset.ovclr.split('|'); clearOv(b === 'all' ? 'all' : +b, sid); if (popAt) reopen();
+});
+(() => {
+  const cal = document.getElementById('cal'); let dg = null, ghost = null, over = null;
+  const cellAt = (x, y) => { const el = document.elementFromPoint(x, y); return el && el.closest ? el.closest('.cal-d[data-k]') : null; };
+  const end = () => { if (ghost) ghost.remove(); ghost = null; if (over) over.classList.remove('drop'); over = null; if (dg && dg.el) dg.el.classList.remove('dragging'); dg = null; };
+  cal.addEventListener('pointerdown', e => {
+    const el = e.target.closest('.ev[data-s]'); if (!el || e.button > 0) return;
+    dg = { el, b:+el.dataset.b, s:el.dataset.s, x:e.clientX, y:e.clientY, on:false };
+    try { el.setPointerCapture(e.pointerId); } catch (_) {}
+  });
+  cal.addEventListener('pointermove', e => {
+    if (!dg) return;
+    if (!dg.on && Math.hypot(e.clientX - dg.x, e.clientY - dg.y) > 6){
+      dg.on = true; dg.el.classList.add('dragging'); closePop();
+      ghost = dg.el.cloneNode(true); ghost.classList.remove('dragging'); ghost.classList.add('ghost'); document.body.appendChild(ghost);
+    }
+    if (!dg.on) return;
+    e.preventDefault();
+    ghost.style.left = (e.clientX + 8) + 'px'; ghost.style.top = (e.clientY + 8) + 'px';
+    const c = cellAt(e.clientX, e.clientY); if (c !== over){ if (over) over.classList.remove('drop'); over = c; if (over) over.classList.add('drop'); }
+  });
+  cal.addEventListener('pointerup', e => {
+    if (!dg) return; const d = dg, c = over;
+    end();
+    if (!d.on){ openPop(d.b, d.s, e.clientX, e.clientY); return; }
+    if (!c || !V.pvP) return;
+    const bo = V.pvP.batches.find(z => z.i === d.b), r = bo && bo.sim.res[d.s]; if (!r) return;
+    const tod = r.start - Math.floor(r.start / H) * H, k = +c.dataset.k;
+    if (k === V.pvP.ref + Math.floor(r.start / H)) return;
+    setOv(d.b, d.s, (k - V.pvP.ref) * H + tod);
+    openPop(d.b, d.s, e.clientX, e.clientY);
+  });
+  cal.addEventListener('pointercancel', end);
+  cal.addEventListener('keydown', e => { const el = e.target.closest && e.target.closest('.ev[data-s]'); if (el && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); const r = el.getBoundingClientRect(); openPop(+el.dataset.b, el.dataset.s, r.left + r.width / 2, r.bottom); } });
+})();
 document.getElementById('reset').addEventListener('click', () => { S = clone(DEF); save(); buildTables(); render(); });
 let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => keepCenter(V.sc === 'pv' ? 'pv-gs' : 'gs', render), 120); });
 
@@ -1370,6 +1554,10 @@ function render(){
   S.holds.forEach((x, i) => {
     const bh = R.base.holdRes.find(y => y.h === x); const g = document.getElementById('ho-g-' + i); if (g) g.textContent = bh ? fmtGap(bh.actual) : '';
     const d = document.getElementById('ho-d-' + i); if (d) d.textContent = days1(num(x.t));
+    const ch = R.cur.holdRes.find(y => y.h === x), a = document.getElementById('ho-a-' + i);
+    if (a){ const lim = num(x.t) + (S.tg.hts && x.on ? num(S.sampH) : 0), bad = ch && num(x.t) > 0 && ch.actual > lim + 0.01;
+      a.textContent = ch ? fmtGap(ch.actual) : ''; a.classList.toggle('v-warn', bad && S.tg.hts && x.on); a.classList.toggle('v-crit', bad && !(S.tg.hts && x.on));
+      a.title = bad ? (S.tg.hts && x.on ? '채취 후 다음 공정까지 더 보관됨' : '기준 초과') : ''; }
   });
 }
 buildTables(); render();
