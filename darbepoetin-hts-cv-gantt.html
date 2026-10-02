@@ -240,7 +240,7 @@ input[type=number]{width:64px;text-align:right}
       <label for="sd" class="sd">D1 시작일 <input type="date" id="sd" min="2000-01-01" max="2100-12-31" data-k="startDate"></label>
       <span class="t">근무시간</span>
       <label for="ws"><input type="number" id="ws" min="0" max="23" data-k="workStart">시부터</label>
-      <label for="we"><input type="number" id="we" min="1" max="24" data-k="workEnd">시까지</label>
+      <label for="we"><input type="number" id="we" min="1" max="47" data-k="workEnd">시까지 <span class="s2" id="we-note"></span></label>
       <label for="sh">샘플링 <input type="number" id="sh" min="0" max="8" step="0.5" data-k="sampH">h</label>
       <label for="hsl" class="opt"><input type="checkbox" id="hsl" data-k="holdSampLate"> 홀드 샘플은 다음 공정 시작 직전에</label>
       <label for="cnw" class="opt"><input type="checkbox" id="cnw" data-k="cleanNow"> 세척·샘플링은 근무시간과 관계없이 바로 (야간 작업 보기)</label>
@@ -485,16 +485,21 @@ const fmtGap = h => h >= 24 ? `${days1(h)}일` : `${Math.round(h*10)/10} h`;
 
 /* ---------- 시뮬레이션 ---------- */
 function planned(map, s){ if (s.after){ const p = map[s.after]; return planned(map, p) + num(p.proc); } return (num(s.day) - 1) * H + num(s.at); }
-function workSpan(){ const ws = Math.min(23, num(S.workStart)), we = Math.max(ws + 1, Math.min(24, num(S.workEnd))); return [ws, we]; }
-function nextWork(t){ const ws = workSpan()[0], d = Math.floor(t / H), tod = t - d * H; return tod <= ws + 1e-9 ? d * H + ws : (d + 1) * H + ws; }
+/* 근무시간: 하루 d의 근무 창은 [d·24+ws, d·24+we]. we는 24를 넘을 수 있다(26 = 익일 02시, 최대 ws+24) */
+function workSpan(){ const ws = Math.max(0, Math.min(23, num(S.workStart))), we = Math.max(ws + 1, Math.min(ws + 24, num(S.workEnd))); return [ws, we]; }
+const clock = h => h > 24 ? `익일 ${h - 24}` : `${h}`;
+const workLabel = () => { const [ws, we] = workSpan(); return `${ws}~${clock(we)}시`; };
+/* t가 들어 있는 근무 창의 날(d). 없으면 null */
+function winDay(t){ const [ws, we] = workSpan(), d0 = Math.floor(t / H); for (const d of [d0, d0 - 1]) if (t >= d * H + ws - 1e-9 && t <= d * H + we + 1e-9) return d; return null; }
+function nextWork(t){ const ws = workSpan()[0]; let d = Math.floor(t / H); if (t > d * H + ws + 1e-9) d += 1; return d * H + ws; }
 /* t 이후 가장 이른 근무시간 내 착수 시각. 'full'이면 작업 전체(dur)가 근무 종료 전에 끝나야 한다 */
 function fitWork(t, dur, strict){
   const [ws, we] = workSpan();
   const need = !strict && S.workMode === 'start' ? 0 : Math.min(num(dur), we - ws);
-  let d = Math.floor(t / H), tod = t - d * H;
-  if (tod < ws) tod = ws;
-  if (need > 0 ? tod + need > we + 1e-9 : tod >= we - 1e-9){ d += 1; tod = ws; }
-  return d * H + tod;
+  for (let d = Math.floor(t / H) - 1; ; d++){
+    const s = Math.max(t, d * H + ws), e = d * H + we;
+    if (need > 0 ? s + need <= e + 1e-9 : s < e - 1e-9) return s;
+  }
 }
 /* 계획 시각이든 밀린 시각이든 근무시간 안에 들어가야 한다 */
 function snap(t, plan, dur){ return fitWork(Math.max(t, plan), dur); }
@@ -505,10 +510,10 @@ function latestFit(endBy, dur){
   const [ws, we] = workSpan(); dur = num(dur);
   if (dur >= H) return endBy - dur;   /* 하루 이상 걸리는 준비는 대기 포함으로 본다 */
   if (dur > we - ws + 1e-9) return Math.floor((endBy - dur - ws) / H) * H + ws;
-  let d = Math.floor(endBy / H), tod = endBy - d * H;
-  if (tod > we) tod = we;
-  if (tod - dur < ws - 1e-9){ d -= 1; tod = we; }
-  return d * H + tod - dur;
+  for (let d = Math.floor(endBy / H); ; d--){
+    const e = Math.min(endBy, d * H + we), s = e - dur;
+    if (s >= d * H + ws - 1e-9) return s;
+  }
 }
 
 /* 계획에서 앞 공정과의 관계: k = 앞 공정 종료일로부터 며칠 뒤(0 = 같은 날 이어서)에 시작했는가.
@@ -588,7 +593,7 @@ function simulate(tg, g0, ctx){
     if (S.holdSampLate && tg.hts && !s.anchor && !ov && sd > 0){
       const opens = S.holds.filter(h => h.to === s.id && h.on && num(h.t) > 0 && res[h.from] && !(ctx && ctx.sov && ctx.sov[h.id] != null)).map(h => res[h.from].end + num(h.t));
       for (let k = 0; k < 4 && opens.length; k++){
-        const day0 = Math.floor(start / H) * H, need = Math.max(day0 + workSpan()[0], ...opens) + sd;
+        const wd = winDay(start), day0 = (wd != null ? wd : Math.floor(start / H)) * H, need = Math.max(day0 + workSpan()[0], ...opens) + sd;
         if (start >= need - 1e-9) break;
         start = fitWork(need, runDur);
       }
@@ -729,20 +734,20 @@ function computeAll(){
 function sampAt(open, d){ return S.cleanNow ? open : fitWork(open, d, true); }
 function sampEnd(open){ const d = num(S.sampH); return sampAt(open, d) + d; }
 function nightHours(t, p){
-  const [ws, we] = workSpan(); let n = 0;
-  for (let d = Math.floor(t / H); d * H < t + p; d++){
-    const a = Math.max(t, d * H), b = Math.min(t + p, (d + 1) * H);
-    const ia = Math.max(a, d * H + ws), ib = Math.min(b, d * H + we);
-    n += (b - a) - Math.max(0, ib - ia);
-  }
-  return n;
+  const [ws, we] = workSpan(); let inW = 0;
+  for (let d = Math.floor(t / H) - 1; d * H + ws < t + p; d++) inW += Math.max(0, Math.min(t + p, d * H + we) - Math.max(t, d * H + ws));
+  return p - inW;
+}
+/* 하루(d) 안에서 근무시간이 아닌 구간들 (간트 음영) */
+function offIntervals(d){
+  const [ws, we] = workSpan(), a = d * H, b = a + H, on = [[a - H + ws, a - H + we], [a + ws, a + we]].map(([x, y]) => [Math.max(a, x), Math.min(b, y)]).filter(([x, y]) => y > x + 1e-9).sort((p, q) => p[0] - q[0]);
+  const out = []; let c = a; on.forEach(([x, y]) => { if (x > c + 1e-9) out.push([c, x]); c = Math.max(c, y); }); if (b > c + 1e-9) out.push([c, b]); return out;
 }
 function inHours(a, b){
   const [ws, we] = workSpan();
   if (b - a >= H - 1e-9) return true;  /* 하루 이상 걸리는 준비(바이러스 여과 사용 전 24 h)는 대기 포함으로 본다 */
   if (b - a > we - ws + 1e-9) return false;
-  const d = Math.floor(a / H);
-  return a - d * H >= ws - 1e-9 && b - d * H <= we + 1e-9;
+  return inWin(a, b - a);
 }
 function simulateOps(R){
   const base = R.base, lim = { hts:S.tg.hts, dht:S.tg.dht, cht:S.tg.cht };
@@ -972,7 +977,7 @@ function renderGantt(R){
         const t0 = r.nightTry.start, t1 = r.nightTry.end;
         body += `<rect x="${X(t0)}" y="${mid - 7}" width="${((t1 - t0) * pxh).toFixed(2)}" height="14" rx="3" style="fill:none;stroke:var(--crit);stroke-width:1.2;stroke-dasharray:3 2"><title>${esc(s.name)}을 ${stamp(t0)}에 바로 시작하면 ${stamp(t1)}에 끝나 근무시간(${ws1}~${we1}시) 밖 ${fmtGap(r.nightTry.night)}가 생깁니다. 그래서 ${stamp(r.start)}로 미뤘습니다.</title></rect>`;
         for (let d = Math.floor(t0 / H); d * H < t1; d++){
-          [[d * H, d * H + ws1], [d * H + we1, (d + 1) * H]].forEach(([a, c]) => {
+          offIntervals(d).forEach(([a, c]) => {
             const ia = Math.max(a, t0), ib = Math.min(c, t1);
             if (ib > ia + 1e-9) body += `<rect x="${X(ia)}" y="${mid - 6}" width="${((ib - ia) * pxh).toFixed(2)}" height="12" style="fill:var(--crit-soft);pointer-events:none"/>`;
           });
@@ -1007,8 +1012,7 @@ function renderGantt(R){
   const step = [1,2,7].find(d => d * H * pxh >= lblW) || 7;
   let axis = `<rect x="${LX0}" y="0" width="${W}" height="${HEAD}" style="fill:var(--surface)"/>`;
   for (let d = T0 / H; d < days; d++){
-    if (ws1 > 0) axis += `<rect x="${X(d * H)}" y="${HEAD}" width="${(ws1 * pxh).toFixed(2)}" height="${y - HEAD}" style="fill:var(--night)"/>`;
-    if (we1 < 24) axis += `<rect x="${X(d * H + we1)}" y="${HEAD}" width="${((24 - we1) * pxh).toFixed(2)}" height="${y - HEAD}" style="fill:var(--night)"/>`;
+    offIntervals(d).forEach(([a, c]) => { axis += `<rect x="${X(a)}" y="${HEAD}" width="${((c - a) * pxh).toFixed(2)}" height="${y - HEAD}" style="fill:var(--night)"/>`; });
   }
   for (let d = T0 / H + 1; d <= days; d++){
     const xx = ((d - 1) * H * pxh).toFixed(2);
@@ -1082,7 +1086,7 @@ function studyRows(R){
       why = `${esc(nx.name)}이 ${esc(f ? eqAt(f.e.id, f.step.id) : '설비')}의 ${by}을 기다려 ${stamp(q.start)}에 시작합니다.`;
     } else if (q.start > q.earliest + 0.01){
       src = '근무시간'; const nt = q.nightTry;
-      why = `보관 후 바로 ${esc(nx.name)}을 하면 ${nt ? stamp(nt.end) : ''}에 끝나 ${we0}시를 넘깁니다. 그래서 ${stamp(q.start)}에 시작합니다. DHT·CHT와는 관계없습니다.`;
+      why = `보관 후 바로 ${esc(nx.name)}을 하면 ${nt ? stamp(nt.end) : ''}에 끝나 근무 종료(${clock(we0)}시)를 넘깁니다. 그래서 ${stamp(q.start)}에 시작합니다. DHT·CHT와는 관계없습니다.`;
     } else if (q.bind.type === 'hold' && q.bind.hts && q.bind.h !== x.h){
       src = '홀드'; why = `${esc(nx.name)}이 ${esc(q.bind.h.name)} 홀드 시험(${fmtGap(num(q.bind.h.t))})이 끝나기를 기다려 ${stamp(q.start)}에 시작합니다.`;
     } else if (q.start <= q.plan + 0.01){
@@ -1099,7 +1103,7 @@ function studyRows(R){
   });
   S.steps.forEach(st => {
     const b = R.base.res[st.id];
-    if (b.start > b.plan + 0.01) rows.push(`<tr><td>${sev('info', '계획을 근무시간에 맞춤')}</td><td class="what">${esc(st.name)}</td><td class="when">${stamp(b.plan)} → ${stamp(b.start)}</td><td class="why">운영 스케줄 시각대로 하면 근무시간(${ws0}~${we0}시) 안에 끝나지 않아 옮겨서 계산합니다.</td></tr>`);
+    if (b.start > b.plan + 0.01) rows.push(`<tr><td>${sev('info', '계획을 근무시간에 맞춤')}</td><td class="what">${esc(st.name)}</td><td class="when">${stamp(b.plan)} → ${stamp(b.start)}</td><td class="why">운영 스케줄 시각대로 하면 근무시간(${workLabel()}) 안에 끝나지 않아 옮겨서 계산합니다.</td></tr>`);
   });
   return rows;
 }
@@ -1132,12 +1136,12 @@ function renderOps(R){
   const [ws, we] = workSpan();
   const st = (n, t) => `<div><b class="${n ? '' : 'zero'}">${n}</b><span>${t}</span></div>`;
   document.getElementById('ops-head').innerHTML = `<div style="display:grid;gap:12px">
-    <div class="verdict ${ok ? 'ok' : 'bad'}"><span class="ic">${ok ? '✓' : '!'}</span><div><b>${ok ? '지금 근무시간으로 운영할 수 있습니다' : '근무시간 안에서는 운영할 수 없습니다'}</b><span>${applied.length ? applied.join(', ') + '을 운영 기준으로 두고' : '켜진 평가 항목이 없어 기준 없이'} 계획 일정 D1~D${dayOf(o.end)}, 근무 ${ws}~${we}시로 점검했습니다.</span></div></div>
+    <div class="verdict ${ok ? 'ok' : 'bad'}"><span class="ic">${ok ? '✓' : '!'}</span><div><b>${ok ? '지금 근무시간으로 운영할 수 있습니다' : '근무시간 안에서는 운영할 수 없습니다'}</b><span>${applied.length ? applied.join(', ') + '을 운영 기준으로 두고' : '켜진 평가 항목이 없어 기준 없이'} 계획 일정 D1~D${dayOf(o.end)}, 근무 ${workLabel()}로 점검했습니다.</span></div></div>
     <div class="stats">${st(nRe, 'CHT 때문에 추가하는 재세척')}${st(nEarly, 'DHT 때문에 당일로 당긴 세척')}${st(nNight, '근무시간 밖 작업')}${st(nHold, '보관 기준 초과')}</div></div>`;
   const rows = [];
   o.issues.forEach(i => {
     if (i.kind === 'hold') rows.push(`<tr><td>${sev('crit', '보관 기준 초과')}</td><td class="what">${esc(i.x.h.name)}</td><td class="when">계획상 ${fmtGap(i.x.actual)}, ${i.existing ? '기존 기준' : '평가 목표'} ${fmtGap(num(i.x.h.t))}</td><td class="why">${i.existing ? '기존 보관 기준(제조지시서)보다 계획의 보관이 깁니다.' : '평가한 홀드타임보다 계획의 보관이 깁니다.'} 홀드 목표를 늘리거나 계획을 당기세요.</td></tr>`);
-    else rows.push(`<tr><td>${sev('crit', '근무시간 밖')}</td><td class="what">${esc(i.what)}</td><td class="when">${stamp(i.start)} → ${stamp(i.end)}</td><td class="why">기준을 지키려면 ${ws}~${we}시 밖에 해야 합니다. 근무시간이나 평가 값을 조정하세요.</td></tr>`);
+    else rows.push(`<tr><td>${sev('crit', '근무시간 밖')}</td><td class="what">${esc(i.what)}</td><td class="when">${stamp(i.start)} → ${stamp(i.end)}</td><td class="why">기준을 지키려면 ${workLabel()} 밖에 해야 합니다. 근무시간이나 평가 값을 조정하세요.</td></tr>`);
   });
   o.adds.forEach(a => {
     if (a.kind === 'reclean') rows.push(`<tr><td>${sev('warn', '재세척 추가')}</td><td class="what">${esc(a.step ? eqAt(a.e.id, a.step.id) : a.e.name)}</td><td class="when">${stamp(a.start)} → ${stamp(a.end)}</td><td class="why">${esc(a.prev.name)} 뒤 세척하고 ${esc(a.step.name)} 사용 전 세척까지 ${fmtGap(a.idle)} 비어 CHT ${fmtGap(num(a.e.chtT))}를 넘습니다. 사용 직전에 한 번 더 세척합니다.</td></tr>`);
@@ -1150,11 +1154,11 @@ function renderOps(R){
    홀드: 보관 시작(T0)과 목표 시간 도달 시각에 공정액 채취. 체크한 지점은 실제 배치, 아니면 따로 떼어 둔 시료
    DHT: 사용 후 방치가 끝나고 세척을 시작하기 직전에 설비 표면 채취
    CHT: 세척 후 청정 보관이 끝나는 시각에 채취 */
-function isWork(t){ const [ws, we] = workSpan(), tod = t - Math.floor(t / H) * H; return tod >= ws - 1e-9 && tod <= we + 1e-9; }
+function isWork(t){ return winDay(t) != null; }
 /* [t, t+d]가 하루 근무시간 안에 들어가는가 (d=0이면 근무 종료 시각까지 허용) */
 function inWin(t, d){
-  const [ws, we] = workSpan(), ok = day => { const tod = t - day * H; return tod >= ws - 1e-9 && tod + d <= we + 1e-9; };
-  return ok(Math.floor(t / H)) || (d === 0 && ok(Math.floor((t - 1e-9) / H))); }
+  const [ws, we] = workSpan(), ok = day => { const tod = t - day * H; return tod >= ws - 1e-9 && tod + d <= we + 1e-9; }, d0 = Math.floor(t / H);
+  return ok(d0) || ok(d0 - 1) || (d === 0 && ok(Math.floor((t - 1e-9) / H))); }
 function samplings(sim, hts){
   if (hts === undefined) hts = S.tg.hts;
   /* 목표 시간이 지난 순간(open)부터 채취 가능, 다음 단계 전(close)까지. 장비마다 따로 채취한다 */
@@ -1191,7 +1195,7 @@ function renderSched(R){
   const [ws, we] = workSpan();
   document.getElementById('sched-h').textContent = ops ? '공정별 운영 시각' : '공정별 예상 시각과 샘플링';
   document.getElementById('sched-note').innerHTML = ops ? '평가가 끝난 뒤 계획대로 운영할 때의 시작·종료 시각입니다.'
-    : `목표 시간이 지난 순간부터 채취할 수 있습니다. 채취(${num(S.sampH)} h)를 근무시간 안에서 가장 이르게 마치고 나서 다음 공정·세척·사용 준비를 시작하도록 일정을 잡았습니다. 총 샘플링 ${sp.hold.length + sp.dht.length + sp.cht.length}회 (홀드 ${sp.hold.length}, DHT ${sp.dht.length}, CHT ${sp.cht.length})${nNight ? `. <b style="color:var(--crit)">${nNight}회는 채취 가능 구간이 근무시간(${ws}~${we}시)에 걸리지 않아</b> 야간 채취나 목표 시간 조정이 필요합니다` : '. 모두 근무시간 안입니다'}.`;
+    : `목표 시간이 지난 순간부터 채취할 수 있습니다. 채취(${num(S.sampH)} h)를 근무시간 안에서 가장 이르게 마치고 나서 다음 공정·세척·사용 준비를 시작하도록 일정을 잡았습니다. 총 샘플링 ${sp.hold.length + sp.dht.length + sp.cht.length}회 (홀드 ${sp.hold.length}, DHT ${sp.dht.length}, CHT ${sp.cht.length})${nNight ? `. <b style="color:var(--crit)">${nNight}회는 채취 가능 구간이 근무시간(${workLabel()})에 걸리지 않아</b> 야간 채취나 목표 시간 조정이 필요합니다` : '. 모두 근무시간 안입니다'}.`;
   document.getElementById('sched').innerHTML = table(heads, rows);
 }
 /* 간트 위 샘플링 표시: 행 위쪽에 작은 마름모 */
@@ -1277,13 +1281,13 @@ function pvWarn(P){
         w('crit', `${x.h.name} 보관이 ${fmtGap(x.actual)}로 기존 기준 ${fmtGap(num(x.h.t))}을 넘습니다.`);
     });
     const run = num(st.proc);
-    if (run > 0 && !inHours(r.start, r.start + run)) w('warn', `${stepOf(st.id).name}이 근무시간(${workSpan().join('~')}시) 밖에 걸립니다 (${pvStamp(P, r.start)}–${hm(r.end)}).`);
+    if (run > 0 && !inHours(r.start, r.start + run)) w('warn', `${stepOf(st.id).name}이 근무시간(${workLabel()}) 밖에 걸립니다 (${pvStamp(P, r.start)}–${hm(r.end)}).`);
   }));
   /* 직접 옮긴 홀드 샘플 */
   P.batches.forEach(b => { if (!b.tg.hts) return; samplings(b.sim, true).hold.filter(x => x.how === 'manual').forEach(x => {
     const w = (lv, text) => out.push({ b:b.i, s:'h:' + x.h.id, lv, text });
     if (x.short) w('crit', `${x.name} 샘플이 목표 시각 ${pvStamp(P, x.open)}보다 이릅니다. 보관 ${fmtGap(Math.max(0, x.t - x.t0))}로 홀드 목표 ${fmtGap(x.target)}보다 짧습니다.`);
-    if (!inWin(x.t, sd)) w('warn', `${x.name} 샘플(${pvStamp(P, x.t)})이 근무시간(${workSpan().join('~')}시) 밖입니다.`);
+    if (!inWin(x.t, sd)) w('warn', `${x.name} 샘플(${pvStamp(P, x.t)})이 근무시간(${workLabel()}) 밖입니다.`);
     const nx = b.sim.res[x.h.to];
     if (nx && x.t > x.open + 0.01 && nx.bind && nx.bind.type === 'hold' && nx.bind.h === x.h && nx.start <= x.t + sd + 0.01 + H) w('warn', `${S.steps.find(z => z.id === x.h.to).name}이 이 샘플을 기다려 ${pvStamp(P, nx.start)}에 시작합니다.`);
   }); });
@@ -1453,7 +1457,7 @@ function onField(el, commit){
   const k = el.dataset && el.dataset.k; if (!k) return;
   let v = el.type === 'checkbox' ? el.checked : (el.tagName === 'SELECT' || el.type === 'date') ? el.value : num(el.value);
   if (k === 'workStart') v = Math.min(23, v);
-  if (k === 'workEnd') v = Math.min(24, Math.max(num(S.workStart) + 1, v));
+  if (k === 'workEnd') v = Math.min(Math.min(23, num(S.workStart)) + 24, Math.max(num(S.workStart) + 1, v));
   setPath(k, v); save(); render();
   /* 입력을 마치면 실제로 쓰는 값으로 칸을 맞춘다 (빈 칸·음수·범위 밖) */
   if (commit && el.type === 'number' && String(v) !== el.value) el.value = v;
@@ -1613,6 +1617,7 @@ document.getElementById('reset').addEventListener('click', () => { S = clone(DEF
 let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => keepCenter(V.sc === 'pv' ? 'pv-gs' : 'gs', render), 120); });
 
 function render(){
+  { const n = document.getElementById('we-note'), we = workSpan()[1]; if (n) n.textContent = we > 24 ? `(익일 ${we - 24}시)` : ''; }
   const R = computeAll();
   renderSwitches(R);
   if (V.sc === 'pv'){ renderPV(R); }
