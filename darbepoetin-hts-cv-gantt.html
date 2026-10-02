@@ -70,6 +70,7 @@ header.top{display:grid;gap:4px;padding-bottom:4px}
 .hours label{display:inline-flex;align-items:center;gap:6px;font-size:.84rem;color:var(--ink-2)}
 .hours input[type=number]{width:52px}
 .hours select{max-width:100%}
+.hours .sd{flex-basis:100%;font-weight:600;color:var(--ink)}
 
 /* 탭 */
 .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line-2);margin-top:6px}
@@ -221,6 +222,7 @@ input[type=number]{width:64px;text-align:right}
     <label class="tg" style="--c:var(--dht)" id="card-dht"><input type="checkbox" id="tg-dht"><span class="sw" aria-hidden="true"></span><span class="t">세척 DHT</span><span class="s">사용 후 24 h 이상 두었다가 세척</span><span class="d" id="d-dht"></span></label>
     <label class="tg" style="--c:var(--cht)" id="card-cht"><input type="checkbox" id="tg-cht"><span class="sw" aria-hidden="true"></span><span class="t">세척 CHT</span><span class="s">세척 후 청정 보관, UF 막 제외</span><span class="d" id="d-cht"></span></label>
     <div class="hours">
+      <label for="sd" class="sd">D1 시작일 <input type="date" id="sd" min="2000-01-01" max="2100-12-31" data-k="startDate"></label>
       <span class="t">근무시간</span>
       <label for="ws"><input type="number" id="ws" min="0" max="23" data-k="workStart">시부터</label>
       <label for="we"><input type="number" id="we" min="1" max="24" data-k="workEnd">시까지</label>
@@ -351,7 +353,7 @@ const KEYS = ['hts','dht','cht'];
 const LABEL = { hts:'HTS', dht:'DHT', cht:'CHT' };
 const COLOR = { hts:'var(--hts)', dht:'var(--dht)', cht:'var(--cht)' };
 const DEF = {
-  workStart: 8, workEnd: 22, workMode: 'full', sampH: 0.5, pv: { dates:['2026-11-02','2026-11-23','2026-12-14'], tg:[{ hts:true, dht:true, cht:true }, { hts:true, dht:true, cht:true }, { hts:true, dht:true, cht:true }] },
+  workStart: 8, workEnd: 22, workMode: 'full', sampH: 0.5, startDate: '2026-11-02', pv: { dates:['2026-11-02','2026-11-23','2026-12-14'], tg:[{ hts:true, dht:true, cht:true }, { hts:true, dht:true, cht:true }, { hts:true, dht:true, cht:true }] },
   tg: { hts: true, dht: true, cht: true },
   equipment: [
     { id:'AKTA1', name:'AKTA (1차·2차 크로 공용)', kind:'system', rule:'next', dht:true, cht:true, dhtT:24, chtT:72, dhtUse:'all', chtUse:'all' },
@@ -425,6 +427,7 @@ S.equipment.forEach(e => { const d = DEF.equipment.find(x => x.id === e.id) || {
 if (!S.pv || typeof S.pv !== 'object') S.pv = clone(DEF.pv);
 if (!Array.isArray(S.pv.dates)) S.pv.dates = clone(DEF.pv.dates);
 while (S.pv.dates.length < 3) S.pv.dates.push('');
+if (typeof S.startDate !== 'string') S.startDate = S.pv.dates[0] || DEF.startDate;
 if (!Array.isArray(S.pv.tg)) S.pv.tg = [0,1,2].map(i => { const on = !Array.isArray(S.pv.on) || S.pv.on[i] !== false; return { hts:on && S.tg.hts, dht:on && S.tg.dht, cht:on && S.tg.cht }; });
 for (let i = 0; i < 3; i++) S.pv.tg[i] = { hts:false, dht:false, cht:false, ...(S.pv.tg[i] || {}) };
 const V = { vw:'proc', zoom:1, actual:false, sc:'study', pvZoom:1, calProc:true, calSamp:true, calCip:false };
@@ -435,10 +438,8 @@ const num = v => { const n = Number(v); return isFinite(n) && n >= 0 ? n : 0; };
 const dayOf = t => Math.floor(Math.round(t * 60) / 60 / H) + 1;
 const hm = t => { const tt = Math.round(t * 60) / 60, m = Math.round((tt - Math.floor(tt / H) * H) * 60); return `${String(Math.floor(m / 60)).padStart(2,'0')}:${String(m % 60).padStart(2,'0')}`; };
 function dateLabel(d){
-  const sd0 = S.pv && S.pv.dates[0];
-  if (!sd0) return '';
-  const b = new Date(sd0 + 'T00:00:00'); if (isNaN(b)) return '';
-  b.setDate(b.getDate() + d - 1); return `${b.getMonth()+1}/${b.getDate()}`;
+  const dn = dnum(S.startDate); if (dn == null) return '';
+  const b = new Date((dn + d - 1) * DAYMS); return `${b.getUTCMonth()+1}/${b.getUTCDate()}`;
 }
 const stamp = t => `D${dayOf(t)} ${hm(t)}`;
 const tenths = h => Math.round(h / 2.4 + 1e-9);
@@ -1274,7 +1275,7 @@ function buildTables(){
   });
   document.getElementById('t-step').innerHTML = s + '</tbody>';
   [0,1,2].forEach(i => { document.getElementById('pv-d' + i).value = S.pv.dates[i] || ''; ['hts','dht','cht'].forEach(k => { document.getElementById('pv-' + k + i).checked = !!S.pv.tg[i][k]; }); });
-  ['workStart','workEnd','workMode','sampH'].forEach(k => { document.querySelector(`[data-k="${k}"]`).value = S[k]; });
+  ['workStart','workEnd','workMode','sampH','startDate'].forEach(k => { document.querySelector(`[data-k="${k}"]`).value = S[k]; });
   KEYS.forEach(k => { document.getElementById('tg-' + k).checked = !!S.tg[k]; });
 }
 
