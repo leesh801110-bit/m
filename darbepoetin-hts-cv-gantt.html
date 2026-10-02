@@ -327,7 +327,7 @@ input[type=number]{width:64px;text-align:right}
         <li>CCF 1·2·3은 배양 수확일(D1·D5·D9)에 고정합니다. 나머지 단계는 앞 공정 종료, 공정액 보관, 설비 준비가 모두 끝난 뒤 시작합니다.</li>
         <li>밀린 단계와 평가 때문에 시점이 바뀐 사후 세척은 근무시간 안에서만 진행합니다. 근무 종료 전에 끝낼 수 없으면 다음 날 근무 시작 시각으로 넘어갑니다(새벽 작업 없음). 계획 일정 자체는 그대로 둡니다.</li>
         <li>사용 전: 시스템 CIP(UF System·AKTA) → 막 장착 → 막·컬럼 CIP·평형화 순서입니다. 시스템 CIP 시간은 사후 시스템 CIP와 같게 보고, Pre CIP &amp; EQ의 나머지를 막·컬럼 몫으로 나눴습니다. 각각 근무시간 안에서 끊지 않고 하며, 가능하면 전날로 당겨 잡습니다.</li><li>사용 후: 막·컬럼 DHT 샘플 → 막·컬럼 CIP → 시스템 DHT 샘플 → 시스템 CIP 순서입니다. 막·컬럼과 시스템 샘플은 따로 채취합니다. CHT 샘플도 막·컬럼(컬럼만, UF 막 제외)과 시스템을 각각 채취하고, 그다음 사용 전 세척을 시작합니다.</li><li>세척(사용 전 세척·평형화, 막·컬럼 세척, 시스템 CIP)은 중간에 끊어서 나눠 할 수 없습니다. 근무 종료 전에 한 번에 끝낼 수 없으면 통째로 다음 날 근무 시작 시각으로 넘깁니다. 위 '적용' 설정과 관계없이 항상 이 규칙을 씁니다. 단, 크로마토그래피 메소드 안에서 이어지는 컬럼 CIP는 공정과 연속이라 예외입니다.</li>
-        <li>샘플링은 목표 시간(홀드·DHT·CHT)이 지난 순간부터 가능합니다. 채취 소요 시간(위 '샘플링' 값)만큼 근무시간 안에서 채취를 마친 뒤에 다음 공정, 세척, 사용 준비를 시작합니다.</li><li>DHT 평가를 켜면 사후 세척 시작이 사용 종료 + 목표 DHT + 채취 이후로 밀립니다. CHT 평가를 켜면 세척한 설비를 목표 CHT + 채취가 끝날 때까지 다음 사용에 쓰지 않습니다.</li>
+        <li>샘플링은 목표 시간(홀드·DHT·CHT)이 지난 순간부터 가능합니다. 목표보다 늦게 채취해도 설정값은 목표 시간 그대로이므로 경고하지 않습니다. 채취 소요 시간(위 '샘플링' 값)만큼 근무시간 안에서 채취를 마친 뒤에 다음 공정, 세척, 사용 준비를 시작합니다.</li><li>DHT 평가를 켜면 사후 세척 시작이 사용 종료 + 목표 DHT + 채취 이후로 밀립니다. CHT 평가를 켜면 세척한 설비를 목표 CHT + 채취가 끝날 때까지 다음 사용에 쓰지 않습니다.</li>
         <li>앞 공정과 다음 공정의 계획상 관계(같은 날 이어서 / 며칠 뒤 같은 시각)는 유지합니다. HTS를 켜면 앞 공정 종료 + 홀드 목표보다 일찍 시작하지 않습니다. 둘 중 늦은 쪽이 기준입니다.</li><li>여러 공정액이 모이는 2차 UF는 가장 늦게 끝나는 1차 크로-3과의 관계만 지킵니다. 먼저 끝난 1차 크로-1·2 용출액은 기다리기만 하고 2차 UF를 늦추지 않습니다.</li><li>HTS·DHT·CHT는 서로 독립적으로 더하지 않고 한 일정 안에서 함께 계산합니다. 각 단계는 공정액 보관, 설비 세척(DHT), 청정 보관(CHT), 근무시간 조건 중 가장 늦은 것에 맞춰 시작합니다. 그래서 항목별 단독 영향의 합과 전체 지연이 다를 수 있습니다.</li><li>설비 대기나 근무시간 때문에 다음 공정이 늦게 시작하면 공정액의 실제 보관 시간이 목표보다 길어집니다. HTS로 실공정 보관하는 지점은 '보관 연장'(시험 시점을 실제 시간으로 잡아야 함)으로, HTS를 하지 않는 지점은 기존 기준을 넘으면 '보관 초과'로 표시합니다.</li>
         <li>누적 막대는 HTS → DHT → CHT 순서로 하나씩 더했을 때 늘어나는 일수입니다. 항목끼리 겹치는 대기가 있어서 단독 영향의 합과 다를 수 있습니다.</li>
         <li>바이러스 여과의 Post CIP 21 h는 익일 세척까지 대기를 포함한 값으로 보고 Nano Vessel 세척 2 h로 나눴습니다.</li>
@@ -912,9 +912,10 @@ function renderGantt(R){
 function studyRows(R){
   const rows = [], [ws0, we0] = workSpan();
   R.cur.holdRes.forEach(x => {
-    /* 실공정 홀드 지점은 목표 시간 + 채취 시간까지가 정상. 그보다 길 때만 알린다 */
-    const allow = num(x.h.t) + (S.tg.hts && x.h.on ? num(S.sampH) : 0);
-    if (x.actual <= allow + 0.01) return;
+    /* 실공정 홀드 지점은 목표 시간 이상에서 채취하고 목표 시간으로 설정하므로 더 오래 보관돼도 문제가 아니다.
+       홀드 시험을 하지 않는 지점만 기존 보관 기준을 넘는지 본다 */
+    if (S.tg.hts && x.h.on) return;
+    if (x.actual <= num(x.h.t) + 0.01) return;
     const q = x.to, nx = S.steps.find(z => z.id === q.id) || { name:'', proc:0 };
     let why, src;
     if (q.bind.type === 'eq'){
@@ -1003,7 +1004,7 @@ function renderSched(R){
   const shortName = n => n.replace(/\s*\(.*\)/, '');
   const rows = S.steps.map(s => {
     const r = sim.res[s.id];
-    const win = x => `<div class="s2">${stamp(x.open)}부터${isFinite(x.close) ? ` ${stamp(x.close)} ${esc(x.closeWhat)} 전까지` : ''}${x.t > x.open + 0.01 ? ` · ${x.after != null && x.after > x.open + 0.01 ? '막·컬럼 CIP가 끝난 뒤' : '근무시간에 맞춰'} ${fmtGap(x.t - x.open)} 늦게 채취 (실제 ${fmtGap(x.t - x.t0)})` : ''}</div>`;
+    const win = x => `<div class="s2">${stamp(x.open)}부터${isFinite(x.close) ? ` ${stamp(x.close)} ${esc(x.closeWhat)} 전까지` : ''}${x.t > x.open + 0.01 ? ` · ${x.after != null && x.after > x.open + 0.01 ? '막·컬럼 CIP가 끝난 뒤' : '근무시간에 맞춰'} ${fmtGap(x.t - x.t0)} 시점에 채취, ${fmtGap(x.target)}로 설정` : ''}</div>`;
     const cell = (x, label) => `<div><b>${hm(x.t)}</b> <span class="s2">D${dayOf(x.t)}</span>${nightTag(x.night)}<div class="s2">${label}</div>${win(x)}</div>`;
     const h = sp.hold.filter(x => x.step === s.id).map(x => cell(x, `${esc(x.name)} ${fmtGap(x.target)}, ${x.onBatch ? '실제 배치' : '시료'}`)).join('');
     const d = sp.dht.filter(x => x.step === s.id).map(x => cell(x, `${esc(shortName(x.name))} DHT ${fmtGap(x.target)}`)).join('');
