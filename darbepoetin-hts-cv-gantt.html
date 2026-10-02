@@ -158,7 +158,7 @@ header.top{display:grid;gap:4px;padding-bottom:4px}
 .sev.good{background:var(--good-soft);color:var(--good)}
 .list-wrap{overflow-x:auto}
 .empty{color:var(--ink-2);padding:6px 2px}
-.ev[data-s],.ev[data-h],.ev[data-c]{cursor:grab;touch-action:none}
+.ev[data-s],.ev[data-h],.ev[data-c],.ev[data-x]{cursor:grab;touch-action:none}
 .ev.man{outline:1.5px dashed var(--ink-2);outline-offset:-1px}
 .ev.bad{box-shadow:inset 0 0 0 1.5px var(--crit)}
 .ev.dragging{opacity:.35}
@@ -289,7 +289,7 @@ input[type=number]{width:64px;text-align:right}
       <label for="cal-s"><input type="checkbox" id="cal-s" checked> 샘플링</label>
       <label for="cal-c"><input type="checkbox" id="cal-c"> 세척</label>
     </div></div>
-    <p class="s2 cal-tip">공정, 홀드 샘플, DHT 세척(세척 보기에선 사후 세척)을 끌어 다른 날로 옮기거나, 눌러서 시각을 바꿀 수 있습니다. ✎는 직접 옮긴 것입니다.</p>
+    <p class="s2 cal-tip">공정, 홀드 샘플, DHT 세척(세척 보기에선 사후 세척), CHT 샘플을 끌어 다른 날로 옮기거나, 눌러서 시각을 바꿀 수 있습니다. 근무시간 때문에 밀린 것을 앞날로 옮기면 설정한 목표 시각(예: 24 h 뒤)으로 들어갑니다. ✎는 직접 옮긴 것입니다.</p>
     <div class="cal-wrap"><div class="cal" id="cal"></div></div>
     <div class="ov-pop" id="ov-pop" role="dialog" aria-label="공정 시작 시각 조정" hidden>
       <b id="ov-title"></b><span class="s2" id="ov-sub"></span>
@@ -377,7 +377,7 @@ const KEYS = ['hts','dht','cht'];
 const LABEL = { hts:'HTS', dht:'DHT', cht:'CHT' };
 const COLOR = { hts:'var(--hts)', dht:'var(--dht)', cht:'var(--cht)' };
 const DEF = {
-  workStart: 8, workEnd: 22, workMode: 'full', sampH: 0.5, holdSampLate: false, cleanNow: false, startDate: '2026-11-02', pv: { dates:['2026-11-02','2026-11-23','2026-12-14'], tg:[{ hts:true, dht:true, cht:true }, { hts:true, dht:true, cht:true }, { hts:true, dht:true, cht:true }], ov:[{}, {}, {}], sov:[{}, {}, {}], cov:[{}, {}, {}] },
+  workStart: 8, workEnd: 22, workMode: 'full', sampH: 0.5, holdSampLate: false, cleanNow: false, startDate: '2026-11-02', pv: { dates:['2026-11-02','2026-11-23','2026-12-14'], tg:[{ hts:true, dht:true, cht:true }, { hts:true, dht:true, cht:true }, { hts:true, dht:true, cht:true }], ov:[{}, {}, {}], sov:[{}, {}, {}], cov:[{}, {}, {}], xov:[{}, {}, {}] },
   tg: { hts: true, dht: true, cht: true },
   equipment: [
     { id:'AKTA1', name:'AKTA (1차·2차 크로 공용)', kind:'system', rule:'next', dht:true, cht:true, dhtT:24, chtT:72, dhtUse:'all', chtUse:'all' },
@@ -457,6 +457,8 @@ for (let i = 0; i < 3; i++) S.pv.tg[i] = { hts:false, dht:false, cht:false, ...(
 if (!Array.isArray(S.pv.ov)) S.pv.ov = [{}, {}, {}];
 if (!Array.isArray(S.pv.sov)) S.pv.sov = [{}, {}, {}];
 if (!Array.isArray(S.pv.cov)) S.pv.cov = [{}, {}, {}];
+if (!Array.isArray(S.pv.xov)) S.pv.xov = [{}, {}, {}];
+for (let i = 0; i < 3; i++) if (!S.pv.xov[i] || typeof S.pv.xov[i] !== 'object') S.pv.xov[i] = {};
 for (let i = 0; i < 3; i++) if (!S.pv.cov[i] || typeof S.pv.cov[i] !== 'object') S.pv.cov[i] = {};
 for (let i = 0; i < 3; i++) if (!S.pv.sov[i] || typeof S.pv.sov[i] !== 'object') S.pv.sov[i] = {};
 for (let i = 0; i < 3; i++) if (!S.pv.ov[i] || typeof S.pv.ov[i] !== 'object') S.pv.ov[i] = {};
@@ -539,6 +541,8 @@ function simulate(tg, g0, ctx){
   /* 사후 세척 시작을 직접 정한 값 (달력에서 옮김). 공정이 끝나기 전·막/컬럼 샘플 전에는 시작할 수 없다 */
   const covOf = (sid, eid) => { const v = ctx && ctx.cov ? ctx.cov[sid + '|' + eid] : null; return v != null && isFinite(+v) ? +v + offH : null; };
   const cman = {};
+  /* CHT 샘플 시각을 직접 정한 값. 세척(과 DHT 샘플)이 끝나기 전에는 딸 수 없다 */
+  const xovOf = (sid, eid) => { const v = ctx && ctx.xov ? ctx.xov[sid + '|' + eid] : null; return v != null && isFinite(+v) ? +v + offH : null; };
   S.steps.forEach(s => {
     const plan = planned(map, s) + offH;
     let earliest = plan, bind = { type:'plan' };
@@ -640,8 +644,8 @@ function simulate(tg, g0, ctx){
       const chtOn = tg.cht && medE.cht && medE.kind !== 'membrane' && pick(medE.chtUse, i, totals[medE.id]);
       let fr = mDone;
       if (chtOn){
-        const open = mCe + num(medE.chtT), t = sampAt(Math.max(open, mDone), sd); fr = t + sd;
-        const smp = { kind:'cht', step:s.id, eq:medE.id, name:medE.name, t0:mCe, open, t, close:Infinity, target:num(medE.chtT), closeWhat:'다음 사용 전 세척' };
+        const open = mCe + num(medE.chtT), xr = xovOf(s.id, medE.id), t = xr != null ? Math.max(xr, mDone) : sampAt(Math.max(open, mDone), sd); fr = t + sd;
+        const smp = { kind:'cht', step:s.id, eq:medE.id, name:medE.name, t0:mCe, open, t, close:Infinity, target:num(medE.chtT), closeWhat:'다음 사용 전 세척', man: xr != null ? { req:xr, min:mDone } : null };
         samps.push(smp); pendCht[medE.id] = smp;
         bars.push({ eq:medE.id, type:'cht', start:mCe, end:t, step:s, study:true }, { eq:medE.id, type:'samp', start:t, end:fr, step:s, k:'cht' });
       }
@@ -670,8 +674,8 @@ function simulate(tg, g0, ctx){
       const chtOn = tg.cht && sysE.cht && pick(sysE.chtUse, i, totals[sysE.id]);
       let fr = sDone;
       if (chtOn){
-        const open = se + num(sysE.chtT), t = sampAt(Math.max(open, sDone), sd); fr = t + sd;
-        const smp = { kind:'cht', step:s.id, eq:sysE.id, name:sysE.name, t0:se, open, t, close:Infinity, target:num(sysE.chtT), closeWhat:'다음 사용 전 시스템 CIP' };
+        const open = se + num(sysE.chtT), xr = xovOf(s.id, sysE.id), t = xr != null ? Math.max(xr, sDone) : sampAt(Math.max(open, sDone), sd); fr = t + sd;
+        const smp = { kind:'cht', step:s.id, eq:sysE.id, name:sysE.name, t0:se, open, t, close:Infinity, target:num(sysE.chtT), closeWhat:'다음 사용 전 시스템 CIP', man: xr != null ? { req:xr, min:sDone } : null };
         samps.push(smp); pendCht[sysE.id] = smp;
         bars.push({ eq:sysE.id, type:'cht', start:se, end:t, step:s, study:true }, { eq:sysE.id, type:'samp', start:t, end:fr, step:s, k:'cht' });
       }
@@ -1236,7 +1240,7 @@ function pvSim(R, tg, noOv){
   if (list[list.length - 1].dn - list[0].dn > PV_SPAN) return { tooFar:true };
   const ref = list[0].dn, state = { free:{}, freeWhy:{}, pendCht:{} }, off = { hts:false, dht:false, cht:false };
   const out = list.map(b => {
-    const sim = simulate(b.t, R.g0, { off:(b.dn - ref) * H, state, batch:b.i, ov: tg || noOv ? null : S.pv.ov[b.i], sov: tg || noOv ? null : S.pv.sov[b.i], cov: tg || noOv ? null : S.pv.cov[b.i] });
+    const sim = simulate(b.t, R.g0, { off:(b.dn - ref) * H, state, batch:b.i, ov: tg || noOv ? null : S.pv.ov[b.i], sov: tg || noOv ? null : S.pv.sov[b.i], cov: tg || noOv ? null : S.pv.cov[b.i], xov: tg || noOv ? null : S.pv.xov[b.i] });
     return { ...b, off:(b.dn - ref) * H, sim, tg:b.t };
   });
   /* 샘플링이 마지막 공정·세척보다 늦게 끝날 수 있어 범위에 넣는다 */
@@ -1272,7 +1276,13 @@ function manualPanel(R, P){
       rows.push(`<li><span class="dot" style="--c:${BCOL[b.i]}"></span> <b>${b.i + 1}배치 ${esc(eqAt(q.eq, q.step.id))} 세척</b> ${pvStamp(P, q.start)}–${hm(q.end)} <span class="s2">(자동 ${a ? pvStamp(P, a.start) : '—'}, 공정 종료 후 ${fmtGap(q.start - b.sim.res[q.step.id].end)})</span>
         <button class="btn sm" type="button" data-covclr="${b.i}|${key}">자동으로</button>${ws.map(w => `<div class="ovw ${w.lv}">${w.lv === 'crit' ? '⚠ ' : ''}${esc(w.text)}</div>`).join('')}</li>`);
     }); });
-  if (!rows.length) return `<p class="s2 ov-hint">달력에서 공정, 홀드 샘플, DHT 세척을 끌어 날짜를 옮기거나, 눌러서 시각을 직접 바꿀 수 있습니다. 바꾸면 뒤 공정·세척·다른 배치가 모두 다시 계산됩니다.</p>`;
+  P.batches.forEach(b => { const ab = auto.batches.find(z => z.i === b.i), asp = ab ? samplings(ab.sim, ab.tg.hts).cht : [];
+    samplings(b.sim, b.tg.hts).cht.filter(x => x.man).forEach(x => {
+      const key = x.step + '|' + x.eq, a = asp.find(z => z.step === x.step && z.eq === x.eq), ws = V.pvWarn.filter(w => w.b === b.i && w.s === 'x:' + key);
+      rows.push(`<li><span class="dot" style="--c:${BCOL[b.i]}"></span> <b>${b.i + 1}배치 ${esc(eqAt(x.eq, x.step))} CHT 샘플</b> ${pvStamp(P, x.t)} <span class="s2">(자동 ${a ? pvStamp(P, a.t) : '—'}, 세척 후 ${fmtGap(x.t - x.t0)})</span>
+        <button class="btn sm" type="button" data-xovclr="${b.i}|${key}">자동으로</button>${ws.map(w => `<div class="ovw ${w.lv}">${w.lv === 'crit' ? '⚠ ' : ''}${esc(w.text)}</div>`).join('')}</li>`);
+    }); });
+  if (!rows.length) return `<p class="s2 ov-hint">달력에서 공정, 홀드 샘플, DHT 세척, CHT 샘플을 끌어 날짜를 옮기거나, 눌러서 시각을 직접 바꿀 수 있습니다. 바꾸면 뒤 공정·세척·다른 배치가 모두 다시 계산됩니다.</p>`;
   const nCrit = V.pvWarn.filter(w => w.lv === 'crit').length;
   return `<div class="pv-man"><b>수동 조정 ${rows.length}건</b>${nCrit ? ` <span class="sev crit">경고 ${nCrit}</span>` : ''} <button class="btn sm" type="button" data-ovclr="all">모두 자동으로</button><ul>${rows.join('')}</ul></div>`;
 }
@@ -1305,6 +1315,13 @@ function pvWarn(P){
     if (q.start > q.man.req + 0.01) w('warn', `요청한 ${pvStamp(P, q.man.req)}에는 시작할 수 없습니다. ${q.man.min > r.end + 0.01 ? '막·컬럼 세척과 그 샘플' : '공정'}이 ${pvStamp(P, q.man.min)}에 끝나 그때 시작합니다.`);
     if (q.dhtOn && b.tg.dht && q.start - r.end < num(e.dhtT) - 0.01) w('crit', `${nm} 세척이 공정 종료 후 ${fmtGap(q.start - r.end)} 만에 시작해 DHT 목표 ${fmtGap(num(e.dhtT))}보다 짧습니다.`);
     if (!inHours(q.start, q.end + (q.dhtOn ? sd : 0))) w('warn', `${nm} 세척${q.dhtOn ? '·샘플' : ''}(${pvStamp(P, q.start)}–${hm(q.end + (q.dhtOn ? sd : 0))})이 근무시간(${workLabel()}) 밖에 걸립니다.`);
+  }));
+  /* 직접 옮긴 CHT 샘플 */
+  P.batches.forEach(b => samplings(b.sim, b.tg.hts).cht.filter(x => x.man).forEach(x => {
+    const nm = eqAt(x.eq, x.step), w = (lv, text) => out.push({ b:b.i, s:'x:' + x.step + '|' + x.eq, lv, text });
+    if (x.t > x.man.req + 0.01) w('warn', `요청한 ${pvStamp(P, x.man.req)}에는 딸 수 없습니다. 세척${x.man.min > x.t0 + 0.01 ? '과 DHT 샘플' : ''}이 ${pvStamp(P, x.man.min)}에 끝나 그때 채취합니다.`);
+    if (x.t < x.open - 0.01) w('crit', `${nm} CHT 샘플이 세척 후 ${fmtGap(x.t - x.t0)} 만이라 CHT 목표 ${fmtGap(x.target)}보다 짧습니다.`);
+    if (!inWin(x.t, sd)) w('warn', `${nm} CHT 샘플(${pvStamp(P, x.t)})이 근무시간(${workLabel()}) 밖입니다.`);
   }));
   /* 직접 옮긴 홀드 샘플 */
   P.batches.forEach(b => { if (!b.tg.hts) return; samplings(b.sim, true).hold.filter(x => x.how === 'manual').forEach(x => {
@@ -1396,7 +1413,8 @@ function renderCal(P){
       /* DHT: 세척 시작 날에 표시 · 세척 시작–끝, 채취 시각 */
       sp.dht.forEach(x => { const cid = `${x.step}|${x.eq}`; add(x.cs != null ? x.cs : x.t, { kind:'dht', b:b.i, cid, man:x.man, warn:(V.pvWarn || []).some(w => w.b === b.i && w.s === 'c:' + cid && w.lv === 'crit'),
         text:`${x.man ? '✎ ' : ''}DHT ${eqAt(x.eq, x.step)}`, sub: x.cs != null ? `세척 ${hm(x.cs)}–${dayOf(x.ce - 1e-9) !== dayOf(x.cs) ? mdw(P, x.ce) + ' ' : ''}${hm(x.ce)} · 채취 ${hm(x.t)}` : hm(x.t), night:x.night, tag }); });
-      sp.cht.forEach(x => add(x.t, { kind:'cht', b:b.i, text:`CHT ${eqAt(x.eq, x.step)}`, sub:hm(x.t), night:x.night, tag }));
+      sp.cht.forEach(x => { const xid = `${x.step}|${x.eq}`; add(x.t, { kind:'cht', b:b.i, xid, man:!!x.man, warn:(V.pvWarn || []).some(w => w.b === b.i && w.s === 'x:' + xid && w.lv === 'crit'),
+        text:`${x.man ? '✎ ' : ''}CHT ${eqAt(x.eq, x.step)}`, sub:`세척 끝 ${dayOf(x.t0) !== dayOf(x.t) ? mdw(P, x.t0) + ' ' : ''}${hm(x.t0)} → 채취 ${hm(x.t)}`, night:x.night, tag }); });
     }
     if (V.calCip) b.sim.bars.filter(q => q.type === 'cip' || q.type === 'pre').forEach(q => {
       if (q.type === 'cip' && q.part === 'med' && S.equipment.find(e => e.id === q.eq && e.kind !== 'membrane' && e.kind !== 'column')) return;
@@ -1416,7 +1434,7 @@ function renderCal(P){
     for (let d = 0; d < nDays; d++){
       const k = mStart + d, wd = (lead + d) % 7, items = (ev[k] || []).sort((a, c) => a.t - c.t);
       const inRange = k >= first && k <= last;
-      cells += `<div class="cal-d${wd === 0 || wd === 6 ? ' we' : ''}${inRange ? '' : ' out'}${k === today ? ' today' : ''}" data-k="${k}"><div class="n${wd === 0 ? ' sun' : wd === 6 ? ' sat' : ''}">${d + 1}</div>${items.map(it => `<div class="ev ${it.kind}${it.night ? ' night' : ''}${it.man ? ' man' : ''}${it.warn ? ' bad' : ''}" style="--bc:${BCOL[it.b]}"${it.s ? ` data-b="${it.b}" data-s="${it.s}" tabindex="0" role="button"` : it.hid ? ` data-b="${it.b}" data-h="${it.hid}" tabindex="0" role="button"` : it.cid ? ` data-b="${it.b}" data-c="${it.cid}" tabindex="0" role="button"` : ''} title="${esc(it.tag + ' ' + it.text + ' ' + it.sub + (it.s || it.hid || it.cid ? '\n끌어서 날짜를 옮기거나 눌러서 시각을 바꿀 수 있습니다' : ''))}"><i></i><span class="bn">${it.b + 1}</span><span class="tx">${esc(it.text)}</span><span class="tm">${esc(it.sub)}</span></div>`).join('')}</div>`;
+      cells += `<div class="cal-d${wd === 0 || wd === 6 ? ' we' : ''}${inRange ? '' : ' out'}${k === today ? ' today' : ''}" data-k="${k}"><div class="n${wd === 0 ? ' sun' : wd === 6 ? ' sat' : ''}">${d + 1}</div>${items.map(it => `<div class="ev ${it.kind}${it.night ? ' night' : ''}${it.man ? ' man' : ''}${it.warn ? ' bad' : ''}" style="--bc:${BCOL[it.b]}"${it.s ? ` data-b="${it.b}" data-s="${it.s}" tabindex="0" role="button"` : it.hid ? ` data-b="${it.b}" data-h="${it.hid}" tabindex="0" role="button"` : it.cid ? ` data-b="${it.b}" data-c="${it.cid}" tabindex="0" role="button"` : it.xid ? ` data-b="${it.b}" data-x="${it.xid}" tabindex="0" role="button"` : ''} title="${esc(it.tag + ' ' + it.text + ' ' + it.sub + (it.s || it.hid || it.cid || it.xid ? '\n끌어서 날짜를 옮기거나 눌러서 시각을 바꿀 수 있습니다' : ''))}"><i></i><span class="bn">${it.b + 1}</span><span class="tx">${esc(it.text)}</span><span class="tm">${esc(it.sub)}</span></div>`).join('')}</div>`;
     }
     html += `<div class="cal-m"><h3>${y}년 ${m + 1}월</h3><div class="cal-g">${cells}</div></div>`;
     m++; if (m > 11){ m = 0; y++; }
@@ -1540,16 +1558,19 @@ document.getElementById('list').addEventListener('click', ev => {
 });
 /* ---------- 달력에서 공정 옮기기 (끌어 놓기 · 눌러서 시각 입력) ---------- */
 const ovRound = t => Math.round(t * 4) / 4;
-const evKey = el => el.dataset.s || (el.dataset.h ? 'h:' + el.dataset.h : 'c:' + el.dataset.c);
+const evKey = el => el.dataset.s || (el.dataset.h ? 'h:' + el.dataset.h : el.dataset.c ? 'c:' + el.dataset.c : 'x:' + el.dataset.x);
 function setOv(b, sid, tAbs){
   const P = V.pvP, bo = P && P.batches.find(z => z.i === b); if (!bo) return;
   S.pv.ov[b][sid] = ovRound(tAbs - bo.off); save(); render();
 }
-function clearOv(b, sid){ if (b === 'all'){ S.pv.ov = [{}, {}, {}]; S.pv.sov = [{}, {}, {}]; S.pv.cov = [{}, {}, {}]; } else delete S.pv.ov[b][sid]; save(); render(); }
+function clearOv(b, sid){ if (b === 'all'){ S.pv.ov = [{}, {}, {}]; S.pv.sov = [{}, {}, {}]; S.pv.cov = [{}, {}, {}]; S.pv.xov = [{}, {}, {}]; } else delete S.pv.ov[b][sid]; save(); render(); }
 function setSov(b, hid, tAbs){ const bo = V.pvP && V.pvP.batches.find(z => z.i === b); if (!bo) return; S.pv.sov[b][hid] = ovRound(tAbs - bo.off); save(); render(); }
 function clearSov(b, hid){ delete S.pv.sov[b][hid]; save(); render(); }
 function setCov(b, key, tAbs){ const bo = V.pvP && V.pvP.batches.find(z => z.i === b); if (!bo) return; S.pv.cov[b][key] = ovRound(tAbs - bo.off); save(); render(); }
 function clearCov(b, key){ delete S.pv.cov[b][key]; save(); render(); }
+function setXov(b, key, tAbs){ const bo = V.pvP && V.pvP.batches.find(z => z.i === b); if (!bo) return; S.pv.xov[b][key] = ovRound(tAbs - bo.off); save(); render(); }
+function clearXov(b, key){ delete S.pv.xov[b][key]; save(); render(); }
+const chtOf = (b, key) => { const bo = V.pvP && V.pvP.batches.find(z => z.i === b); if (!bo) return null; const [sid, eid] = key.split('|'); return samplings(bo.sim, bo.tg.hts).cht.find(x => x.step === sid && x.eq === eid) || null; };
 const cipOf = (b, key) => { const bo = V.pvP && V.pvP.batches.find(z => z.i === b); if (!bo) return null; const [sid, eid] = key.split('|'); return bo.sim.bars.find(q => q.type === 'cip' && q.step.id === sid && q.eq === eid) || null; };
 const sampOf = (b, hid) => { const bo = V.pvP && V.pvP.batches.find(z => z.i === b); return bo ? samplings(bo.sim, true).hold.find(x => x.h.id === hid) : null; };
 const pop = document.getElementById('ov-pop');
@@ -1558,6 +1579,7 @@ function openPop(b, sid, x, y){
   const P = V.pvP, bo = P && P.batches.find(z => z.i === b); if (!bo) return;
   if (sid.startsWith('h:')) return openSampPop(b, sid.slice(2), x, y);
   if (sid.startsWith('c:')) return openCleanPop(b, sid.slice(2), x, y);
+  if (sid.startsWith('x:')) return openChtPop(b, sid.slice(2), x, y);
   const r = bo.sim.res[sid], st = S.steps.find(z => z.id === sid), d = absDate(P, r.start);
   popAt = { b, sid, x, y };
   document.getElementById('ov-title').textContent = `${b + 1}배치 ${st.name} 시작`;
@@ -1604,19 +1626,36 @@ function openCleanPop(b, key, x, y){
   pop.style.left = Math.max(12, Math.min(innerWidth - pw - 12, x - pw / 2)) + 'px';
   pop.style.top = Math.max(12, Math.min(innerHeight - ph - 12, y + 14)) + 'px';
 }
+function openChtPop(b, key, x, y){
+  const P = V.pvP, c = chtOf(b, key); if (!c){ closePop(); return; }
+  const d = absDate(P, c.t);
+  popAt = { b, sid:'x:' + key, x, y };
+  document.getElementById('ov-title').textContent = `${b + 1}배치 ${eqAt(c.eq, c.step)} CHT 샘플`;
+  document.getElementById('ov-sub').textContent = `지금 ${pvStamp(P, c.t)} · 세척 끝 ${pvStamp(P, c.t0)} 후 ${fmtGap(c.t - c.t0)} (CHT 목표 ${fmtGap(c.target)} → ${pvStamp(P, c.open)}부터)${isFinite(c.close) ? ` · 다음 사용 전 세척 ${pvStamp(P, c.close)} 전까지` : ''}${c.man ? ' · 직접 지정' : ''}`;
+  document.getElementById('ov-d').value = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+  document.getElementById('ov-h').value = hm(c.t);
+  document.getElementById('ov-clr').disabled = !c.man;
+  const ws = (V.pvWarn || []).filter(w => w.b === b && w.s === 'x:' + key);
+  document.getElementById('ov-warn').innerHTML = ws.length ? ws.map(w => `<div class="ovw ${w.lv}" style="padding-left:0">${w.lv === 'crit' ? '⚠ ' : ''}${esc(w.text)}</div>`).join('') : (c.man ? '<div class="ovw" style="padding-left:0;color:var(--good)">CHT 목표 이후, 근무시간 안입니다.</div>' : '');
+  pop.hidden = false;
+  const pw = pop.offsetWidth, ph = pop.offsetHeight;
+  pop.style.left = Math.max(12, Math.min(innerWidth - pw - 12, x - pw / 2)) + 'px';
+  pop.style.top = Math.max(12, Math.min(innerHeight - ph - 12, y + 14)) + 'px';
+}
 const closePop = () => { pop.hidden = true; popAt = null; };
 const reopen = () => { if (popAt) openPop(popAt.b, popAt.sid, popAt.x, popAt.y); };
 document.getElementById('ov-x').addEventListener('click', closePop);
-document.getElementById('ov-clr').addEventListener('click', () => { if (!popAt) return; if (popAt.sid.startsWith('h:')) clearSov(popAt.b, popAt.sid.slice(2)); else if (popAt.sid.startsWith('c:')) clearCov(popAt.b, popAt.sid.slice(2)); else clearOv(popAt.b, popAt.sid); reopen(); });
+document.getElementById('ov-clr').addEventListener('click', () => { if (!popAt) return; if (popAt.sid.startsWith('h:')) clearSov(popAt.b, popAt.sid.slice(2)); else if (popAt.sid.startsWith('c:')) clearCov(popAt.b, popAt.sid.slice(2)); else if (popAt.sid.startsWith('x:')) clearXov(popAt.b, popAt.sid.slice(2)); else clearOv(popAt.b, popAt.sid); reopen(); });
 document.getElementById('ov-ok').addEventListener('click', () => {
   if (!popAt || !V.pvP) return;
   const dn = dnum(document.getElementById('ov-d').value), tm = /^(\d{1,2}):(\d{2})/.exec(document.getElementById('ov-h').value || '');
   if (dn == null || !tm) return;
   const tA = (dn - V.pvP.ref) * H + +tm[1] + +tm[2] / 60;
-  if (popAt.sid.startsWith('h:')) setSov(popAt.b, popAt.sid.slice(2), tA); else if (popAt.sid.startsWith('c:')) setCov(popAt.b, popAt.sid.slice(2), tA); else setOv(popAt.b, popAt.sid, tA); reopen();
+  if (popAt.sid.startsWith('h:')) setSov(popAt.b, popAt.sid.slice(2), tA); else if (popAt.sid.startsWith('c:')) setCov(popAt.b, popAt.sid.slice(2), tA); else if (popAt.sid.startsWith('x:')) setXov(popAt.b, popAt.sid.slice(2), tA); else setOv(popAt.b, popAt.sid, tA); reopen();
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && !pop.hidden) closePop(); });
 document.getElementById('pv-sum').addEventListener('click', e => {
+  const xv = e.target.closest('[data-xovclr]'); if (xv){ const v = xv.dataset.xovclr, i = v.indexOf('|'); clearXov(+v.slice(0, i), v.slice(i + 1)); if (popAt) reopen(); return; }
   const cv = e.target.closest('[data-covclr]'); if (cv){ const v = cv.dataset.covclr, i = v.indexOf('|'); clearCov(+v.slice(0, i), v.slice(i + 1)); if (popAt) reopen(); return; }
   const sv = e.target.closest('[data-sovclr]'); if (sv){ const [b, h] = sv.dataset.sovclr.split('|'); clearSov(+b, h); if (popAt) reopen(); return; }
   const bt = e.target.closest('[data-ovclr]'); if (!bt) return;
@@ -1627,7 +1666,7 @@ document.getElementById('pv-sum').addEventListener('click', e => {
   const cellAt = (x, y) => { const el = document.elementFromPoint(x, y); return el && el.closest ? el.closest('.cal-d[data-k]') : null; };
   const end = () => { if (ghost) ghost.remove(); ghost = null; if (over) over.classList.remove('drop'); over = null; if (dg && dg.el) dg.el.classList.remove('dragging'); dg = null; };
   cal.addEventListener('pointerdown', e => {
-    const el = e.target.closest('.ev[data-s], .ev[data-h], .ev[data-c]'); if (!el || e.button > 0) return;
+    const el = e.target.closest('.ev[data-s], .ev[data-h], .ev[data-c], .ev[data-x]'); if (!el || e.button > 0) return;
     dg = { el, b:+el.dataset.b, s:evKey(el), x:e.clientX, y:e.clientY, on:false };
     try { el.setPointerCapture(e.pointerId); } catch (_) {}
   });
@@ -1647,22 +1686,29 @@ document.getElementById('pv-sum').addEventListener('click', e => {
     end();
     if (!d.on){ openPop(d.b, d.s, e.clientX, e.clientY); return; }
     if (!c || !V.pvP) return;
-    const k = +c.dataset.k;
+    const k = +c.dataset.k, day = k - V.pvP.ref;
+    /* 놓은 날에 설정 목표 시각(공정 종료 + 목표)이 있으면 그 시각으로, 없으면 원래 시각(시:분)을 유지 */
+    const at = (cur, dflt) => dflt != null && isFinite(dflt) && Math.floor(dflt / H + 1e-9) === day ? dflt : day * H + cur - Math.floor(cur / H) * H;
+    const bo = V.pvP.batches.find(z => z.i === d.b); if (!bo) return;
     if (d.s.startsWith('c:')){
-      const q = cipOf(d.b, d.s.slice(2)); if (!q || k === V.pvP.ref + Math.floor(q.start / H)) return;
-      setCov(d.b, d.s.slice(2), (k - V.pvP.ref) * H + q.start - Math.floor(q.start / H) * H);
+      const q = cipOf(d.b, d.s.slice(2)); if (!q || day === Math.floor(q.start / H)) return;
+      const e = S.equipment.find(z => z.id === q.eq), r = bo.sim.res[q.step.id];
+      setCov(d.b, d.s.slice(2), at(q.start, q.dhtOn ? r.end + num(e.dhtT) : null));
+    } else if (d.s.startsWith('x:')){
+      const x = chtOf(d.b, d.s.slice(2)); if (!x || day === Math.floor(x.t / H)) return;
+      setXov(d.b, d.s.slice(2), at(x.t, x.open));
     } else if (d.s.startsWith('h:')){
-      const sp = sampOf(d.b, d.s.slice(2)); if (!sp || k === V.pvP.ref + Math.floor(sp.t / H)) return;
-      setSov(d.b, d.s.slice(2), (k - V.pvP.ref) * H + sp.t - Math.floor(sp.t / H) * H);
+      const sp = sampOf(d.b, d.s.slice(2)); if (!sp || day === Math.floor(sp.t / H)) return;
+      setSov(d.b, d.s.slice(2), at(sp.t, sp.open));
     } else {
-      const bo = V.pvP.batches.find(z => z.i === d.b), r = bo && bo.sim.res[d.s]; if (!r) return;
-      if (k === V.pvP.ref + Math.floor(r.start / H)) return;
-      setOv(d.b, d.s, (k - V.pvP.ref) * H + r.start - Math.floor(r.start / H) * H);
+      const r = bo.sim.res[d.s]; if (!r || day === Math.floor(r.start / H)) return;
+      const sd = num(S.sampH), opens = bo.tg.hts ? S.holds.filter(h => h.to === d.s && h.on && num(h.t) > 0 && bo.sim.res[h.from]).map(h => bo.sim.res[h.from].end + num(h.t) + sd) : [];
+      setOv(d.b, d.s, at(r.start, opens.length ? Math.max(...opens) : null));
     }
     openPop(d.b, d.s, e.clientX, e.clientY);
   });
   cal.addEventListener('pointercancel', end);
-  cal.addEventListener('keydown', e => { const el = e.target.closest && e.target.closest('.ev[data-s], .ev[data-h], .ev[data-c]'); if (el && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); const r = el.getBoundingClientRect(); openPop(+el.dataset.b, evKey(el), r.left + r.width / 2, r.bottom); } });
+  cal.addEventListener('keydown', e => { const el = e.target.closest && e.target.closest('.ev[data-s], .ev[data-h], .ev[data-c], .ev[data-x]'); if (el && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); const r = el.getBoundingClientRect(); openPop(+el.dataset.b, evKey(el), r.left + r.width / 2, r.bottom); } });
 })();
 document.getElementById('reset').addEventListener('click', () => { S = clone(DEF); save(); buildTables(); render(); });
 let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => keepCenter(V.sc === 'pv' ? 'pv-gs' : 'gs', render), 120); });
