@@ -443,7 +443,8 @@ function fitWork(t, dur, strict){
   if (need > 0 ? tod + need > we + 1e-9 : tod >= we - 1e-9){ d += 1; tod = ws; }
   return d * H + tod;
 }
-function snap(t, plan, dur){ return t <= plan + 1e-9 ? plan : fitWork(t, dur); }
+/* 계획 시각이든 밀린 시각이든 근무시간 안에 들어가야 한다 */
+function snap(t, plan, dur){ return fitWork(Math.max(t, plan), dur); }
 const pick = (sel, i, n) => sel === 'all' || (sel === 'first' && i === 0) || (sel === 'last' && i === n - 1);
 
 /* endBy까지 끝나는, 근무시간 안에서 가장 늦은 착수 시각 (사용 전 세척을 전날로 당겨 잡을 때) */
@@ -489,7 +490,9 @@ function simulate(tg, g0, ctx){
     const pre = num(s.pre), preSys = sysE ? (medE ? Math.min(num(s.cip), pre) : pre) : 0, preMed = medE ? pre - preSys : 0;
     const fSys = sysE && free[sysE.id] !== undefined ? free[sysE.id] : -Infinity;
     const fMed = medE && free[medE.id] !== undefined ? free[medE.id] : -Infinity;
-    let start = s.anchor ? plan : snap(earliest, plan, s.proc);
+    /* 크로마토그래피 메소드 안의 컬럼 CIP는 공정과 이어서 돌므로 근무시간 판단에 함께 넣는다 */
+    const runDur = num(s.proc) + (medE && medE.rule === 'now' ? num(s.post) : 0);
+    let start = s.anchor ? fitWork(plan, num(s.proc)) : snap(earliest, plan, runDur);
     const back = st => { const m = lf(st, preMed), y = lf(m, preSys); return { m, y }; };
     let P = back(start);
     if ((sysE || medE) && (P.y < fSys - 1e-9 || P.m < fMed - 1e-9)){
@@ -500,7 +503,7 @@ function simulate(tg, g0, ctx){
         const limMed = fMed > yS + preSys + 1e-9;
         const id = limMed ? medE.id : sysE.id;
         earliest = Math.max(earliest, need);
-        start = snap(need, plan, s.proc);
+        start = snap(need, plan, runDur);
         bind = { type:'eq', eq:id, why:freeWhy[id] };
       }
       P = back(start);
@@ -635,7 +638,8 @@ function nightHours(t, p){
 }
 function inHours(a, b){
   const [ws, we] = workSpan();
-  if (b - a >= we - ws - 1e-9) return true;
+  if (b - a >= H - 1e-9) return true;  /* 하루 이상 걸리는 준비(바이러스 여과 사용 전 24 h)는 대기 포함으로 본다 */
+  if (b - a > we - ws + 1e-9) return false;
   const d = Math.floor(a / H);
   return a - d * H >= ws - 1e-9 && b - d * H <= we + 1e-9;
 }
@@ -702,7 +706,8 @@ function simulateOps(R){
   S.steps.forEach(s => {
     if (s.anchor) return;
     const r = base.res[s.id];
-    if (S.workMode !== 'start' && !inHours(r.start, r.end)) issues.push({ kind:'night', what:`${s.name} 공정`, start:r.start, end:r.end });
+    const inM = s.media && (S.equipment.find(e => e.id === s.media) || {}).rule === 'now' ? num(s.post) : 0;
+    if (S.workMode !== 'start' && !inHours(r.start, r.end + inM)) issues.push({ kind:'night', what:`${s.name} 공정${inM ? ' (메소드 안 컬럼 CIP 포함)' : ''}`, start:r.start, end:r.end + inM });
     [['시스템 CIP', r.preSys], ['막·컬럼 CIP·평형화', r.preMed]].forEach(([nm, p]) => { if (p[1] > p[0] + 1e-9 && !inHours(p[0], p[1])) issues.push({ kind:'night', what:`${s.name} 사용 전 ${nm}`, start:p[0], end:p[1] }); });
   });
   return { res:base.res, bars, holdRes:base.holdRes, end:base.end, horizon:Math.max(base.horizon, ...bars.map(b => b.end)), issues, adds };
@@ -933,10 +938,8 @@ function studyRows(R){
     rows.push(`<tr><td>${study ? sev('warn', '보관 연장') : sev('crit', '보관 초과')}</td><td class="what">${esc(x.h.name)}</td><td class="when">${study ? `목표 ${fmtGap(num(x.h.t))} + 채취 ${fmtGap(num(S.sampH))}` : `기준 ${fmtGap(num(x.h.t))}`} → 실제 ${fmtGap(x.actual)}</td><td class="why">${why}${study ? ' 홀드 시험 시점을 실제 보관 시간으로 잡거나 목표를 늘리세요.' : ' 일정 조정이 필요합니다.'} <span class="tag">${src}</span></td></tr>`);
   });
   S.steps.forEach(st => {
-    const b = R.base.res[st.id]; if (st.anchor) return;
-    const tod = b.start - Math.floor(b.start / H) * H, endTod = tod + num(st.proc);
-    if (tod < ws0 - 1e-9 || (S.workMode !== 'start' && endTod > we0 + 1e-9) || (S.workMode === 'start' && tod >= we0))
-      rows.push(`<tr><td>${sev('info', '계획이 근무시간 밖')}</td><td class="what">${esc(st.name)}</td><td class="when">${stamp(b.start)} → ${stamp(b.end)}</td><td class="why">계획은 그대로 두고 계산합니다. 근무시간(${ws0}~${we0}시)에 맞추려면 계획 시각을 조정하세요.</td></tr>`);
+    const b = R.base.res[st.id];
+    if (b.start > b.plan + 0.01) rows.push(`<tr><td>${sev('info', '계획을 근무시간에 맞춤')}</td><td class="what">${esc(st.name)}</td><td class="when">${stamp(b.plan)} → ${stamp(b.start)}</td><td class="why">운영 스케줄 시각대로 하면 근무시간(${ws0}~${we0}시) 안에 끝나지 않아 옮겨서 계산합니다.</td></tr>`);
   });
   return rows;
 }
