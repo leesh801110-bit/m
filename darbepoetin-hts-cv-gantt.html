@@ -14,6 +14,7 @@
   --crit:#d03b3b; --crit-soft:#fbe4e4; --warn:#b77700; --warn-soft:#fdf0d4; --good:#0c8a3c; --good-soft:#dcf2e4;
   --night:rgba(23,33,43,.055); --band:rgba(42,120,214,.07);
   --focus:#2a78d6;
+  --b1:#2c3a47; --b2:#6a4fb3; --b3:#a35c1a;
   --f:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
 }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
@@ -21,13 +22,13 @@
   --plan:#38424b; --proc:#c9d3db; --on-proc:#101418;
   --hts:#3987e5; --hts-soft:#1c3150; --dht:#d95926; --dht-soft:#43261a; --cht:#199e70; --cht-soft:#173a2e; --cip:#5f6e7c;
   --crit:#e66767; --crit-soft:#46201f; --warn:#e3a338; --warn-soft:#3d2f14; --good:#4cc27a; --good-soft:#163524;
-  --night:rgba(0,0,0,.30); --band:rgba(57,135,229,.10); --focus:#3987e5; color-scheme:dark }}
+  --night:rgba(0,0,0,.30); --band:rgba(57,135,229,.10); --focus:#3987e5; --b1:#7d8fa3; --b2:#9b85e3; --b3:#d08a45; color-scheme:dark }}
 :root[data-theme="dark"]{
   --bg:#101418; --surface:#181d22; --sunk:#14181c; --ink:#e7ecf0; --ink-2:#adb8c2; --ink-3:#7c8893; --line:#2a3239; --line-2:#3a444d;
   --plan:#38424b; --proc:#c9d3db; --on-proc:#101418;
   --hts:#3987e5; --hts-soft:#1c3150; --dht:#d95926; --dht-soft:#43261a; --cht:#199e70; --cht-soft:#173a2e; --cip:#5f6e7c;
   --crit:#e66767; --crit-soft:#46201f; --warn:#e3a338; --warn-soft:#3d2f14; --good:#4cc27a; --good-soft:#163524;
-  --night:rgba(0,0,0,.30); --band:rgba(57,135,229,.10); --focus:#3987e5; color-scheme:dark }
+  --night:rgba(0,0,0,.30); --band:rgba(57,135,229,.10); --focus:#3987e5; --b1:#7d8fa3; --b2:#9b85e3; --b3:#d08a45; color-scheme:dark }
 
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -177,6 +178,29 @@ input[type=number]{width:64px;text-align:right}
 .workset{display:flex;flex-wrap:wrap;gap:10px 18px;font-size:.82rem;color:var(--ink-2)}
 .workset label{display:inline-flex;gap:6px;align-items:center}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.pv-in{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
+.pv-in .bi{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--sunk)}
+.pv-in .bi b{font-weight:600}
+.pv-in label{display:inline-flex;align-items:center;gap:6px;font-size:.84rem;color:var(--ink-2)}
+.cal{display:grid;gap:18px}
+.cal-m h3{font-size:1rem;font-weight:700;margin:0 0 8px}
+.cal-wrap{overflow-x:auto;max-width:100%}
+.cal-g{display:grid;grid-template-columns:repeat(7,minmax(104px,1fr));border-top:1px solid var(--line);border-left:1px solid var(--line);min-width:740px}
+.cal-h{font-size:.74rem;color:var(--ink-3);padding:6px 8px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--sunk)}
+.cal-h.sun,.cal-d .n.sun{color:var(--crit)} .cal-h.sat,.cal-d .n.sat{color:var(--hts)}
+.cal-d{min-height:96px;padding:4px 5px 6px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:2px;min-width:0}
+.cal-d.we{background:var(--sunk)} .cal-d.pad{background:var(--bg)} .cal-d.out .n{color:var(--ink-3)}
+.cal-d.today{box-shadow:inset 0 0 0 2px var(--ink)}
+.cal-d .n{font-size:.78rem;font-weight:600;margin-bottom:2px}
+.ev{display:grid;grid-template-columns:auto auto minmax(0,1fr);grid-template-areas:"i b t" "i b m";column-gap:4px;align-items:center;font-size:.7rem;line-height:1.25;padding:2px 4px;border-radius:4px;background:color-mix(in srgb,var(--bc) 10%,transparent);border-left:3px solid var(--bc)}
+.ev i{grid-area:i;width:7px;height:7px;transform:rotate(45deg);background:transparent}
+.ev.hts i{background:var(--hts)} .ev.dht i{background:var(--dht)} .ev.cht i{background:var(--cht)} .ev.cip i{background:var(--cip);transform:none;border-radius:50%}
+.ev.proc i{display:none}
+.ev .bn{grid-area:b;font-weight:700;color:var(--bc);font-size:.66rem}
+.ev .tx{grid-area:t;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.ev .tm{grid-area:m;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev.proc .tx{font-weight:700}
+.ev.night{outline:1.5px solid var(--crit);outline-offset:-1px}
 </style>
 
 <div class="wrap">
@@ -201,6 +225,7 @@ input[type=number]{width:64px;text-align:right}
   <nav class="tabs" role="tablist" aria-label="일정">
     <button type="button" role="tab" data-sc="study" aria-selected="true">평가 진행 일정</button>
     <button type="button" role="tab" data-sc="ops" aria-selected="false">평가 완료 후 운영</button>
+    <button type="button" role="tab" data-sc="pv" aria-selected="false">PV 3배치 일정</button>
   </nav>
 
   <section class="panel" id="sum-study" aria-label="지연 요약">
@@ -211,7 +236,36 @@ input[type=number]{width:64px;text-align:right}
     <div id="ops-head"></div>
   </section>
 
-  <section class="panel" aria-label="간트 차트">
+  <section class="panel pv-only" aria-label="PV 배치" hidden>
+    <h2>PV 3배치</h2>
+    <p class="sub">배치마다 CCF-1 날짜(D1)를 넣으면 같은 설비를 공유하며 이어서 계산합니다. 앞 배치의 세척·CHT가 끝나야 다음 배치가 그 설비를 씁니다. 위 평가 항목은 '평가' 체크한 배치에 적용됩니다.</p>
+    <div class="pv-in">
+      <span class="bi"><span class="dot" style="--c:var(--b1)"></span><b>1배치</b><input type="date" id="pv-d0" data-k="pv.dates.0" aria-label="1배치 D1"><label for="pv-o0"><input type="checkbox" id="pv-o0" data-k="pv.on.0">평가</label></span>
+      <span class="bi"><span class="dot" style="--c:var(--b2)"></span><b>2배치</b><input type="date" id="pv-d1" data-k="pv.dates.1" aria-label="2배치 D1"><label for="pv-o1"><input type="checkbox" id="pv-o1" data-k="pv.on.1">평가</label></span>
+      <span class="bi"><span class="dot" style="--c:var(--b3)"></span><b>3배치</b><input type="date" id="pv-d2" data-k="pv.dates.2" aria-label="3배치 D1"><label for="pv-o2"><input type="checkbox" id="pv-o2" data-k="pv.on.2">평가</label></span>
+    </div>
+    <div id="pv-sum"></div>
+  </section>
+
+  <section class="panel pv-only" aria-label="PV 간트" hidden>
+    <div class="toolbar"><h2>전체 간트</h2><div class="ctl"><label for="pv-zoom">확대 <input type="range" id="pv-zoom" min="1" max="10" step="0.5" value="1"></label></div></div>
+    <div class="legend" id="pv-legend"></div>
+    <div class="gantt">
+      <div class="g-labels" id="pv-gl"></div>
+      <div class="g-scroll" id="pv-gs"><svg id="pv-svg" xmlns="http://www.w3.org/2000/svg"></svg></div>
+    </div>
+  </section>
+
+  <section class="panel pv-only" aria-label="월간 달력" hidden>
+    <div class="toolbar"><h2>월간 달력</h2><div class="ctl">
+      <label for="cal-p"><input type="checkbox" id="cal-p" checked> 공정</label>
+      <label for="cal-s"><input type="checkbox" id="cal-s" checked> 샘플링</label>
+      <label for="cal-c"><input type="checkbox" id="cal-c"> 세척</label>
+    </div></div>
+    <div class="cal-wrap"><div class="cal" id="cal"></div></div>
+  </section>
+
+  <section class="panel single" aria-label="간트 차트">
     <div class="toolbar">
       <div class="seg" role="group" aria-label="보기">
         <button type="button" data-vw="proc" aria-pressed="true">공정 단계</button>
@@ -229,13 +283,13 @@ input[type=number]{width:64px;text-align:right}
     </div>
   </section>
 
-  <section class="panel" aria-label="공정별 시각">
+  <section class="panel single" aria-label="공정별 시각">
     <h2 id="sched-h">공정별 예상 시각과 샘플링</h2>
     <p class="sub" id="sched-note"></p>
     <div id="sched"></div>
   </section>
 
-  <section class="panel" aria-label="확인할 것">
+  <section class="panel single" aria-label="확인할 것">
     <h2 id="list-h">확인할 것</h2>
     <div id="list"></div>
   </section>
@@ -266,7 +320,7 @@ input[type=number]{width:64px;text-align:right}
     <details class="panel">
       <summary>계산 가정</summary>
       <div class="workset">
-        <label for="sd">D1 날짜 <input type="date" id="sd" data-k="startDate"></label>
+        
         <button class="btn" type="button" id="reset">처음 값으로</button>
       </div>
       <ul class="notes">
@@ -288,7 +342,7 @@ const KEYS = ['hts','dht','cht'];
 const LABEL = { hts:'HTS', dht:'DHT', cht:'CHT' };
 const COLOR = { hts:'var(--hts)', dht:'var(--dht)', cht:'var(--cht)' };
 const DEF = {
-  workStart: 8, workEnd: 22, workMode: 'full', sampH: 0.5, startDate: '',
+  workStart: 8, workEnd: 22, workMode: 'full', sampH: 0.5, pv: { dates:['2026-11-02','2026-11-23','2026-12-14'], on:[true,true,true] },
   tg: { hts: true, dht: true, cht: true },
   equipment: [
     { id:'AKTA1', name:'AKTA (1차·2차 크로 공용)', kind:'system', rule:'next', dht:true, cht:true, dhtT:24, chtT:72, dhtUse:'all', chtUse:'all' },
@@ -355,7 +409,8 @@ try { S = JSON.parse(localStorage.getItem(STORE)); } catch (e) {}
 if (!S || !Array.isArray(S.steps) || !Array.isArray(S.holds) || !Array.isArray(S.equipment)) S = clone(DEF);
 if (S.workEnd === undefined){ S.workEnd = 22; S.workMode = 'full'; delete S.latestStart; }
 if (S.sampH === undefined) S.sampH = 0.5;
-const V = { vw:'proc', zoom:1, actual:false, sc:'study' };
+if (!S.pv) S.pv = clone(DEF.pv);
+const V = { vw:'proc', zoom:1, actual:false, sc:'study', pvZoom:1, calProc:true, calSamp:true, calCip:false };
 function save(){ try { localStorage.setItem(STORE, JSON.stringify(S)); } catch (e) {} }
 const num = v => { const n = Number(v); return isFinite(n) && n >= 0 ? n : 0; };
 
@@ -363,8 +418,9 @@ const num = v => { const n = Number(v); return isFinite(n) && n >= 0 ? n : 0; };
 const dayOf = t => Math.floor(t / H) + 1;
 const hm = t => { const m = Math.round((t - Math.floor(t / H) * H) * 60); return `${String(Math.floor(m / 60)).padStart(2,'0')}:${String(m % 60).padStart(2,'0')}`; };
 function dateLabel(d){
-  if (!S.startDate) return '';
-  const b = new Date(S.startDate + 'T00:00:00'); if (isNaN(b)) return '';
+  const sd0 = S.pv && S.pv.dates[0];
+  if (!sd0) return '';
+  const b = new Date(sd0 + 'T00:00:00'); if (isNaN(b)) return '';
   b.setDate(b.getDate() + d - 1); return `${b.getMonth()+1}/${b.getDate()}`;
 }
 const stamp = t => `D${dayOf(t)} ${hm(t)}`;
@@ -404,16 +460,17 @@ function relTime(rel, p, plan){
   const tod = plan - Math.floor(plan / H) * H;
   return Math.max(p.end, (Math.floor(p.end / H) + rel.k) * H + tod);
 }
-function simulate(tg, g0){
+function simulate(tg, g0, ctx){
   const map = Object.fromEntries(S.steps.map(s => [s.id, s]));
   const eqMap = Object.fromEntries(S.equipment.map(e => [e.id, e]));
   const totals = {}; S.steps.forEach(s => [s.sys, s.media].forEach(e => { if (e) totals[e] = (totals[e] || 0) + 1; }));
-  const free = {}, freeWhy = {}, useCount = {}, res = {}, bars = [], holdRes = [], samps = [], pendCht = {};
+  const cs0 = ctx ? ctx.state : null, offH = ctx ? ctx.off : 0;
+  const free = cs0 ? cs0.free : {}, freeWhy = cs0 ? cs0.freeWhy : {}, pendCht = cs0 ? cs0.pendCht : {}, useCount = {}, res = {}, bars = [], holdRes = [], samps = [];
   const sd = num(S.sampH);
   const lf = (endBy, d) => d > 0 ? latestFit(endBy, d) : endBy;
   const fw = (t, d) => d > 0 ? fitWork(t, d, true) : t;
   S.steps.forEach(s => {
-    const plan = planned(map, s);
+    const plan = planned(map, s) + offH;
     let earliest = plan, bind = { type:'plan' };
     if (!s.anchor){
       S.holds.filter(h => h.to === s.id).forEach(h => {
@@ -925,10 +982,11 @@ function renderOps(R){
    DHT: 사용 후 방치가 끝나고 세척을 시작하기 직전에 설비 표면 채취
    CHT: 세척 후 청정 보관이 끝나는 시각에 채취 */
 function isWork(t){ const [ws, we] = workSpan(), tod = t - Math.floor(t / H) * H; return tod >= ws - 1e-9 && tod <= we + 1e-9; }
-function samplings(sim){
+function samplings(sim, hts){
+  if (hts === undefined) hts = S.tg.hts;
   /* 목표 시간이 지난 순간(open)부터 채취 가능, 다음 단계 전(close)까지. 장비마다 따로 채취한다 */
   const out = { hold:[], dht:[], cht:[] }, sd = num(S.sampH);
-  if (S.tg.hts) sim.holdRes.forEach(x => {
+  if (hts) sim.holdRes.forEach(x => {
     if (num(x.h.t) <= 0) return;
     const t0 = x.from.end, open = t0 + num(x.h.t), close = x.h.on ? x.to.start : Infinity;
     const t = fitWork(open, sd, true), ok = t + sd <= close + 1e-9;
@@ -968,6 +1026,112 @@ function sampleMarks(sp, rowY, pxh){
     g += win(x, y + 7, col) + dia(x.t, y + 7, col, `${kind} 샘플링 ${stamp(x.t)}: ${x.name}\n채취 가능 ${stamp(x.open)}부터${isFinite(x.close) ? ' ' + stamp(x.close) + '까지' : ''}${x.night ? '\n근무시간 안에 채취할 수 없음' : ''}`, x.night); });
   add(sp.hold, 'var(--hts)', '홀드'); add(sp.dht, 'var(--dht)', 'DHT'); add(sp.cht, 'var(--cht)', 'CHT');
   return g;
+}
+
+/* ---------- PV 3배치 ----------
+   배치마다 D1(CCF-1) 날짜를 받아 같은 설비를 공유하며 이어서 계산한다. 앞 배치의 세척·CHT가 끝나야 다음 배치가 그 설비를 쓴다 */
+const DAYMS = 86400000;
+const dnum = s => { const d = new Date((s || '') + 'T00:00:00Z'); return isNaN(d) ? null : Math.round(d.getTime() / DAYMS); };
+const WK = ['일','월','화','수','목','금','토'];
+function pvSim(R, tg){
+  const list = S.pv.dates.map((d, i) => ({ i, date:d, dn:dnum(d), on:S.pv.on[i] })).filter(b => b.dn != null).sort((a, b) => a.dn - b.dn);
+  if (!list.length) return null;
+  const ref = list[0].dn, state = { free:{}, freeWhy:{}, pendCht:{} }, off = { hts:false, dht:false, cht:false };
+  const out = list.map(b => {
+    const sim = simulate(b.on ? tg : off, R.g0, { off:(b.dn - ref) * H, state });
+    return { ...b, off:(b.dn - ref) * H, sim, tg: b.on ? tg : off };
+  });
+  return { ref, batches:out, end:Math.max(...out.map(b => b.sim.end)), horizon:Math.max(...out.map(b => b.sim.horizon)) };
+}
+const absDate = (P, t) => new Date((P.ref + Math.floor(t / H)) * DAYMS);
+const mdw = (P, t) => { const d = absDate(P, t); return `${d.getUTCMonth() + 1}/${d.getUTCDate()}(${WK[d.getUTCDay()]})`; };
+const pvStamp = (P, t) => `${mdw(P, t)} ${hm(t)}`;
+const BCOL = ['var(--b1)', 'var(--b2)', 'var(--b3)'];
+
+function renderPV(R){
+  const plan = pvSim(R, { hts:false, dht:false, cht:false }), P = pvSim(R, S.tg);
+  const sumEl = document.getElementById('pv-sum');
+  if (!P){ sumEl.innerHTML = '<p class="empty">배치 시작일(D1)을 하나 이상 입력하세요.</p>'; document.getElementById('pv-gl').innerHTML = ''; document.getElementById('pv-svg').innerHTML = ''; document.getElementById('cal').innerHTML = ''; return; }
+  /* 요약 표 */
+  const rows = P.batches.map((b, k) => {
+    const pb = plan.batches[k], d = b.sim.end - pb.sim.end;
+    const sp = samplings(b.sim, b.tg.hts), n = sp.hold.length + sp.dht.length + sp.cht.length, nn = sp.hold.concat(sp.dht, sp.cht).filter(x => x.night).length;
+    return `<tr><td class="what"><span class="dot" style="--c:${BCOL[b.i]}"></span> ${b.i + 1}배치</td><td class="when">${mdw(P, b.off)}</td><td class="when">${pvStamp(plan, pb.sim.end)}</td><td class="when"><b>${pvStamp(P, b.sim.end)}</b></td><td class="d">${d > 0.01 ? '+' + days1(d) + '일' : '±0일'}</td><td>${b.on ? `${n}회${nn ? ` <span class="sev crit">근무시간 밖 ${nn}</span>` : ''}` : '<span class="s2">평가 안 함</span>'}</td></tr>`;
+  });
+  sumEl.innerHTML = table(['배치', 'D1 (CCF-1)', '계획 원액 소분', '평가 반영 원액 소분', '지연', '샘플링'], rows);
+
+  /* 간트: 행 = 공정 단계, 한 행에 3배치 막대 */
+  const gs = document.getElementById('pv-gs'), svg = document.getElementById('pv-svg'), gl = document.getElementById('pv-gl');
+  const days = Math.ceil(Math.max(P.horizon, plan.horizon) / H) + 1, maxT = days * H;
+  const pxh = Math.max(0.12, (gs.clientWidth - 8) / maxT) * V.pvZoom, W = Math.ceil(maxT * pxh) + 4;
+  const X = t => (t * pxh).toFixed(2), RH = 34, TOP = 44;
+  const labels = [`<div class="lr head" style="height:${TOP}px">공정 단계</div>`];
+  let g = '', y = TOP; const rowY = {};
+  S.steps.forEach(s => { rowY[s.id] = y; labels.push(`<div class="lr" style="height:${RH}px"><span class="t"><span>${esc(s.name)}</span></span></div>`); y += RH; });
+  for (let d = 0; d < days; d++){
+    const dt = new Date((P.ref + d) * DAYMS), wd = dt.getUTCDay(), x = X(d * H);
+    if (wd === 0 || wd === 6) g += `<rect x="${x}" y="${TOP}" width="${(H * pxh).toFixed(2)}" height="${y - TOP}" style="fill:var(--night)"/>`;
+    g += `<line x1="${x}" x2="${x}" y1="${TOP - (dt.getUTCDate() === 1 ? 30 : 6)}" y2="${y}" style="stroke:var(--line);stroke-width:${wd === 1 ? 1 : 0.5}"/>`;
+    const step = pxh * H >= 26 ? 1 : 7;
+    if ((step === 1 || wd === 1)) g += `<text x="${(+x + 3).toFixed(1)}" y="${TOP - 9}" style="fill:var(--ink-3);font:500 10.5px var(--f)">${dt.getUTCDate()}</text>`;
+    if (dt.getUTCDate() === 1 || d === 0) g += `<text x="${(+x + 3).toFixed(1)}" y="${TOP - 26}" style="fill:var(--ink);font:600 11.5px var(--f)">${dt.getUTCFullYear()}.${dt.getUTCMonth() + 1}</text>`;
+  }
+  g += `<line x1="0" x2="${W}" y1="${TOP - 0.5}" y2="${TOP - 0.5}" style="stroke:var(--line-2)"/>`;
+  S.steps.forEach(s => { g += `<line x1="0" x2="${W}" y1="${rowY[s.id] + RH - 0.5}" y2="${rowY[s.id] + RH - 0.5}" style="stroke:var(--line)"/>`; });
+  P.batches.forEach((b, k) => {
+    const pb = plan.batches[k];
+    S.steps.forEach(s => {
+      const r = b.sim.res[s.id], p0 = pb.sim.res[s.id], mid = rowY[s.id] + RH / 2;
+      if (r.start - p0.start > 0.01) g += `<rect x="${X(p0.start)}" y="${mid - 6}" width="${Math.max(3, (p0.end - p0.start) * pxh).toFixed(2)}" height="12" rx="3" style="fill:var(--plan)"><title>${b.i + 1}배치 ${esc(s.name)} 계획 ${pvStamp(P, p0.start)}</title></rect><line x1="${(p0.end * pxh + 2).toFixed(1)}" x2="${(r.start * pxh - 2).toFixed(1)}" y1="${mid}" y2="${mid}" style="stroke:${BCOL[b.i]};stroke-width:1;stroke-dasharray:2 3"/>`;
+      const w = Math.max(4, (r.end - r.start) * pxh);
+      g += `<rect x="${X(r.start)}" y="${mid - 8}" width="${w.toFixed(2)}" height="16" rx="3" style="fill:${BCOL[b.i]}"><title>${b.i + 1}배치 ${esc(s.name)}\n${pvStamp(P, r.start)} → ${pvStamp(P, r.end)}${r.start - p0.start > 0.01 ? `\n계획보다 +${days1(r.start - p0.start)}일` : ''}</title></rect>`;
+      if (w > 16) g += `<text x="${(r.start * pxh + w / 2).toFixed(1)}" y="${mid + 4}" text-anchor="middle" style="fill:#fff;font:700 10.5px var(--f);pointer-events:none">${b.i + 1}</text>`;
+    });
+    if (b.on) g += sampleMarks(samplings(b.sim, b.tg.hts), rowY, pxh);
+    const ex = b.sim.end * pxh;
+    g += `<line x1="${ex.toFixed(1)}" x2="${ex.toFixed(1)}" y1="${TOP}" y2="${y}" style="stroke:${BCOL[b.i]};stroke-width:1.4;stroke-dasharray:4 3"><title>${b.i + 1}배치 원액 소분 완료 ${pvStamp(P, b.sim.end)}</title></line>`;
+  });
+  svg.setAttribute('width', W); svg.setAttribute('height', y); svg.setAttribute('viewBox', `0 0 ${W} ${y}`);
+  svg.innerHTML = g; gl.innerHTML = labels.join('');
+  document.getElementById('pv-legend').innerHTML = P.batches.map(b => `<span><i class="k" style="background:${BCOL[b.i]}"></i>${b.i + 1}배치${b.on ? '' : ' (평가 안 함)'}</span>`).join('') + `<span><i class="k plan"></i>원래 계획 위치</span><span>샘플링 <i class="dia" style="--c:var(--hts)"></i>홀드 <i class="dia" style="--c:var(--dht)"></i>DHT <i class="dia" style="--c:var(--cht)"></i>CHT</span><span><i class="k night"></i>주말</span>`;
+  renderCal(P);
+}
+
+/* ---------- 월간 달력 ---------- */
+function renderCal(P){
+  const ev = {}, add = (t, o) => { const k = P.ref + Math.floor(t / H); (ev[k] = ev[k] || []).push({ t, ...o }); };
+  const [ws, we] = workSpan();
+  P.batches.forEach(b => {
+    const tag = `${b.i + 1}배치`;
+    if (V.calProc) S.steps.forEach(s => { const r = b.sim.res[s.id]; add(r.start, { kind:'proc', b:b.i, text:`${s.name}`, sub:`${hm(r.start)}–${dayOf(r.end) !== dayOf(r.start) ? mdw(P, r.end) + ' ' : ''}${hm(r.end)}`, tag }); });
+    if (V.calSamp && b.on){ const sp = samplings(b.sim, b.tg.hts);
+      sp.hold.forEach(x => add(x.t, { kind:'hts', b:b.i, text:`홀드 ${x.name}`, sub:hm(x.t), night:x.night, tag }));
+      sp.dht.forEach(x => add(x.t, { kind:'dht', b:b.i, text:`DHT ${x.name.replace(/\s*\(.*\)/, '')}`, sub:hm(x.t), night:x.night, tag }));
+      sp.cht.forEach(x => add(x.t, { kind:'cht', b:b.i, text:`CHT ${x.name.replace(/\s*\(.*\)/, '')}`, sub:hm(x.t), night:x.night, tag }));
+    }
+    if (V.calCip) b.sim.bars.filter(q => q.type === 'cip' || q.type === 'pre').forEach(q => {
+      if (q.type === 'cip' && q.part === 'med' && S.equipment.find(e => e.id === q.eq && e.kind !== 'membrane' && e.kind !== 'column')) return;
+      if (q.type === 'pre' && q.part === 'med' && S.equipment.find(e => e.id === q.eq && e.kind === 'system')) return;
+      add(q.start, { kind:'cip', b:b.i, text:`${q.type === 'pre' ? '사용 전 ' : ''}${(S.equipment.find(e => e.id === q.eq) || { name:q.eq }).name.replace(/\s*\(.*\)/, '')} ${q.type === 'pre' && q.part === 'med' ? 'CIP·EQ' : 'CIP'}`, sub:`${hm(q.start)}–${hm(q.end)}`, tag });
+    });
+  });
+  const first = P.ref, last = P.ref + Math.ceil(P.horizon / H);
+  const d0 = new Date(first * DAYMS), d1 = new Date(last * DAYMS);
+  let html = '', y = d0.getUTCFullYear(), m = d0.getUTCMonth();
+  const today = Math.floor(Date.now() / DAYMS);
+  while (y < d1.getUTCFullYear() || (y === d1.getUTCFullYear() && m <= d1.getUTCMonth())){
+    const mStart = Math.round(Date.UTC(y, m, 1) / DAYMS), nDays = new Date(Date.UTC(y, m + 1, 0)).getUTCDate(), lead = new Date(Date.UTC(y, m, 1)).getUTCDay();
+    let cells = WK.map((w, i) => `<div class="cal-h${i === 0 ? ' sun' : i === 6 ? ' sat' : ''}">${w}</div>`).join('');
+    for (let i = 0; i < lead; i++) cells += '<div class="cal-d pad"></div>';
+    for (let d = 0; d < nDays; d++){
+      const k = mStart + d, wd = (lead + d) % 7, items = (ev[k] || []).sort((a, c) => a.t - c.t);
+      const inRange = k >= first && k <= last;
+      cells += `<div class="cal-d${wd === 0 || wd === 6 ? ' we' : ''}${inRange ? '' : ' out'}${k === today ? ' today' : ''}"><div class="n${wd === 0 ? ' sun' : wd === 6 ? ' sat' : ''}">${d + 1}</div>${items.map(it => `<div class="ev ${it.kind}${it.night ? ' night' : ''}" style="--bc:${BCOL[it.b]}" title="${esc(it.tag + ' ' + it.text + ' ' + it.sub)}"><i></i><span class="bn">${it.b + 1}</span><span class="tx">${esc(it.text)}</span><span class="tm">${esc(it.sub)}</span></div>`).join('')}</div>`;
+    }
+    html += `<div class="cal-m"><h3>${y}년 ${m + 1}월</h3><div class="cal-g">${cells}</div></div>`;
+    m++; if (m > 11){ m = 0; y++; }
+  }
+  document.getElementById('cal').innerHTML = html;
 }
 
 function renderList(R){
@@ -1018,7 +1182,8 @@ function buildTables(){
     s += `<tr><td>${esc(x.name)}${x.anchor ? ' <span class="tag">수확일 고정</span>' : ''}${!x.anchor && !x.sys && !x.media ? ' <span class="tag">싱글유즈</span>' : ''}</td><td class="n mono">D${x.day}</td>${f('pre','Pre CIP')}${f('proc','Process')}${f('post','Post')}${f('cip','Post CIP')}</tr>`;
   });
   document.getElementById('t-step').innerHTML = s + '</tbody>';
-  ['workStart','workEnd','workMode','sampH','startDate'].forEach(k => { document.querySelector(`[data-k="${k}"]`).value = S[k]; });
+  [0,1,2].forEach(i => { document.getElementById('pv-d' + i).value = S.pv.dates[i] || ''; document.getElementById('pv-o' + i).checked = !!S.pv.on[i]; });
+  ['workStart','workEnd','workMode','sampH'].forEach(k => { document.querySelector(`[data-k="${k}"]`).value = S[k]; });
   KEYS.forEach(k => { document.getElementById('tg-' + k).checked = !!S.tg[k]; });
 }
 
@@ -1031,7 +1196,9 @@ function onField(el){
 document.addEventListener('input', ev => onField(ev.target));
 document.addEventListener('change', ev => { if (ev.target.tagName === 'SELECT' || ev.target.type === 'checkbox' || ev.target.type === 'date') onField(ev.target); });
 KEYS.forEach(k => document.getElementById('tg-' + k).addEventListener('change', e => { S.tg[k] = e.target.checked; save(); render(); }));
-document.querySelectorAll('[data-sc]').forEach(bt => bt.addEventListener('click', () => { V.sc = bt.dataset.sc; if (V.sc === 'ops') V.vw = 'eq'; document.querySelectorAll('[data-sc]').forEach(x => x.setAttribute('aria-selected', x === bt)); document.querySelectorAll('[data-vw]').forEach(x => x.setAttribute('aria-pressed', x.dataset.vw === V.vw)); document.getElementById('sum-study').hidden = V.sc === 'ops'; document.getElementById('sum-ops').hidden = V.sc !== 'ops'; render(); }));
+document.querySelectorAll('[data-sc]').forEach(bt => bt.addEventListener('click', () => { V.sc = bt.dataset.sc; if (V.sc === 'ops') V.vw = 'eq'; document.querySelectorAll('[data-sc]').forEach(x => x.setAttribute('aria-selected', x === bt)); document.querySelectorAll('[data-vw]').forEach(x => x.setAttribute('aria-pressed', x.dataset.vw === V.vw)); document.getElementById('sum-study').hidden = V.sc !== 'study'; document.getElementById('sum-ops').hidden = V.sc !== 'ops'; document.querySelectorAll('.single').forEach(el => el.hidden = V.sc === 'pv'); document.querySelectorAll('.pv-only').forEach(el => el.hidden = V.sc !== 'pv'); render(); }));
+document.getElementById('pv-zoom').addEventListener('input', e => { V.pvZoom = +e.target.value; render(); });
+[['cal-p','calProc'],['cal-s','calSamp'],['cal-c','calCip']].forEach(([id, k]) => document.getElementById(id).addEventListener('change', e => { V[k] = e.target.checked; render(); }));
 document.querySelectorAll('[data-vw]').forEach(bt => bt.addEventListener('click', () => { V.vw = bt.dataset.vw; document.querySelectorAll('[data-vw]').forEach(x => x.setAttribute('aria-pressed', x === bt)); render(); }));
 document.querySelectorAll('[data-preset]').forEach(bt => bt.addEventListener('click', () => {
   const p = bt.dataset.preset; S.holds.forEach(h => { h.on = p === 'all' ? true : p === 'none' ? false : num(h.t) <= 48; });
@@ -1044,7 +1211,9 @@ let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTime
 
 function render(){
   const R = computeAll();
-  renderSwitches(R); renderBridge(R); renderGantt(R); renderSched(R); renderList(R);
+  renderSwitches(R);
+  if (V.sc === 'pv'){ renderPV(R); }
+  else { renderBridge(R); renderGantt(R); renderSched(R); renderList(R); }
   S.holds.forEach((x, i) => {
     const bh = R.base.holdRes.find(y => y.h === x); const g = document.getElementById('ho-g-' + i); if (g) g.textContent = bh ? fmtGap(bh.actual) : '';
     const d = document.getElementById('ho-d-' + i); if (d) d.textContent = days1(num(x.t));
