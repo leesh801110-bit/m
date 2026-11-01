@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>합격사(合格寺) · 삼성 합격 기원 도량</title>
+<meta name="description" content="삼성그룹 지원자들의 최종 합격을 기원하는 온라인 기도처 (비공식 패러디)">
+<style>
+  :root{
+    --gold:#e8c66a; --gold2:#b8902f; --red:#8e1b1b; --red2:#5c0f0f;
+    --ink:#1a0f0a; --paper:#f6ecd6; --blue:#1428a0;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:"Noto Serif KR","Nanum Myeongjo","Apple SD Gothic Neo",serif;
+    color:var(--paper);
+    background:
+      radial-gradient(ellipse at 50% 30%, rgba(232,198,106,.18), transparent 60%),
+      linear-gradient(#0b0716 0%, #1d0e12 55%, #2a120c 100%);
+    min-height:100vh; overflow-x:hidden;
+  }
+  /* 별 */
+  .stars{position:fixed;inset:0;pointer-events:none;z-index:0;
+    background-image:radial-gradient(1px 1px at 10% 20%,#fff8,transparent),radial-gradient(1px 1px at 30% 10%,#fff6,transparent),
+    radial-gradient(1.5px 1.5px at 70% 15%,#fff9,transparent),radial-gradient(1px 1px at 85% 30%,#fff6,transparent),
+    radial-gradient(1px 1px at 50% 5%,#fff7,transparent),radial-gradient(1px 1px at 20% 40%,#fff4,transparent);}
+  main{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:24px 16px 80px}
+
+  header{text-align:center;margin-bottom:10px}
+  .hanja{font-size:14px;letter-spacing:.6em;color:var(--gold);opacity:.8}
+  h1{font-size:clamp(32px,6vw,56px);letter-spacing:.15em;
+     background:linear-gradient(180deg,#fff3c4,var(--gold) 50%,var(--gold2));
+     -webkit-background-clip:text;background-clip:text;color:transparent;
+     text-shadow:0 0 30px rgba(232,198,106,.25)}
+  .sub{margin-top:6px;opacity:.85;font-size:15px}
+
+  /* 현판 */
+  .signboard{margin:18px auto 0;width:min(520px,90%);padding:10px 0;text-align:center;
+    background:linear-gradient(var(--red),var(--red2));border:4px solid var(--gold2);
+    box-shadow:0 0 0 3px var(--red2),0 8px 24px #0008;font-size:22px;letter-spacing:.5em;color:var(--gold)}
+
+  /* 대웅전 */
+  .hall{position:relative;margin-top:26px;padding:30px 10px 0;border-radius:6px;
+    background:linear-gradient(#2b100c,#3a1610);border:2px solid #5a2a14;
+    box-shadow:inset 0 0 80px #000a}
+  .roof{position:absolute;left:-3%;right:-3%;top:-34px;height:44px;
+    background:linear-gradient(#3d1f12,#1c0d07);clip-path:polygon(0 100%,6% 20%,50% 0,94% 20%,100% 100%);
+    border-bottom:4px solid var(--gold2)}
+  .pillar{position:absolute;top:0;bottom:0;width:22px;background:linear-gradient(90deg,#5c0f0f,#a52a2a,#5c0f0f)}
+  .pillar.l{left:8px}.pillar.r{right:8px}
+  .lanterns{display:flex;justify-content:space-around;margin:-6px 30px 6px}
+  .lantern{width:34px;height:46px;border-radius:45%;background:radial-gradient(#ffd27a,#e0552b 60%,#8e1b1b);
+    box-shadow:0 0 24px #ff9b4a;animation:sway 4s ease-in-out infinite;transform-origin:top center;position:relative}
+  .lantern::before{content:"";position:absolute;left:50%;top:-14px;width:2px;height:14px;background:var(--gold2)}
+  .lantern:nth-child(2){animation-delay:-1s}.lantern:nth-child(3){animation-delay:-2s}.lantern:nth-child(4){animation-delay:-3s}
+  @keyframes sway{50%{transform:rotate(6deg)}}
+
+  .altar{display:grid;grid-template-columns:1fr 1fr 1.7fr 1fr 1fr;align-items:end;gap:10px;padding:10px 40px 0}
+  .deity{display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:transform .2s}
+  .deity:hover{transform:translateY(-4px)}
+  .deity.selected .halo{opacity:1;transform:scale(1.08)}
+  .statue{position:relative;width:100%;max-width:150px;aspect-ratio:3/4}
+  .deity.main .statue{max-width:280px}
+  .halo{position:absolute;inset:-12% -10% 25%;border-radius:50%;
+    background:radial-gradient(circle,rgba(255,231,150,.55),rgba(232,198,106,.12) 55%,transparent 70%);
+    opacity:.55;transition:.4s;animation:pulse 3s ease-in-out infinite}
+  .deity.main .halo{opacity:.85}
+  @keyframes pulse{50%{filter:brightness(1.35)}}
+  .statue svg,.statue img{position:relative;width:100%;height:100%;display:block}
+  .statue img{object-fit:cover;border-radius:50% 50% 8px 8px;border:5px solid var(--gold);box-shadow:0 0 30px #e8c66a88}
+  .pedestal{width:110%;max-width:170px;height:22px;margin-top:-4px;border-radius:4px;
+    background:linear-gradient(#d9b25a,#7a5a1c);box-shadow:0 6px 12px #000a}
+  .deity.main .pedestal{max-width:310px;height:30px}
+  .plate{margin-top:8px;text-align:center;padding:6px 8px;min-width:90%;
+    background:#130905;border:1px solid var(--gold2);border-radius:3px}
+  .plate .co{font-size:11px;color:var(--gold);opacity:.9}
+  .plate .nm{font-size:15px;font-weight:700;margin-top:2px}
+  .deity.main .plate .co{font-size:13px}
+  .deity.main .plate .nm{font-size:22px;color:var(--gold)}
+  .plate .bows{font-size:11px;opacity:.7;margin-top:3px}
+
+  /* 향로 */
+  .censer-wrap{display:flex;justify-content:center;margin-top:70px;padding-bottom:20px;position:relative}
+  .censer{width:150px;height:70px;border-radius:0 0 70px 70px;
+    background:linear-gradient(#c79a3c,#5e4313);position:relative;box-shadow:0 8px 20px #000c}
+  .censer::before{content:"";position:absolute;left:-10px;right:-10px;top:-8px;height:12px;border-radius:6px;background:#d8b04d}
+  .incense{position:absolute;bottom:58px;width:3px;height:56px;background:linear-gradient(#ff6a2b 0 6px,#7b4b2a 6px)}
+  .smoke{position:absolute;bottom:112px;width:14px;height:14px;border-radius:50%;background:#fff3;filter:blur(4px);
+    animation:smoke 4s linear infinite;opacity:0}
+  @keyframes smoke{0%{opacity:.6;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(14px,-110px) scale(4)}}
+
+  /* 섹션 공통 */
+  section.panel{margin-top:28px;background:rgba(20,10,8,.75);border:1px solid #6b4a1e;border-radius:10px;padding:22px}
+  section.panel h2{font-size:20px;color:var(--gold);margin-bottom:14px;letter-spacing:.1em}
+  .row{display:flex;gap:10px;flex-wrap:wrap}
+  label{font-size:13px;opacity:.85;display:block;margin-bottom:4px}
+  input,select,textarea{width:100%;padding:10px 12px;border-radius:6px;border:1px solid #6b4a1e;background:#0f0805;color:var(--paper);font:inherit;font-size:15px}
+  textarea{min-height:80px;resize:vertical}
+  .field{flex:1 1 200px}
+  .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+  button{font:inherit;cursor:pointer;border:none;border-radius:8px;padding:12px 18px;font-size:16px;font-weight:700;
+    background:linear-gradient(#f2d48a,var(--gold2));color:var(--ink);box-shadow:0 4px 0 #6d5115;transition:.1s}
+  button:active{transform:translateY(3px);box-shadow:0 1px 0 #6d5115}
+  button.alt{background:linear-gradient(#b23a3a,var(--red2));color:var(--paper);box-shadow:0 4px 0 #3a0808}
+  .counter{text-align:center;margin-top:18px;font-size:15px}
+  .counter b{font-size:28px;color:var(--gold)}
+
+  /* 소원 벽 */
+  .wall{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin-top:6px}
+  .tag{background:linear-gradient(#f9eccb,#ead6a4);color:var(--ink);padding:12px 12px 10px;border-radius:4px;position:relative;
+    box-shadow:0 4px 10px #0008;font-size:14px;line-height:1.5}
+  .tag::before{content:"";position:absolute;top:-8px;left:50%;width:10px;height:10px;margin-left:-5px;border-radius:50%;background:var(--red)}
+  .tag .to{font-size:12px;color:var(--red);font-weight:700}
+  .tag .who{margin-top:6px;font-size:12px;opacity:.7;text-align:right}
+  .empty{opacity:.6;text-align:center;padding:20px}
+
+  /* 오버레이 */
+  .overlay{position:fixed;inset:0;background:#000c;display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
+  .overlay.show{display:flex}
+  .card{background:linear-gradient(#fbf1d8,#ecd8a6);color:var(--ink);max-width:380px;width:100%;border-radius:10px;padding:28px 22px;text-align:center;
+    border:6px double var(--red);animation:pop .35s ease}
+  @keyframes pop{from{transform:scale(.7);opacity:0}}
+  .card .big{font-size:42px;font-weight:900;color:var(--red);margin:10px 0}
+  .card p{line-height:1.6}
+  .card button{margin-top:16px}
+
+  .bow-flash{position:fixed;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 40%,#ffe9a8aa,transparent 60%);opacity:0;z-index:40}
+  .bow-flash.go{animation:flash 1s ease}
+  @keyframes flash{30%{opacity:1}}
+  .float-txt{position:fixed;z-index:45;pointer-events:none;color:var(--gold);font-weight:900;font-size:22px;text-shadow:0 2px 6px #000;
+    animation:up 1.4s ease forwards}
+  @keyframes up{to{transform:translateY(-120px);opacity:0}}
+
+  footer{margin-top:40px;text-align:center;font-size:12px;opacity:.6;line-height:1.7}
+
+  @media (max-width:760px){
+    .altar{grid-template-columns:1fr 1fr;padding:10px 30px 0}
+    .deity.main{grid-column:1/-1;order:-1}
+    .deity.main .statue{max-width:220px}
+  }
+</style>
+</head>
+<body>
+<div class="stars"></div>
+<div class="bow-flash" id="flash"></div>
+
+<main>
+  <header>
+    <div class="hanja">合 格 寺</div>
+    <h1>합격사</h1>
+    <p class="sub">삼성그룹 지원자들의 최종 합격을 기원하는 온라인 도량</p>
+    <div class="signboard">最終合格</div>
+  </header>
+
+  <div class="hall">
+    <div class="roof"></div>
+    <div class="pillar l"></div><div class="pillar r"></div>
+    <div class="lanterns"><div class="lantern"></div><div class="lantern"></div><div class="lantern"></div><div class="lantern"></div></div>
+    <div class="altar" id="altar"></div>
+    <div class="censer-wrap" id="censer"><div class="censer"></div></div>
+  </div>
+
+  <section class="panel">
+    <h2>🙏 소원 올리기</h2>
+    <div class="row">
+      <div class="field">
+        <label for="target">기원 대상</label>
+        <select id="target"></select>
+      </div>
+      <div class="field">
+        <label for="nick">이름 (닉네임)</label>
+        <input id="nick" maxlength="12" placeholder="예) 삼성가고싶은 취준생">
+      </div>
+      <div class="field">
+        <label for="stage">현재 전형</label>
+        <select id="stage">
+          <option>서류 전형</option><option>GSAT</option><option>1차 면접</option>
+          <option>최종 면접</option><option>건강검진</option><option>최종 발표 대기</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-top:10px">
+      <label for="wish">소원</label>
+      <textarea id="wish" maxlength="120" placeholder="예) 이번 하반기 GSAT 꼭 붙게 해주세요. 최종까지 가서 꼭 합격하겠습니다!"></textarea>
+    </div>
+    <div class="btns">
+      <button id="bowBtn">🙇 절 올리기</button>
+      <button id="incenseBtn" class="alt">🪔 향 피우기</button>
+      <button id="wishBtn">📜 소원지 걸기</button>
+      <button id="fortuneBtn" class="alt">🎴 합격운 뽑기</button>
+    </div>
+    <div class="counter">지금까지 올린 절 <b id="totalBows">0</b>번 · 피운 향 <b id="totalIncense">0</b>개</div>
+  </section>
+
+  <section class="panel">
+    <h2>📜 소원 벽</h2>
+    <div class="wall" id="wall"></div>
+  </section>
+
+  <footer>
+    본 사이트는 취업준비생들의 응원을 위한 <b>비공식 패러디·유머 사이트</b>이며,<br>
+    삼성그룹 및 등장 인물과 아무런 관련이 없습니다. 합격은 여러분의 실력으로! 화이팅 💙
+  </footer>
+</main>
+
+<div class="overlay" id="overlay">
+  <div class="card">
+    <div id="cardTitle">오늘의 합격운</div>
+    <div class="big" id="cardBig">大吉</div>
+    <p id="cardText"></p>
+    <button onclick="document.getElementById('overlay').classList.remove('show')">감사합니다 🙏</button>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   신위(神位) 설정
+   - 이름/직함은 인사이동 시 여기서만 수정하면 됩니다.
+   - photo 에 이미지 경로(예: "img/jy.jpg")를 넣으면 금빛 동상 대신
+     사진 액자가 표시됩니다. (사용 권한이 있는 사진만 넣어주세요)
+   ========================================================= */
+const DEITIES = [
+  { id:"bio",   co:"삼성바이오로직스", title:"대표이사", name:"존 림",   photo:"", tone:"#d9b25a" },
+  { id:"disp",  co:"삼성디스플레이",   title:"대표이사", name:"이청",    photo:"", tone:"#d4ad55" },
+  { id:"main",  co:"삼성전자",         title:"회장",     name:"이재용",  photo:"", tone:"#f0cf6e", main:true },
+  { id:"ds",    co:"삼성전자 DS부문",  title:"대표이사", name:"전영현",  photo:"", tone:"#d4ad55" },
+  { id:"dx",    co:"삼성전자 DX부문",  title:"대표이사", name:"노태문",  photo:"", tone:"#d9b25a" },
+];
+
+const STORE = "hapgyeoksa-v1";
+const state = Object.assign({bows:{}, incense:0, wishes:[]}, JSON.parse(localStorage.getItem(STORE) || "{}"));
+const save = () => localStorage.setItem(STORE, JSON.stringify(state));
+let selected = "main";
+
+/* 금빛 흉상 SVG */
+function statueSVG(d){
+  const g = "g"+d.id;
+  return `<svg viewBox="0 0 120 160" xmlns="http://www.w3.org/2000/svg" aria-label="${d.name} 동상">
+    <defs>
+      <linearGradient id="${g}" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#fff2bf"/><stop offset=".45" stop-color="${d.tone}"/><stop offset="1" stop-color="#6b4c14"/>
+      </linearGradient>
+    </defs>
+    <!-- 어깨/정장 -->
+    <path d="M10 160 C12 122 30 108 60 104 C90 108 108 122 110 160 Z" fill="url(#${g})"/>
+    <path d="M50 106 L60 132 L70 106" fill="#0000" stroke="#6b4c14" stroke-width="2"/>
+    <path d="M57 112 L60 140 L63 112 Z" fill="#7a5a1c"/>
+    <path d="M30 118 L48 108 L56 140 Z M90 118 L72 108 L64 140 Z" fill="#000" opacity=".12"/>
+    <!-- 목 -->
+    <rect x="50" y="86" width="20" height="22" rx="6" fill="url(#${g})"/>
+    <!-- 머리 -->
+    <ellipse cx="60" cy="58" rx="27" ry="33" fill="url(#${g})"/>
+    <path d="M33 52 C34 26 86 22 87 52 C84 38 72 34 60 35 C46 35 36 40 33 52 Z" fill="#7a5a1c" opacity=".55"/>
+    <ellipse cx="33" cy="62" rx="4" ry="8" fill="url(#${g})"/><ellipse cx="87" cy="62" rx="4" ry="8" fill="url(#${g})"/>
+    <!-- 얼굴 (온화한 미소) -->
+    <path d="M45 58 q5 -4 10 0 M65 58 q5 -4 10 0" stroke="#5a3f0f" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <path d="M60 62 l-2 10 h4" stroke="#7a5a1c" stroke-width="1.5" fill="none"/>
+    <path d="M50 78 q10 7 20 0" stroke="#5a3f0f" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <ellipse cx="46" cy="44" rx="10" ry="5" fill="#fff" opacity=".25"/>
+    ${d.main ? `<circle cx="60" cy="20" r="3" fill="#fff8"/>` : ``}
+  </svg>`;
+}
+
+function renderAltar(){
+  const altar = document.getElementById("altar");
+  altar.innerHTML = DEITIES.map(d => `
+    <div class="deity ${d.main?'main':''} ${selected===d.id?'selected':''}" data-id="${d.id}">
+      <div class="statue">
+        <div class="halo"></div>
+        ${d.photo ? `<img src="${d.photo}" alt="${d.name}">` : statueSVG(d)}
+      </div>
+      <div class="pedestal"></div>
+      <div class="plate">
+        <div class="co">${d.co} ${d.title}</div>
+        <div class="nm">${d.name}${d.main?' 님':''}</div>
+        <div class="bows">🙇 ${(state.bows[d.id]||0).toLocaleString()}배</div>
+      </div>
+    </div>`).join("");
+  altar.querySelectorAll(".deity").forEach(el => el.onclick = () => {
+    selected = el.dataset.id;
+    document.getElementById("target").value = selected;
+    renderAltar();
+  });
+}
+
+function renderSelect(){
+  document.getElementById("target").innerHTML = DEITIES.map(d =>
+    `<option value="${d.id}" ${d.id===selected?'selected':''}>${d.name} (${d.co} ${d.title})</option>`).join("");
+  document.getElementById("target").onchange = e => { selected = e.target.value; renderAltar(); };
+}
+
+function renderCensor(){
+  const wrap = document.getElementById("censer");
+  wrap.querySelectorAll(".incense,.smoke").forEach(n => n.remove());
+  const n = Math.min(state.incense, 9) || 1;
+  for(let i=0;i<n;i++){
+    const x = 50 + (i - (n-1)/2) * 12;
+    const s = document.createElement("div"); s.className="incense"; s.style.left=`calc(${x}% - 1px)`; wrap.appendChild(s);
+    const sm = document.createElement("div"); sm.className="smoke"; sm.style.left=`calc(${x}% - 7px)`; sm.style.animationDelay=`${-i*0.7}s`; wrap.appendChild(sm);
+  }
+}
+
+function renderCounts(){
+  const total = Object.values(state.bows).reduce((a,b)=>a+b,0);
+  document.getElementById("totalBows").textContent = total.toLocaleString();
+  document.getElementById("totalIncense").textContent = state.incense.toLocaleString();
+}
+
+const esc = s => s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function renderWall(){
+  const wall = document.getElementById("wall");
+  if(!state.wishes.length){ wall.innerHTML = `<div class="empty">아직 걸린 소원지가 없습니다. 첫 소원을 올려보세요!</div>`; return; }
+  wall.innerHTML = state.wishes.slice().reverse().map(w => {
+    const d = DEITIES.find(x=>x.id===w.to) || DEITIES[2];
+    return `<div class="tag"><div class="to">▶ ${esc(d.name)}님께 · ${esc(w.stage)}</div>${esc(w.text)}<div class="who">- ${esc(w.nick)} · ${w.date}</div></div>`;
+  }).join("");
+}
+
+function floatText(txt, el){
+  const r = el.getBoundingClientRect();
+  const f = document.createElement("div"); f.className="float-txt"; f.textContent = txt;
+  f.style.left = (r.left + r.width/2 - 40) + "px"; f.style.top = (r.top) + "px";
+  document.body.appendChild(f); setTimeout(()=>f.remove(), 1500);
+}
+
+document.getElementById("bowBtn").onclick = e => {
+  state.bows[selected] = (state.bows[selected]||0) + 1; save();
+  const fl = document.getElementById("flash"); fl.classList.remove("go"); void fl.offsetWidth; fl.classList.add("go");
+  renderAltar(); renderCounts();
+  const statueEl = document.querySelector(`.deity[data-id="${selected}"]`);
+  floatText("합격 기원 +1", statueEl || e.target);
+};
+
+document.getElementById("incenseBtn").onclick = e => {
+  state.incense++; save(); renderCensor(); renderCounts();
+  floatText("향 +1 🪔", document.getElementById("censer"));
+};
+
+document.getElementById("wishBtn").onclick = () => {
+  const text = document.getElementById("wish").value.trim();
+  if(!text){ alert("소원을 적어주세요 🙏"); return; }
+  const d = new Date();
+  state.wishes.push({
+    to: selected,
+    nick: document.getElementById("nick").value.trim() || "익명의 취준생",
+    stage: document.getElementById("stage").value,
+    text, date: `${d.getMonth()+1}/${d.getDate()}`
+  });
+  if(state.wishes.length > 200) state.wishes.shift();
+  save(); renderWall();
+  document.getElementById("wish").value = "";
+  document.getElementById("wall").scrollIntoView({behavior:"smooth", block:"start"});
+};
+
+const FORTUNES = [
+  ["大吉","최종 합격의 기운이 하늘을 찌릅니다. 면접장에서 평소처럼만 하세요."],
+  ["大吉","GSAT 수리 영역에서 신들린 계산력이 발휘될 운세입니다."],
+  ["吉","서류 합격 메일이 당신을 찾아오고 있습니다. 메일함을 자주 확인하세요."],
+  ["吉","직무 이해도가 빛을 발하는 날. 직무 역량 질문에 자신 있게 답하세요."],
+  ["吉","면접관이 당신의 경험담에 고개를 끄덕일 것입니다."],
+  ["中吉","조금만 더 준비하면 됩니다. 오늘은 기출 한 세트 더!"],
+  ["中吉","귀인이 나타날 운. 현직자 선배에게 연락해 보세요."],
+  ["小吉","오늘은 휴식이 보약. 푹 자야 내일 문제가 잘 풀립니다."],
+];
+document.getElementById("fortuneBtn").onclick = () => {
+  const d = DEITIES.find(x=>x.id===selected);
+  const [big, txt] = FORTUNES[Math.floor(Math.random()*FORTUNES.length)];
+  document.getElementById("cardTitle").textContent = `${d.name}님이 내려주신 오늘의 합격운`;
+  document.getElementById("cardBig").textContent = big;
+  document.getElementById("cardText").textContent = txt;
+  document.getElementById("overlay").classList.add("show");
+};
+
+renderSelect(); renderAltar(); renderCensor(); renderCounts(); renderWall();
+</script>
+</body>
+</html>
