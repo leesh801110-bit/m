@@ -2,517 +2,794 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>합격사(合格寺) · 삼성 합격 기원 도량</title>
-<meta name="description" content="삼성그룹 지원자들의 최종 합격을 기원하는 온라인 기도처 (비공식 패러디)">
-<meta property="og:title" content="합격사(合格寺) · 삼성 합격 기원 도량">
-<meta property="og:description" content="절 올리고, 향 피우고, 소원지 걸고. 삼성 최종 합격 기원 🙇">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>합격사(合格寺) · 3D 삼성 합격 기원 법당</title>
+<meta name="description" content="캐릭터를 움직여 3D 법당에서 절하고 삼성 최종 합격을 기원하는 온라인 도량 (비공식 패러디)">
+<meta property="og:title" content="합격사(合格寺) · 3D 삼성 합격 기원 법당">
+<meta property="og:description" content="내 캐릭터로 법당에 들어가 방석 위에서 절 올리고, 향 피우고, 소원지 걸기 🙇">
 <meta property="og:type" content="website">
 <meta name="theme-color" content="#1428a0">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🙏</text></svg>">
-<link rel="preconnect" href="https://cdn.jsdelivr.net">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
-  :root{
-    --blue:#1428a0; --blue2:#0b1a6e; --sky:#2189ff; --navy:#050b2e;
-    --ink:#1d1d1f; --gray:#6e6e73; --line:#e3e6ef; --bg:#f4f6fb; --white:#fff;
-  }
-  *{box-sizing:border-box;margin:0;padding:0}
-  html{scroll-behavior:smooth}
-  body{font-family:"Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
-    color:var(--ink);background:var(--bg);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+  :root{--blue:#1428a0;--blue2:#0b1a6e;--sky:#2189ff;--ink:#1d1d1f;--gray:#6e6e73;--line:#e3e6ef;--bg:#f4f6fb}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;overflow:hidden;background:#0b1a6e}
+  body{font-family:"Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;color:var(--ink);
+    -webkit-font-smoothing:antialiased;user-select:none;-webkit-user-select:none;touch-action:none}
+  canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block;outline:none}
+  button{font:inherit;cursor:pointer;border:none;border-radius:999px;padding:11px 18px;font-size:15px;font-weight:700;background:var(--blue);color:#fff;transition:.15s}
+  button:active{transform:scale(.96)}
+  button.light{background:rgba(255,255,255,.92);color:var(--ink)}
+  button.dark{background:var(--ink)}
 
-  /* 상단 내비게이션 */
-  .nav{position:sticky;top:0;z-index:60;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
-  .nav-in{max-width:1200px;margin:0 auto;height:60px;display:flex;align-items:center;gap:28px;padding:0 20px}
-  .wordmark{font-weight:900;font-size:22px;letter-spacing:.14em;color:var(--blue);text-decoration:none;line-height:1}
-  .wordmark small{display:block;font-size:10px;letter-spacing:.08em;color:var(--gray);font-weight:600;margin-top:3px}
-  .nav-links{display:flex;gap:22px;margin-left:auto}
-  .nav-links a{color:var(--ink);text-decoration:none;font-size:15px;font-weight:600}
-  .nav-links a:hover{color:var(--blue)}
-  .sound-toggle{width:40px;height:40px;padding:0;border-radius:50%;font-size:18px;background:var(--bg);border:1px solid var(--line);box-shadow:none}
-  .sound-toggle.off{opacity:.45}
+  /* 상단 HUD */
+  .hud-top{position:fixed;top:12px;left:12px;right:12px;display:flex;align-items:center;gap:10px;z-index:10;pointer-events:none}
+  .brand{pointer-events:auto;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border-radius:16px;padding:8px 14px;box-shadow:0 6px 20px rgba(0,0,0,.15)}
+  .brand b{display:block;font-size:17px;font-weight:900;letter-spacing:.14em;color:var(--blue);line-height:1.1}
+  .brand small{font-size:10px;color:var(--gray);font-weight:600}
+  .chips{display:flex;gap:6px;flex-wrap:wrap}
+  .chip{background:rgba(255,255,255,.92);border-radius:999px;padding:7px 12px;font-size:13px;font-weight:700;box-shadow:0 6px 20px rgba(0,0,0,.12)}
+  .chip b{color:var(--blue)}
+  .hud-btns{margin-left:auto;display:flex;gap:6px;pointer-events:auto}
+  .icon-btn{width:42px;height:42px;padding:0;font-size:18px;background:rgba(255,255,255,.92);color:var(--ink);box-shadow:0 6px 20px rgba(0,0,0,.15)}
+  .icon-btn.off{opacity:.45}
 
-  /* 히어로 + 무대 */
-  .hero{position:relative;overflow:hidden;color:#fff;
-    background:radial-gradient(ellipse 80% 60% at 50% 0%,#3d5cff55,transparent 70%),linear-gradient(180deg,var(--blue) 0%,var(--blue2) 45%,var(--navy) 100%)}
-  .hero-text{position:relative;z-index:2;text-align:center;padding:56px 20px 10px}
-  .eyebrow{display:inline-block;font-size:13px;font-weight:700;letter-spacing:.2em;padding:7px 16px;border-radius:999px;
-    background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25)}
-  h1{font-size:clamp(30px,5.4vw,56px);font-weight:800;line-height:1.2;margin-top:18px;letter-spacing:-.02em}
-  .sub{margin-top:14px;font-size:clamp(15px,1.8vw,18px);opacity:.8}
-  .stage{position:relative;max-width:1200px;margin:0 auto;padding:30px 20px 0}
-  .beams{position:absolute;inset:0;pointer-events:none;z-index:0}
-  .beam{position:absolute;top:-40px;width:220px;height:120%;background:linear-gradient(180deg,rgba(160,190,255,.35),transparent 75%);
-    clip-path:polygon(45% 0,55% 0,100% 100%,0 100%);filter:blur(6px);transform-origin:top center;animation:sweep 7s ease-in-out infinite}
-  .beam:nth-child(1){left:8%;transform:rotate(-14deg)}
-  .beam:nth-child(2){left:calc(50% - 110px);width:260px;animation-delay:-2s;opacity:.9}
-  .beam:nth-child(3){right:8%;transform:rotate(14deg);animation-delay:-4s}
-  @keyframes sweep{50%{opacity:.55}}
-  .floor{position:absolute;left:0;right:0;bottom:0;height:150px;z-index:0;
-    background:radial-gradient(ellipse 60% 100% at 50% 100%,rgba(33,137,255,.35),transparent 70%)}
+  /* 상호작용 안내 */
+  .prompt{position:fixed;left:50%;bottom:120px;transform:translateX(-50%);z-index:10;display:none;
+    background:var(--blue);color:#fff;font-size:16px;padding:14px 22px;box-shadow:0 10px 30px rgba(20,40,160,.5);animation:bob 1.4s ease-in-out infinite}
+  .prompt kbd{display:inline-block;background:#fff;color:var(--blue);border-radius:6px;padding:1px 7px;margin-right:6px;font-weight:900;font-family:inherit}
+  @keyframes bob{50%{transform:translateX(-50%) translateY(-4px)}}
 
-  .altar{position:relative;z-index:1;display:grid;grid-template-columns:1fr 1fr 1.7fr 1fr 1fr;align-items:end;gap:14px}
-  .deity{display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:transform .25s}
-  .deity:hover{transform:translateY(-6px)}
-  .statue{position:relative;width:100%;max-width:150px;aspect-ratio:3/4}
-  .deity.main .statue{max-width:290px}
-  .halo{position:absolute;inset:-14% -12% 25%;border-radius:50%;
-    background:radial-gradient(circle,rgba(220,232,255,.55),rgba(33,137,255,.18) 55%,transparent 70%);
-    opacity:.5;transition:.4s;animation:pulse 3s ease-in-out infinite}
-  .deity.main .halo{opacity:.9}
-  .deity.selected .halo{opacity:1;transform:scale(1.1)}
-  @keyframes pulse{50%{filter:brightness(1.3)}}
-  .statue svg,.statue img{position:relative;width:100%;height:100%;display:block;filter:drop-shadow(0 10px 20px rgba(0,0,0,.45))}
-  .statue img{object-fit:cover;border-radius:50% 50% 12px 12px;border:4px solid #fff;box-shadow:0 0 40px rgba(120,170,255,.6)}
-  .pedestal{width:110%;max-width:170px;height:16px;margin-top:-2px;border-radius:999px;
-    background:linear-gradient(180deg,#3a4a8a,#0d1440);box-shadow:0 0 0 1px rgba(255,255,255,.15),0 10px 24px rgba(0,0,0,.5)}
-  .deity.main .pedestal{max-width:320px;height:20px}
-  .plate{margin-top:12px;text-align:center;padding:9px 10px;min-width:92%;border-radius:14px;
-    background:rgba(255,255,255,.96);color:var(--ink);box-shadow:0 8px 20px rgba(0,0,0,.25);transition:.25s}
-  .deity.selected .plate{box-shadow:0 0 0 3px var(--sky),0 8px 20px rgba(0,0,0,.25)}
-  .plate .co{font-size:11px;color:var(--blue);font-weight:700}
-  .plate .nm{font-size:16px;font-weight:800;margin-top:2px}
-  .deity.main .plate{padding:12px 16px}
-  .deity.main .plate .co{font-size:13px}
-  .deity.main .plate .nm{font-size:24px}
-  .plate .bows{font-size:11px;color:var(--gray);margin-top:3px}
+  /* 방석 위 행동 패널 */
+  .actions{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:10;display:none;flex-direction:column;align-items:center;gap:10px;width:min(680px,96vw)}
+  .actions .who{background:rgba(255,255,255,.95);border-radius:999px;padding:8px 18px;font-weight:800;font-size:15px;box-shadow:0 6px 20px rgba(0,0,0,.2)}
+  .actions .who span{color:var(--blue)}
+  .actions .row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+  .actions button{box-shadow:0 8px 20px rgba(0,0,0,.25)}
+  .actions .big{font-size:17px;padding:14px 26px}
+  .actions .on{background:var(--sky)}
+  .beads{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.95);border-radius:999px;padding:6px 14px;font-size:13px;font-weight:700;box-shadow:0 6px 20px rgba(0,0,0,.2)}
+  .beadbar{width:160px;height:8px;border-radius:4px;background:#e3e6ef;overflow:hidden}
+  .beadbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--sky));transition:width .2s}
 
-  /* 향 (빛 공양) */
-  .censer-wrap{position:relative;z-index:1;display:flex;justify-content:center;margin-top:70px;padding-bottom:36px}
-  .censer{width:150px;height:46px;border-radius:0 0 80px 80px;background:linear-gradient(180deg,#e9edf7,#8792b5);position:relative;
-    box-shadow:0 10px 24px rgba(0,0,0,.5)}
-  .censer::before{content:"";position:absolute;left:-8px;right:-8px;top:-6px;height:10px;border-radius:6px;background:#f5f7fc}
-  .incense{position:absolute;bottom:72px;width:3px;height:56px;background:linear-gradient(#7fc1ff 0 6px,#c8d0e6 6px);box-shadow:0 -4px 10px #7fc1ff}
-  .smoke{position:absolute;bottom:126px;width:14px;height:14px;border-radius:50%;background:rgba(200,220,255,.35);filter:blur(4px);
-    animation:smoke 4s linear infinite;opacity:0}
-  @keyframes smoke{0%{opacity:.6;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(14px,-110px) scale(4)}}
+  /* 모바일 조이스틱 */
+  .joy{position:fixed;left:24px;bottom:24px;width:130px;height:130px;border-radius:50%;z-index:9;display:none;
+    background:rgba(255,255,255,.18);border:2px solid rgba(255,255,255,.5);backdrop-filter:blur(4px)}
+  .joy i{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:rgba(255,255,255,.9);box-shadow:0 4px 12px rgba(0,0,0,.3)}
+  .hint{position:fixed;right:14px;bottom:14px;z-index:9;color:#fff;font-size:12px;opacity:.85;text-align:right;text-shadow:0 1px 3px #000;line-height:1.6}
 
-  /* 본문 */
-  main{max-width:1200px;margin:0 auto;padding:10px 20px 60px}
-  section.panel{margin-top:28px;background:var(--white);border-radius:24px;padding:32px;box-shadow:0 10px 30px rgba(20,40,160,.07)}
-  .kicker{font-size:13px;font-weight:800;letter-spacing:.16em;color:var(--sky)}
-  section.panel h2{font-size:26px;font-weight:800;margin:6px 0 18px;letter-spacing:-.01em}
-  .row{display:flex;gap:12px;flex-wrap:wrap}
-  label{font-size:13px;color:var(--gray);font-weight:600;display:block;margin-bottom:6px}
-  input,select,textarea{width:100%;padding:13px 14px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);
-    font:inherit;font-size:15px;outline:none;transition:.15s}
-  input:focus,select:focus,textarea:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 3px rgba(20,40,160,.12)}
-  textarea{min-height:90px;resize:vertical}
-  .field{flex:1 1 200px}
-  .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
-  button{font:inherit;cursor:pointer;border:none;border-radius:999px;padding:13px 24px;font-size:15px;font-weight:700;
-    background:var(--blue);color:#fff;transition:.15s}
-  button:hover{background:#0f1f80}
-  button:active{transform:scale(.97)}
-  button:disabled{opacity:.5}
-  button.alt{background:var(--ink)}
-  button.alt:hover{background:#000}
-  button.ghost{background:#fff;color:var(--ink);border:1px solid #c9cdd8}
-  button.ghost:hover{border-color:var(--ink)}
-  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:24px}
-  .stat{background:var(--bg);border-radius:16px;padding:16px;text-align:center}
-  .stat b{display:block;font-size:30px;font-weight:800;color:var(--blue);letter-spacing:-.02em}
-  .stat span{font-size:13px;color:var(--gray)}
-  .desc{font-size:15px;color:var(--gray);margin-bottom:14px}
-  .progress{position:relative;height:36px;border-radius:999px;background:var(--bg);overflow:hidden}
-  .progress .bar{height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--sky));transition:width .3s;border-radius:999px}
-  .progress span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;mix-blend-mode:difference;color:#fff}
-  .mode{font-size:13px;color:var(--gray);margin-left:8px;font-weight:500;letter-spacing:0}
-
-  /* 소원 벽 */
-  .filter{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
-  .filter button{padding:8px 16px;font-size:13px;font-weight:600;background:var(--bg);color:var(--ink)}
-  .filter button.on{background:var(--ink);color:#fff}
-  .wall{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
-  .tag{background:#fff;border:1px solid var(--line);border-top:4px solid var(--blue);padding:16px;border-radius:16px;font-size:15px;line-height:1.55;
-    transition:.2s}
-  .tag:hover{transform:translateY(-3px);box-shadow:0 12px 24px rgba(20,40,160,.1)}
-  .tag .to{font-size:12px;color:var(--blue);font-weight:800;margin-bottom:6px}
-  .tag .co-tag{display:inline-block;font-size:11px;background:#e8edff;color:var(--blue);border-radius:999px;padding:2px 8px;margin-left:6px;font-weight:700}
-  .tag .who{margin-top:10px;font-size:12px;color:var(--gray);text-align:right}
-  .empty{color:var(--gray);text-align:center;padding:30px}
-
-  /* 카드 팝업 */
-  .overlay{position:fixed;inset:0;background:rgba(5,11,46,.7);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:80;padding:20px}
-  .overlay.show{display:flex}
-  .card{background:#fff;color:var(--ink);max-width:380px;width:100%;border-radius:28px;padding:34px 26px;text-align:center;animation:pop .35s ease;
-    box-shadow:0 30px 60px rgba(0,0,0,.35)}
-  @keyframes pop{from{transform:translateY(20px) scale(.95);opacity:0}}
-  #cardTitle{font-size:14px;font-weight:700;color:var(--gray)}
-  .card .big{font-size:52px;font-weight:900;color:var(--blue);margin:12px 0}
-  .card p{line-height:1.6;color:#3a3a3c}
-  .card button{margin-top:20px;width:100%}
-  .talisman{width:160px;margin:4px auto 0;padding:18px 8px;border-radius:16px;background:linear-gradient(160deg,var(--blue),var(--blue2));color:#fff;
+  /* 모달 */
+  .modal{position:fixed;inset:0;z-index:30;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(5,11,46,.6);backdrop-filter:blur(6px)}
+  .modal.show{display:flex}
+  .sheet{background:#fff;border-radius:26px;width:min(460px,100%);max-height:90vh;overflow:auto;padding:28px 24px;box-shadow:0 30px 60px rgba(0,0,0,.4);animation:pop .3s ease;user-select:text;-webkit-user-select:text}
+  .sheet.wide{width:min(820px,100%)}
+  @keyframes pop{from{transform:translateY(16px) scale(.97);opacity:0}}
+  .kicker{font-size:12px;font-weight:800;letter-spacing:.16em;color:var(--sky)}
+  .sheet h2{font-size:24px;font-weight:800;margin:4px 0 16px}
+  .sheet label{display:block;font-size:13px;color:var(--gray);font-weight:600;margin:12px 0 6px}
+  .sheet input,.sheet select,.sheet textarea{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--bg);font:inherit;font-size:16px;outline:none}
+  .sheet input:focus,.sheet select:focus,.sheet textarea:focus{border-color:var(--blue);background:#fff}
+  .sheet textarea{min-height:90px;resize:vertical}
+  .sheet .btns{display:flex;gap:8px;margin-top:18px}
+  .sheet .btns button{flex:1}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+  .center{text-align:center}
+  .fortune-big{font-size:60px;font-weight:900;color:var(--blue);margin:8px 0}
+  .talisman{width:160px;margin:6px auto;padding:18px 8px;border-radius:16px;background:linear-gradient(160deg,var(--blue),var(--blue2));color:#fff;
     font-weight:900;font-size:34px;line-height:1.25;display:flex;flex-direction:column;align-items:center;
     box-shadow:inset 0 0 0 6px var(--blue),inset 0 0 0 7px rgba(255,255,255,.6),0 14px 30px rgba(20,40,160,.35)}
   .talisman small{font-size:11px;margin-top:10px;letter-spacing:.2em;opacity:.8}
+  .wall{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-top:6px}
+  .tag{border:1px solid var(--line);border-top:4px solid var(--blue);border-radius:14px;padding:12px;font-size:14px;line-height:1.5}
+  .tag .to{font-size:11px;color:var(--blue);font-weight:800;margin-bottom:4px}
+  .tag .co{display:inline-block;font-size:10px;background:#e8edff;color:var(--blue);border-radius:999px;padding:1px 7px;margin-left:4px}
+  .tag .by{margin-top:6px;font-size:11px;color:var(--gray);text-align:right}
+  .empty{color:var(--gray);text-align:center;padding:24px}
+  .keys{display:grid;grid-template-columns:auto 1fr;gap:8px 14px;font-size:14px;margin-top:6px;align-items:center}
+  .keys kbd{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:2px 8px;font-family:inherit;font-weight:800;font-size:13px;white-space:nowrap}
+  .note{font-size:11px;color:var(--gray);margin-top:16px;line-height:1.6}
 
-  .bow-flash{position:fixed;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 35%,rgba(170,200,255,.55),transparent 60%);opacity:0;z-index:40}
-  .bow-flash.go{animation:flash 1s ease}
-  @keyframes flash{30%{opacity:1}}
-  .float-txt{position:fixed;z-index:45;pointer-events:none;color:#fff;background:var(--sky);font-weight:800;font-size:15px;padding:6px 12px;border-radius:999px;
-    box-shadow:0 6px 16px rgba(0,0,0,.3);animation:up 1.4s ease forwards;white-space:nowrap}
-  @keyframes up{to{transform:translateY(-100px);opacity:0}}
-  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(80px);z-index:90;background:var(--ink);color:#fff;
-    padding:12px 22px;border-radius:999px;transition:.3s;opacity:0;font-size:14px;font-weight:600}
+  /* 입장 화면 */
+  .intro{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;padding:20px;color:#fff;text-align:center;
+    background:radial-gradient(ellipse 80% 60% at 50% 0%,#3d5cff66,transparent 70%),linear-gradient(180deg,var(--blue),var(--blue2) 50%,#050b2e)}
+  .intro .eyebrow{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.2em;padding:7px 16px;border-radius:999px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25)}
+  .intro h1{font-size:clamp(32px,6vw,58px);font-weight:900;margin-top:18px;line-height:1.2}
+  .intro p{opacity:.85;margin-top:12px;font-size:16px;line-height:1.6}
+  .intro button{margin-top:28px;font-size:18px;padding:16px 40px;background:#fff;color:var(--blue)}
+  .intro .loading{margin-top:28px;opacity:.8}
+  .intro .small{font-size:12px;opacity:.6;margin-top:22px}
+
+  .float-txt{position:fixed;z-index:12;pointer-events:none;color:#fff;background:var(--sky);font-weight:800;font-size:14px;padding:6px 12px;border-radius:999px;
+    box-shadow:0 6px 16px rgba(0,0,0,.3);animation:up 1.4s ease forwards;white-space:nowrap;transform:translateX(-50%)}
+  @keyframes up{to{margin-top:-90px;opacity:0}}
+  .toast{position:fixed;left:50%;top:76px;transform:translateX(-50%) translateY(-20px);z-index:50;background:var(--ink);color:#fff;
+    padding:11px 20px;border-radius:999px;transition:.3s;opacity:0;font-size:14px;font-weight:600;pointer-events:none;white-space:nowrap}
   .toast.show{transform:translateX(-50%);opacity:1}
+  .flash{position:fixed;inset:0;pointer-events:none;z-index:8;background:radial-gradient(circle at 50% 40%,rgba(255,236,170,.45),transparent 60%);opacity:0}
+  .flash.go{animation:fl 1.2s ease}
+  @keyframes fl{30%{opacity:1}}
 
-  footer{background:#000;color:#a1a1a6;font-size:12px;line-height:1.8;text-align:center;padding:36px 20px}
-  footer .wordmark{color:#fff;font-size:16px;display:inline-block;margin-bottom:10px}
-
-  @media (max-width:760px){
-    .nav-links{display:none}
-    .sound-toggle{margin-left:auto}
-    .altar{grid-template-columns:1fr 1fr;gap:18px 14px}
-    .deity.main{grid-column:1/-1;order:-1}
-    .deity.main .statue{max-width:220px}
-    section.panel{padding:24px 18px;border-radius:20px}
-    .stat b{font-size:22px}
-    .beam:nth-child(1),.beam:nth-child(3){display:none}
+  @media (max-width:700px){
+    .chips{display:none}
+    .brand b{font-size:15px}
+    .prompt{bottom:180px}
+    .actions{bottom:12px;gap:6px}
+    .actions .row{gap:6px}
+    .actions button{padding:10px 14px;font-size:14px}
+    .actions .big{padding:12px 20px;font-size:16px}
+    .actions small{display:none}
+    .intro br{display:none}
+    .hint{display:none}
   }
 </style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+} }
+</script>
 </head>
 <body>
-<div class="bow-flash" id="flash"></div>
+<canvas id="c" tabindex="0"></canvas>
+<div class="flash" id="flash"></div>
 <div class="toast" id="toast"></div>
 
-<nav class="nav">
-  <div class="nav-in">
-    <a class="wordmark" href="#top">HAPGYEOKSA<small>합격사 · 삼성 합격 기원</small></a>
-    <div class="nav-links">
-      <a href="#pray">기원하기</a><a href="#challenge">108배</a><a href="#wall-sec">소원 벽</a>
-    </div>
-    <button class="sound-toggle" id="soundBtn" aria-label="효과음 켜기/끄기">🔔</button>
+<div class="hud-top">
+  <div class="brand"><b>HAPGYEOKSA</b><small>합격사 · 삼성 합격 기원 법당</small></div>
+  <div class="chips">
+    <div class="chip">🙇 <span id="scope">내</span> 절 <b id="cBow">0</b></div>
+    <div class="chip">🪔 향 <b id="cInc">0</b></div>
+    <div class="chip">📜 소원 <b id="cWish">0</b></div>
+    <div class="chip">📿 108배 <b id="c108">0</b>/108</div>
   </div>
-</nav>
-
-<section class="hero" id="top">
-  <div class="hero-text">
-    <span class="eyebrow">FINAL PASS · 最終合格</span>
-    <h1>당신의 최종 합격을<br>기원합니다</h1>
-    <p class="sub">삼성그룹 지원자를 위한 온라인 합격 기원 도량</p>
-  </div>
-  <div class="stage">
-    <div class="beams"><div class="beam"></div><div class="beam"></div><div class="beam"></div></div>
-    <div class="floor"></div>
-    <div class="altar" id="altar"></div>
-    <div class="censer-wrap" id="censer"><div class="censer"></div></div>
-  </div>
-</section>
-
-<main>
-
-  <section class="panel" id="pray">
-    <div class="kicker">PRAY</div>
-    <h2>합격 기원 올리기</h2>
-    <div class="row">
-      <div class="field">
-        <label for="target">기원 대상</label>
-        <select id="target"></select>
-      </div>
-      <div class="field">
-        <label for="nick">이름 (닉네임)</label>
-        <input id="nick" maxlength="12" placeholder="예) 삼성가고싶은 취준생">
-      </div>
-      <div class="field">
-        <label for="company">지원 계열사</label>
-        <select id="company"></select>
-      </div>
-      <div class="field">
-        <label for="stage">현재 전형</label>
-        <select id="stage">
-          <option>서류 전형</option><option>GSAT</option><option>1차 면접</option>
-          <option>최종 면접</option><option>건강검진</option><option>최종 발표 대기</option>
-        </select>
-      </div>
-    </div>
-    <div style="margin-top:10px">
-      <label for="wish">소원</label>
-      <textarea id="wish" maxlength="120" placeholder="예) 이번 하반기 GSAT 꼭 붙게 해주세요. 최종까지 가서 꼭 합격하겠습니다!"></textarea>
-    </div>
-    <div class="btns">
-      <button id="bowBtn">🙇 절 올리기</button>
-      <button id="incenseBtn" class="ghost">🪔 향 피우기</button>
-      <button id="wishBtn" class="alt">📜 소원지 걸기</button>
-      <button id="fortuneBtn" class="ghost">🎴 합격운 뽑기</button>
-      <button id="shareBtn" class="ghost">🔗 친구에게 공유</button>
-    </div>
-    <div class="stats">
-      <div class="stat"><b id="totalBows">0</b><span><span id="scopeLabel">이 기기에서</span> 올린 절</span></div>
-      <div class="stat"><b id="totalIncense">0</b><span>피운 향</span></div>
-      <div class="stat"><b id="totalWishes">0</b><span>걸린 소원지</span></div>
-    </div>
-  </section>
-
-  <section class="panel" id="challenge">
-    <div class="kicker">CHALLENGE</div>
-    <h2>108배 챌린지</h2>
-    <p class="desc">절 올리기 버튼(또는 스페이스바)을 눌러 108배를 채우면 특별 합격 부적을 받습니다.</p>
-    <div class="progress"><div class="bar" id="bar108"></div><span id="txt108">0 / 108</span></div>
-  </section>
-
-  <section class="panel" id="wall-sec">
-    <div class="kicker">WISH WALL</div>
-    <h2>소원 벽 <span class="mode" id="modeBadge"></span></h2>
-    <div class="filter" id="wallFilter"></div>
-    <div class="wall" id="wall"></div>
-  </section>
-
-
-</main>
-
-<footer>
-  <span class="wordmark">HAPGYEOKSA</span><br>
-  본 사이트는 취업준비생들의 응원을 위한 비공식 패러디·유머 사이트이며,<br>
-  삼성그룹 및 등장 인물과 아무런 관련이 없습니다. 합격은 여러분의 실력으로! 화이팅 💙
-</footer>
-
-<div class="overlay" id="overlay">
-  <div class="card">
-    <div id="cardTitle">오늘의 합격운</div>
-    <div class="big" id="cardBig">大吉</div>
-    <p id="cardText"></p>
-    <button onclick="document.getElementById('overlay').classList.remove('show')">감사합니다 🙏</button>
+  <div class="hud-btns">
+    <button class="icon-btn" id="wallBtn" title="소원 벽 보기">📜</button>
+    <button class="icon-btn" id="shareBtn" title="공유">🔗</button>
+    <button class="icon-btn" id="soundBtn" title="효과음">🔔</button>
+    <button class="icon-btn" id="helpBtn" title="조작법">❓</button>
   </div>
 </div>
 
+<button class="prompt" id="prompt"></button>
+
+<div class="actions" id="actions">
+  <div class="who" id="who"></div>
+  <div class="beads">📿 염주 <div class="beadbar"><i id="beadBar"></i></div> <span id="beadTxt">0/108</span></div>
+  <div class="row">
+    <button class="big" id="aBow">🙇 절하기 <small>(Space)</small></button>
+    <button class="light" id="aHap">🙏 합장</button>
+    <button class="light" id="aBead">📿 염주 돌리기 <small>(R)</small></button>
+    <button class="light" id="aChant">🔊 염불 듣기</button>
+    <button class="dark" id="aLeave">↩ 일어나기</button>
+  </div>
+</div>
+
+<div class="joy" id="joy"><i id="knob"></i></div>
+<div class="hint">WASD/방향키 이동 · Shift 달리기 · 마우스 드래그 시점 · 휠 줌 · E 상호작용</div>
+
+<!-- 입장 화면 -->
+<div class="intro" id="intro">
+  <div>
+    <span class="eyebrow">FINAL PASS · 最終合格</span>
+    <h1>합격사에 오신 것을<br>환영합니다</h1>
+    <p>내 캐릭터로 법당에 들어가 방석 위에서 절을 올리고<br>향을 피우고, 소원지를 걸어 삼성 최종 합격을 기원하세요.</p>
+    <div class="loading" id="loading">법당을 짓는 중…</div>
+    <button id="enterBtn" style="display:none">🙏 입장하기</button>
+    <div class="small">비공식 패러디·유머 사이트 · 삼성그룹 및 등장 인물과 무관</div>
+  </div>
+</div>
+
+<!-- 조작법 -->
+<div class="modal" id="mHelp"><div class="sheet">
+  <div class="kicker">HOW TO</div><h2>조작법</h2>
+  <div class="keys">
+    <kbd>W A S D / 방향키</kbd><span>걷기 (모바일: 왼쪽 아래 조이스틱)</span>
+    <kbd>Shift</kbd><span>달리기</span>
+    <kbd>마우스 드래그</kbd><span>시점 돌리기 (모바일: 화면 오른쪽 드래그)</span>
+    <kbd>휠</kbd><span>확대 / 축소</span>
+    <kbd>E</kbd><span>방석에 서기 · 향 피우기 · 소원지 · 합격운 뽑기</span>
+    <kbd>Space</kbd><span>방석 위에서 절하기 (108번이면 합격 부적)</span>
+    <kbd>R</kbd><span>염주 돌리기</span>
+    <kbd>Esc</kbd><span>방석에서 일어나기</span>
+  </div>
+  <p class="note">법당 안 다섯 분의 동상 앞 파란 방석으로 가서 절을 올리세요. 앞마당 향로에서는 향을, 왼쪽 게시대에는 소원지를, 오른쪽 함에서는 오늘의 합격운을 뽑을 수 있어요.</p>
+  <div class="btns"><button onclick="closeModal('mHelp')">알겠어요</button></div>
+</div></div>
+
+<!-- 소원지 쓰기 -->
+<div class="modal" id="mWish"><div class="sheet">
+  <div class="kicker">WISH</div><h2>소원지 걸기</h2>
+  <label for="wTo">기원 대상</label><select id="wTo"></select>
+  <div class="grid2">
+    <div><label for="wNick">이름 (닉네임)</label><input id="wNick" maxlength="12" placeholder="익명의 취준생"></div>
+    <div><label for="wCo">지원 계열사</label><select id="wCo"></select></div>
+  </div>
+  <label for="wStage">현재 전형</label>
+  <select id="wStage"><option>서류 전형</option><option>GSAT</option><option>1차 면접</option><option>최종 면접</option><option>건강검진</option><option>최종 발표 대기</option></select>
+  <label for="wText">소원</label><textarea id="wText" maxlength="120" placeholder="예) 이번 하반기 GSAT 꼭 붙게 해주세요!"></textarea>
+  <div class="btns"><button class="light" style="border:1px solid var(--line)" onclick="closeModal('mWish')">닫기</button><button id="wSubmit">📜 소원지 걸기</button></div>
+</div></div>
+
+<!-- 소원 벽 -->
+<div class="modal" id="mWall"><div class="sheet wide">
+  <div class="kicker">WISH WALL</div><h2>소원 벽 <small id="wallMode" style="font-size:13px;color:var(--gray);font-weight:500"></small></h2>
+  <div class="wall" id="wallList"></div>
+  <div class="btns"><button onclick="closeModal('mWall')">닫기</button></div>
+</div></div>
+
+<!-- 카드 (합격운/부적) -->
+<div class="modal" id="mCard"><div class="sheet center">
+  <div style="font-size:14px;font-weight:700;color:var(--gray)" id="cardTitle"></div>
+  <div id="cardBig"></div>
+  <p id="cardText" style="line-height:1.6;color:#3a3a3c"></p>
+  <div class="btns"><button onclick="closeModal('mCard')">감사합니다 🙏</button></div>
+</div></div>
+
 <script>
+  // 모듈 밖에서도 쓰는 간단한 함수
+  function closeModal(id){ document.getElementById(id).classList.remove('show'); document.getElementById('c').focus(); }
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
 /* =========================================================
-   신위(神位) 설정
-   - 이름/직함은 인사이동 시 여기서만 수정하면 됩니다.
-   - photo 에 이미지 경로(예: "img/jy.jpg")를 넣으면 금빛 동상 대신
-     사진 액자가 표시됩니다. (사용 권한이 있는 사진만 넣어주세요)
+   설정 — 이름/직함은 인사이동 시 여기서만 고치면 됩니다
    ========================================================= */
 const DEITIES = [
-  { id:"bio",   co:"삼성바이오로직스", title:"대표이사", name:"존 림",   photo:"", tone:"#bcc5da" },
-  { id:"disp",  co:"삼성디스플레이",   title:"대표이사", name:"이청",    photo:"", tone:"#b6c0d6" },
-  { id:"main",  co:"삼성전자",         title:"회장",     name:"이재용",  photo:"", tone:"#d3dbf2", main:true },
-  { id:"ds",    co:"삼성전자 DS부문",  title:"대표이사", name:"전영현",  photo:"", tone:"#b6c0d6" },
-  { id:"dx",    co:"삼성전자 DX부문",  title:"대표이사", name:"노태문",  photo:"", tone:"#bcc5da" },
+  { id:"bio",  co:"삼성바이오로직스", title:"대표이사", name:"존 림",  x:-11.5 },
+  { id:"disp", co:"삼성디스플레이",   title:"대표이사", name:"이청",   x:-6.5 },
+  { id:"main", co:"삼성전자",         title:"회장",     name:"이재용", x:0, main:true },
+  { id:"ds",   co:"삼성전자 DS부문",  title:"대표이사", name:"전영현", x:6.5 },
+  { id:"dx",   co:"삼성전자 DX부문",  title:"대표이사", name:"노태문", x:11.5 },
 ];
-
-/* 금빛 흉상 SVG */
-function statueSVG(d){
-  const g = "g"+d.id;
-  return `<svg viewBox="0 0 120 160" xmlns="http://www.w3.org/2000/svg" aria-label="${d.name} 동상">
-    <defs>
-      <linearGradient id="${g}" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="#ffffff"/><stop offset=".45" stop-color="${d.tone}"/><stop offset="1" stop-color="#4a5678"/>
-      </linearGradient>
-    </defs>
-    <!-- 어깨/정장 -->
-    <path d="M10 160 C12 122 30 108 60 104 C90 108 108 122 110 160 Z" fill="url(#${g})"/>
-    <path d="M50 106 L60 132 L70 106" fill="#0000" stroke="#4a5678" stroke-width="2"/>
-    <path d="M57 112 L60 140 L63 112 Z" fill="#5d6a8c"/>
-    <path d="M30 118 L48 108 L56 140 Z M90 118 L72 108 L64 140 Z" fill="#000" opacity=".12"/>
-    <!-- 목 -->
-    <rect x="50" y="86" width="20" height="22" rx="6" fill="url(#${g})"/>
-    <!-- 머리 -->
-    <ellipse cx="60" cy="58" rx="27" ry="33" fill="url(#${g})"/>
-    <path d="M33 52 C34 26 86 22 87 52 C84 38 72 34 60 35 C46 35 36 40 33 52 Z" fill="#5d6a8c" opacity=".55"/>
-    <ellipse cx="33" cy="62" rx="4" ry="8" fill="url(#${g})"/><ellipse cx="87" cy="62" rx="4" ry="8" fill="url(#${g})"/>
-    <!-- 얼굴 (온화한 미소) -->
-    <path d="M45 58 q5 -4 10 0 M65 58 q5 -4 10 0" stroke="#26304d" stroke-width="2" fill="none" stroke-linecap="round"/>
-    <path d="M60 62 l-2 10 h4" stroke="#5d6a8c" stroke-width="1.5" fill="none"/>
-    <path d="M50 78 q10 7 20 0" stroke="#26304d" stroke-width="2" fill="none" stroke-linecap="round"/>
-    <ellipse cx="46" cy="44" rx="10" ry="5" fill="#fff" opacity=".25"/>
-    ${d.main ? `<circle cx="60" cy="20" r="3" fill="#fff8"/>` : ``}
-  </svg>`;
-}
-
-/* =========================================================
-   지원 계열사 목록 (소원지에 표시)
-   ========================================================= */
 const COMPANIES = ["삼성전자","삼성디스플레이","삼성바이오로직스","삼성바이오에피스","삼성SDI","삼성전기","삼성SDS",
   "삼성물산","삼성중공업","삼성E&A","삼성생명","삼성화재","삼성카드","삼성증권","호텔신라","제일기획","에스원","삼성웰스토리","기타"];
-
-/* =========================================================
-   공유 서버 주소
-   - 비워두면 각 방문자 브라우저에만 저장됩니다(개인 모드).
-   - worker/ 폴더의 Cloudflare Worker 를 배포한 뒤 그 주소를 넣으면
-     모든 방문자가 절 횟수와 소원 벽을 함께 봅니다(공유 모드).
-     예) const API_BASE = "https://hapgyeoksa-api.내계정.workers.dev";
-   ========================================================= */
+// 공유 서버 주소 (worker/ 배포 후 입력). 비워두면 이 기기에만 저장.
 const API_BASE = "";
 
+/* ---------------- 저장 상태 ---------------- */
 const STORE = "hapgyeoksa-v1";
-const state = Object.assign({bows:{}, incense:0, wishes:[], challenge:0, sound:true}, JSON.parse(localStorage.getItem(STORE) || "{}"));
+const state = Object.assign({bows:{}, incense:0, wishes:[], challenge:0, beads:0, sound:true}, JSON.parse(localStorage.getItem(STORE) || "{}"));
 const save = () => localStorage.setItem(STORE, JSON.stringify(state));
-let global = null;          // 공유 모드일 때 서버 데이터
-let selected = "main";
-let wallFilter = "전체";
-const $ = id => document.getElementById(id);
+let global = null;
 const view = () => global || state;
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
-/* ---------------- 서버 통신 ---------------- */
 async function api(path, body){
-  const res = await fetch(API_BASE.replace(/\/$/,"") + path, body ? {
-    method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body)} : {});
+  const res = await fetch(API_BASE.replace(/\/$/,"") + path, body ? {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)} : {});
   if(!res.ok) throw new Error((await res.json().catch(()=>({}))).error || res.status);
   return res.json();
 }
 async function loadGlobal(){
   if(!API_BASE) return;
-  try{ global = await api("/state"); }
-  catch(e){ global = null; toast("서버 연결 실패 · 이 기기 저장 모드로 동작합니다"); }
-  renderAll();
+  try{ global = await api("/state"); }catch(e){ global = null; toast("서버 연결 실패 · 이 기기 저장 모드"); }
+  updateHUD(); rebuildWishTags(); updateIncense();
 }
 
-/* ---------------- 효과음 (Web Audio, 파일 불필요) ---------------- */
+/* ---------------- 소리 ---------------- */
 let actx;
-function ctx(){ actx = actx || new (window.AudioContext||window.webkitAudioContext)(); return actx; }
-function moktak(){            // 목탁 소리
-  if(!state.sound) return; const c = ctx(), t = c.currentTime;
-  const o = c.createOscillator(), g = c.createGain();
+const ac = () => (actx = actx || new (window.AudioContext||window.webkitAudioContext)());
+function moktak(vol=0.7){
+  if(!state.sound) return; const c=ac(), t=c.currentTime, o=c.createOscillator(), g=c.createGain();
   o.type="sine"; o.frequency.setValueAtTime(820,t); o.frequency.exponentialRampToValueAtTime(480,t+0.08);
-  g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.7,t+0.005); g.gain.exponentialRampToValueAtTime(0.0001,t+0.25);
+  g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+0.005); g.gain.exponentialRampToValueAtTime(0.0001,t+0.25);
   o.connect(g).connect(c.destination); o.start(t); o.stop(t+0.3);
 }
-function bell(){              // 범종/풍경 소리
-  if(!state.sound) return; const c = ctx(), t = c.currentTime;
-  [[196,1],[392,.5],[523,.3],[784,.15]].forEach(([f,v])=>{
-    const o=c.createOscillator(), g=c.createGain(); o.type="sine"; o.frequency.value=f;
-    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.35*v,t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+3.5);
-    o.connect(g).connect(c.destination); o.start(t); o.stop(t+3.6);
-  });
+function bell(){
+  if(!state.sound) return; const c=ac(), t=c.currentTime;
+  [[196,1],[392,.5],[523,.3],[784,.15]].forEach(([f,v])=>{const o=c.createOscillator(),g=c.createGain();o.type="sine";o.frequency.value=f;
+    g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(0.35*v,t+0.02);g.gain.exponentialRampToValueAtTime(0.0001,t+3.5);
+    o.connect(g).connect(c.destination);o.start(t);o.stop(t+3.6);});
+}
+function bead(){
+  if(!state.sound) return; const c=ac(), t=c.currentTime, o=c.createOscillator(), g=c.createGain();
+  o.type="triangle"; o.frequency.value=2200; g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.15,t+0.003); g.gain.exponentialRampToValueAtTime(0.0001,t+0.06);
+  o.connect(g).connect(c.destination); o.start(t); o.stop(t+0.08);
+}
+// 염불: 목탁 장단 + (지원 시) 음성 합성
+let chantTimer=null;
+const CHANT = "나무 합격보살. 서류 합격, 인적성 합격, 면접 합격, 최종 합격. 지원자 모두 원하는 계열사에 합격하게 하옵소서. 나무 최종합격 보살.";
+function toggleChant(){
+  if(chantTimer){ stopChant(); return; }
+  let n=0; chantTimer=setInterval(()=>moktak(n++%4===0?0.8:0.45), 600);
+  if('speechSynthesis' in window){
+    const say=()=>{ if(!chantTimer) return; const u=new SpeechSynthesisUtterance(CHANT); u.lang="ko-KR"; u.rate=.75; u.pitch=.5; u.volume=state.sound?1:0;
+      u.onend=()=>setTimeout(say,800); speechSynthesis.speak(u); };
+    speechSynthesis.cancel(); say();
+  }
+  $("aChant").classList.add("on"); $("aChant").textContent="🔇 염불 멈추기";
+}
+function stopChant(){
+  clearInterval(chantTimer); chantTimer=null; if('speechSynthesis' in window) speechSynthesis.cancel();
+  $("aChant").classList.remove("on"); $("aChant").textContent="🔊 염불 듣기";
 }
 
-/* ---------------- 렌더링 ---------------- */
-function renderAltar(){
-  const bows = view().bows || {};
-  const altar = $("altar");
-  altar.innerHTML = DEITIES.map(d => `
-    <div class="deity ${d.main?'main':''} ${selected===d.id?'selected':''}" data-id="${d.id}">
-      <div class="statue">
-        <div class="halo"></div>
-        ${d.photo ? `<img src="${d.photo}" alt="${d.name}">` : statueSVG(d)}
-      </div>
-      <div class="pedestal"></div>
-      <div class="plate">
-        <div class="co">${d.co} ${d.title}</div>
-        <div class="nm">${d.name}${d.main?' 님':''}</div>
-        <div class="bows">🙇 ${(bows[d.id]||0).toLocaleString()}배</div>
-      </div>
-    </div>`).join("");
-  altar.querySelectorAll(".deity").forEach(el => el.onclick = () => {
-    selected = el.dataset.id; $("target").value = selected; renderAltar();
-  });
+/* ---------------- 렌더러/씬 ---------------- */
+const canvas = $("c");
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+
+const scene = new THREE.Scene();
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+
+// 하늘 그라데이션
+{
+  const cv=document.createElement("canvas"); cv.width=2; cv.height=256; const g=cv.getContext("2d");
+  const gr=g.createLinearGradient(0,0,0,256); gr.addColorStop(0,"#1a3bd6"); gr.addColorStop(.55,"#6fa0ff"); gr.addColorStop(1,"#dfe9ff");
+  g.fillStyle=gr; g.fillRect(0,0,2,256);
+  const tex=new THREE.CanvasTexture(cv); tex.colorSpace=THREE.SRGBColorSpace; scene.background=tex;
+}
+scene.fog = new THREE.Fog(0xcfdcff, 45, 120);
+
+const camera = new THREE.PerspectiveCamera(55, innerWidth/innerHeight, 0.1, 300);
+
+scene.add(new THREE.HemisphereLight(0xdfe8ff, 0x8a7d6a, 0.9));
+const sun = new THREE.DirectionalLight(0xfff4e0, 2.2);
+sun.position.set(25, 40, 30); sun.castShadow = true;
+sun.shadow.mapSize.set(2048,2048);
+Object.assign(sun.shadow.camera, {left:-45,right:45,top:45,bottom:-45,near:1,far:120});
+sun.shadow.bias = -0.0005;
+scene.add(sun);
+
+/* ---------------- 재질 ---------------- */
+const M = {
+  stone: new THREE.MeshStandardMaterial({color:0xe7eaf0, roughness:.9}),
+  path:  new THREE.MeshStandardMaterial({color:0xcfd4de, roughness:.85}),
+  grass: new THREE.MeshStandardMaterial({color:0x8fbf7a, roughness:1}),
+  white: new THREE.MeshStandardMaterial({color:0xf7f8fb, roughness:.6}),
+  blue:  new THREE.MeshStandardMaterial({color:0x1428a0, roughness:.45, metalness:.1}),
+  navy:  new THREE.MeshStandardMaterial({color:0x0b1a6e, roughness:.5}),
+  roof:  new THREE.MeshStandardMaterial({color:0x22314f, roughness:.7}),
+  wood:  new THREE.MeshStandardMaterial({color:0xb08a5a, roughness:.8}),
+  floor: new THREE.MeshStandardMaterial({color:0xc9a272, roughness:.7}),
+  gold:  new THREE.MeshStandardMaterial({color:0xf0c24f, roughness:.25, metalness:1}),
+  goldD: new THREE.MeshStandardMaterial({color:0xc9962c, roughness:.35, metalness:1}),
+  cushion: new THREE.MeshStandardMaterial({color:0x2189ff, roughness:.9}),
+  cushionE: new THREE.MeshStandardMaterial({color:0x1428a0, roughness:.9}),
+  bronze: new THREE.MeshStandardMaterial({color:0x8a6a3a, roughness:.4, metalness:.9}),
+};
+function mesh(geo, mat, x=0, y=0, z=0, cast=true, recv=true){
+  const m=new THREE.Mesh(geo,mat); m.position.set(x,y,z); m.castShadow=cast; m.receiveShadow=recv; return m;
+}
+function textTexture(lines, {w=512,h=256,bg="#0b1a6e",fg="#f0c24f",border="#f0c24f",font="900"}={}){
+  const cv=document.createElement("canvas"); cv.width=w; cv.height=h; const g=cv.getContext("2d");
+  g.fillStyle=bg; g.fillRect(0,0,w,h);
+  if(border){ g.strokeStyle=border; g.lineWidth=h*0.04; g.strokeRect(h*.05,h*.05,w-h*.1,h-h*.1); }
+  g.fillStyle=fg; g.textAlign="center"; g.textBaseline="middle";
+  const fam='"Pretendard Variable",Pretendard,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans CJK KR",sans-serif';
+  lines.forEach((l,i)=>{ g.font=`${l.weight||font} ${l.size}px ${fam}`; g.fillText(l.text, w/2, h*(l.y)); });
+  const t=new THREE.CanvasTexture(cv); t.colorSpace=THREE.SRGBColorSpace; t.anisotropy=4; return t;
 }
 
-function renderSelects(){
-  $("target").innerHTML = DEITIES.map(d =>
-    `<option value="${d.id}" ${d.id===selected?'selected':''}>${d.name} (${d.co} ${d.title})</option>`).join("");
-  $("target").onchange = e => { selected = e.target.value; renderAltar(); };
-  $("company").innerHTML = COMPANIES.map(c => `<option>${c}</option>`).join("");
+/* ---------------- 충돌 ---------------- */
+const boxes = [];   // {x1,x2,z1,z2}
+const addBox = (cx,cz,w,d) => boxes.push({x1:cx-w/2,x2:cx+w/2,z1:cz-d/2,z2:cz+d/2});
+const HALL = {front:-6, back:-28, w:32, h:0.6, wallH:9};
+function groundY(x,z){
+  if(Math.abs(x) <= HALL.w/2+0.5){
+    if(z <= HALL.front && z >= HALL.back) return HALL.h;
+    if(z > HALL.front && z < HALL.front+1.8) return HALL.h*(1-(z-HALL.front)/1.8);
+  }
+  return 0;
 }
 
-function renderCensor(){
-  const wrap = $("censer");
-  wrap.querySelectorAll(".incense,.smoke").forEach(n => n.remove());
-  const n = Math.min(view().incense || 0, 9) || 1;
+/* ---------------- 지형 ---------------- */
+scene.add(mesh(new THREE.CircleGeometry(140,48).rotateX(-Math.PI/2), M.grass, 0,-0.02,0,false,true));
+scene.add(mesh(new THREE.PlaneGeometry(56,44).rotateX(-Math.PI/2), M.stone, 0,0,4,false,true));       // 앞마당
+scene.add(mesh(new THREE.PlaneGeometry(6,30).rotateX(-Math.PI/2), M.path, 0,0.01,36,false,true));    // 진입로
+scene.add(mesh(new THREE.PlaneGeometry(6,18).rotateX(-Math.PI/2), M.path, 0,0.01,6,false,true));
+
+/* ---------------- 일주문 ---------------- */
+{
+  const g=new THREE.Group(); g.position.set(0,0,30);
+  for(const x of [-4,4]){ g.add(mesh(new THREE.CylinderGeometry(.35,.4,6,16), M.blue, x,3,0)); addBox(x,30,.9,.9); }
+  g.add(mesh(new THREE.BoxGeometry(10.5,.5,1.2), M.white, 0,6.1,0));
+  const r=mesh(new THREE.CylinderGeometry(0.01,6.6,1.6,4,1), M.roof, 0,7.1,0); r.rotation.y=Math.PI/4; r.scale.set(1,1,.28); g.add(r);
+  const sign=mesh(new THREE.PlaneGeometry(4.2,1.4), new THREE.MeshStandardMaterial({map:textTexture([{text:"合 格 寺",size:120,y:.55}],{w:768,h:256})}), 0,5.2,.62,false,false);
+  g.add(sign);
+  const sign2=sign.clone(); sign2.rotation.y=Math.PI; sign2.position.z=-.62; g.add(sign2);
+  scene.add(g);
+}
+
+/* ---------------- 법당 ---------------- */
+{
+  const g=new THREE.Group();
+  const cz=(HALL.front+HALL.back)/2, depth=HALL.front-HALL.back;
+  // 기단과 계단
+  g.add(mesh(new THREE.BoxGeometry(HALL.w+1,HALL.h,depth), M.white, 0,HALL.h/2,cz));
+  for(let i=0;i<3;i++) g.add(mesh(new THREE.BoxGeometry(HALL.w+1,HALL.h*(3-i)/3,0.6), M.white, 0,HALL.h*(3-i)/6, HALL.front+0.3+i*0.6));
+  // 내부 바닥
+  g.add(mesh(new THREE.PlaneGeometry(HALL.w-1,depth-1).rotateX(-Math.PI/2), M.floor, 0,HALL.h+0.01,cz,false,true));
+  // 벽
+  const wallMat=new THREE.MeshStandardMaterial({color:0xf3f5fa, roughness:.7});
+  g.add(mesh(new THREE.BoxGeometry(HALL.w,HALL.wallH,.5), wallMat, 0,HALL.h+HALL.wallH/2,HALL.back+.25));
+  addBox(0,HALL.back+.25,HALL.w,1);
+  for(const s of [-1,1]){
+    g.add(mesh(new THREE.BoxGeometry(.5,HALL.wallH,depth-3), wallMat, s*(HALL.w/2-.25),HALL.h+HALL.wallH/2,cz-1.5));
+    addBox(s*(HALL.w/2-.25),cz-1.5,1,depth-3);
+  }
+  // 파란 띠 장식
+  for(const s of [-1,1]) g.add(mesh(new THREE.BoxGeometry(.55,.5,depth-3), M.blue, s*(HALL.w/2-.25),HALL.h+HALL.wallH-1,cz-1.5));
+  g.add(mesh(new THREE.BoxGeometry(HALL.w,.5,.55), M.blue, 0,HALL.h+HALL.wallH-1,HALL.back+.25));
+  // 앞 기둥
+  for(const x of [-15,-10,-5,5,10,15]){
+    g.add(mesh(new THREE.CylinderGeometry(.42,.48,HALL.wallH,16), M.blue, x,HALL.h+HALL.wallH/2,HALL.front-1));
+    g.add(mesh(new THREE.CylinderGeometry(.6,.6,.3,16), M.white, x,HALL.h+.15,HALL.front-1));
+    addBox(x,HALL.front-1,1.1,1.1);
+  }
+  // 처마 보
+  g.add(mesh(new THREE.BoxGeometry(HALL.w+1,.8,1), M.white, 0,HALL.h+HALL.wallH+.4,HALL.front-1));
+  // 지붕 (팔작 느낌의 사각뿔)
+  const roof=mesh(new THREE.CylinderGeometry(0.01,1,1,4,1,false), M.roof, 0,HALL.h+HALL.wallH+3.2,cz);
+  roof.rotation.y=Math.PI/4; roof.scale.set((HALL.w+8)/Math.SQRT2*1.0, 6, (depth+8)/Math.SQRT2*1.0);
+  g.add(roof);
+  const ridge=mesh(new THREE.BoxGeometry(HALL.w*0.5,.5,.6), M.white, 0,HALL.h+HALL.wallH+6.2,cz); g.add(ridge);
+  // 천장
+  g.add(mesh(new THREE.BoxGeometry(HALL.w,.3,depth), new THREE.MeshStandardMaterial({color:0x1b2b6b,roughness:.8}), 0,HALL.h+HALL.wallH+.15,cz,false,true));
+  // 현판
+  const sign=mesh(new THREE.PlaneGeometry(7,1.6), new THREE.MeshStandardMaterial({map:textTexture([{text:"最終合格殿",size:118,y:.55}],{w:1024,h:236}),emissive:0x111133}),
+    0,HALL.h+HALL.wallH-.6,HALL.front-.45,false,false);
+  g.add(sign);
+  scene.add(g);
+
+  // 내부 조명
+  const warm=[[0,6.5,-14,1.4],[-9,5.5,-18,.9],[9,5.5,-18,.9]];
+  for(const [x,y,z,i] of warm){ const p=new THREE.PointLight(0xffe2b0, 40*i, 26, 1.6); p.position.set(x,y,z); scene.add(p); }
+  const spot=new THREE.SpotLight(0xfff0c8, 120, 30, .5, .6, 1.2); spot.position.set(0,HALL.h+HALL.wallH-.5,-12); spot.target.position.set(0,4,-22);
+  scene.add(spot, spot.target);
+}
+
+/* ---------------- 동상 ---------------- */
+function limb(a, b, r, mat){
+  const A=new THREE.Vector3(...a), B=new THREE.Vector3(...b), len=A.distanceTo(B);
+  const m=mesh(new THREE.CapsuleGeometry(r, len, 6, 12), mat);
+  m.position.copy(A).add(B).multiplyScalar(.5);
+  m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), B.clone().sub(A).normalize());
+  return m;
+}
+function arc(radius, tube, x, y, z, rotZ, mat){
+  const m=mesh(new THREE.TorusGeometry(radius, tube, 8, 20, Math.PI), mat, x,y,z,false,false); m.rotation.z=rotZ; return m;
+}
+function makeStatue(d){
+  const s = d.main ? 2.0 : 1.05, pedH = d.main ? 1.6 : 1.1, pedW = d.main ? 5 : 3;
+  const z = -22.5, root = new THREE.Group(); root.position.set(d.x, HALL.h, z);
+  // 연화대 받침
+  root.add(mesh(new THREE.BoxGeometry(pedW,pedH*.7,pedW*.8), M.white, 0,pedH*.35,0));
+  root.add(mesh(new THREE.BoxGeometry(pedW+.2,.15,pedW*.8+.2), M.blue, 0,pedH*.7,0));
+  const lotus=mesh(new THREE.CylinderGeometry(pedW*.42,pedW*.3,pedH*.3,24), M.goldD, 0,pedH*.85,0); root.add(lotus);
+  for(let i=0;i<12;i++){ const a=i/12*Math.PI*2; const p=mesh(new THREE.SphereGeometry(pedW*.09,10,8), M.gold, Math.cos(a)*pedW*.4, pedH*.95, Math.sin(a)*pedW*.4); p.scale.set(1,.6,1.4); p.rotation.y=-a; root.add(p); }
+  addBox(d.x, z, pedW+.6, pedW*.8+.6);
+  // 좌상 (가부좌, 정장)
+  const f=new THREE.Group(); f.position.y=pedH; f.scale.setScalar(s); root.add(f);
+  const legs=mesh(new THREE.SphereGeometry(1,24,16), M.gold, 0,.32,.1); legs.scale.set(1.05,.32,.72); f.add(legs);
+  f.add(mesh(new THREE.CylinderGeometry(.44,.56,1.0,24), M.gold, 0,1.0,0));
+  const sh=mesh(new THREE.SphereGeometry(1,24,16), M.gold, 0,1.45,0); sh.scale.set(.62,.28,.4); f.add(sh);
+  f.add(mesh(new THREE.BoxGeometry(.09,.55,.03), M.goldD, 0,1.18,.47));                  // 넥타이
+  f.add(mesh(new THREE.CylinderGeometry(.14,.16,.25,16), M.gold, 0,1.66,0));
+  f.add(mesh(new THREE.SphereGeometry(.38,32,24), M.gold, 0,2.0,0));
+  const hair=mesh(new THREE.SphereGeometry(.4,32,16,0,Math.PI*2,0,Math.PI*.45), M.goldD, 0,2.03,-.03); f.add(hair);
+  for(const sx of [-1,1]){
+    f.add(mesh(new THREE.SphereGeometry(.08,12,8), M.gold, sx*.38,2.0,0));                 // 귀
+    f.add(limb([sx*.55,1.45,0],[sx*.5,.95,.22],.12,M.gold));
+    f.add(limb([sx*.5,.95,.22],[sx*.12,.74,.45],.11,M.gold));
+    f.add(arc(.07,.012, sx*.13,2.03,.35, 0, M.goldD));                                     // 감은 눈
+  }
+  f.add(mesh(new THREE.SphereGeometry(.13,16,12), M.gold, 0,.72,.48));                    // 모은 손
+  f.add(arc(.12,.015, 0,1.86,.35, Math.PI, M.goldD));                                      // 미소
+  // 광배
+  const haloR = .75;
+  const halo=mesh(new THREE.CircleGeometry(haloR,48), new THREE.MeshBasicMaterial({color:0xffe9a8,transparent:true,opacity:.35}), 0,2.0,-.42,false,false);
+  f.add(halo);
+  f.add(mesh(new THREE.TorusGeometry(haloR,.03,8,48), M.gold, 0,2.0,-.4,false,false));
+  if(d.main){
+    const big=mesh(new THREE.CircleGeometry(1.5,64), new THREE.MeshBasicMaterial({color:0x8fb4ff,transparent:true,opacity:.18}), 0,1.4,-.5,false,false);
+    f.add(big); f.add(mesh(new THREE.TorusGeometry(1.5,.035,8,64), M.gold, 0,1.4,-.48,false,false));
+  }
+  // 명패
+  const plate=mesh(new THREE.PlaneGeometry(pedW*.8, pedW*.8*0.32),
+    new THREE.MeshStandardMaterial({map:textTexture([{text:`${d.co} ${d.title}`,size:44,y:.32,weight:700},{text:d.name+(d.main?" 님":""),size:92,y:.68}],{w:640,h:205,bg:"#ffffff",fg:"#1428a0",border:"#1428a0"})}),
+    0,pedH*.38,pedW*.4+.01,false,false);
+  root.add(plate);
+  scene.add(root);
+  d.halo = halo; d.root = root;
+  // 방석
+  const cz = d.main ? -15.8 : -17.8;
+  const cush=new THREE.Group(); cush.position.set(d.x, HALL.h, cz);
+  const c1=mesh(new THREE.CylinderGeometry(.75,.8,.18,32), M.cushion, 0,.09,0); c1.scale.z=.85; cush.add(c1);
+  const c2=mesh(new THREE.TorusGeometry(.72,.05,8,32), M.cushionE, 0,.17,0); c2.rotation.x=Math.PI/2; c2.scale.y=.85; cush.add(c2);
+  scene.add(cush);
+  d.cushion = new THREE.Vector3(d.x, HALL.h, cz);
+  d.faceTo = new THREE.Vector3(d.x, HALL.h, z);
+}
+DEITIES.forEach(makeStatue);
+
+/* ---------------- 향로 ---------------- */
+const burner = new THREE.Group(); burner.position.set(0,0,3);
+burner.add(mesh(new THREE.CylinderGeometry(1.1,1.3,.5,24), M.bronze, 0,.25,0));
+burner.add(mesh(new THREE.CylinderGeometry(1.2,.85,1.0,24), M.bronze, 0,1.0,0));
+burner.add(mesh(new THREE.TorusGeometry(1.2,.08,8,32).rotateX(Math.PI/2), M.gold, 0,1.5,0));
+const ash=mesh(new THREE.CircleGeometry(1.12,24).rotateX(-Math.PI/2), new THREE.MeshStandardMaterial({color:0x9a9a9a,roughness:1}), 0,1.42,0,false,false);
+burner.add(ash);
+scene.add(burner); addBox(0,3,2.6,2.6);
+const sticks = new THREE.Group(); burner.add(sticks);
+const smokeTex = (()=>{const cv=document.createElement("canvas");cv.width=cv.height=64;const g=cv.getContext("2d");const r=g.createRadialGradient(32,32,0,32,32,32);
+  r.addColorStop(0,"rgba(255,255,255,.8)");r.addColorStop(1,"rgba(255,255,255,0)");g.fillStyle=r;g.fillRect(0,0,64,64);return new THREE.CanvasTexture(cv);})();
+const smokes=[];
+for(let i=0;i<40;i++){
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:smokeTex,transparent:true,depthWrite:false,opacity:0,color:0xe8eeff}));
+  sp.userData={t:Math.random()}; scene.add(sp); smokes.push(sp);
+}
+function updateIncense(){
+  sticks.clear();
+  const n=Math.min(view().incense||0, 15);
   for(let i=0;i<n;i++){
-    const x = 50 + (i - (n-1)/2) * 12;
-    const s = document.createElement("div"); s.className="incense"; s.style.left=`calc(${x}% - 1px)`; wrap.appendChild(s);
-    const sm = document.createElement("div"); sm.className="smoke"; sm.style.left=`calc(${x}% - 7px)`; sm.style.animationDelay=`${-i*0.7}s`; wrap.appendChild(sm);
+    const a=i*2.4, r=.25+.55*((i*7)%10)/10;
+    const st=mesh(new THREE.CylinderGeometry(.025,.025,1.1,6), M.wood, Math.cos(a)*r,1.95,Math.sin(a)*r,false,false);
+    st.rotation.z=(Math.random()-.5)*.15; sticks.add(st);
+    const tip=mesh(new THREE.SphereGeometry(.04,8,6), new THREE.MeshBasicMaterial({color:0xff5a1f}), Math.cos(a)*r,2.5,Math.sin(a)*r,false,false);
+    sticks.add(tip);
   }
 }
 
-function renderCounts(){
-  const v = view();
-  const total = Object.values(v.bows||{}).reduce((a,b)=>a+b,0);
-  $("scopeLabel").textContent = global ? "모두가 함께" : "이 기기에서";
-  $("totalBows").textContent = total.toLocaleString();
-  $("totalIncense").textContent = (v.incense||0).toLocaleString();
-  $("totalWishes").textContent = (v.wishes||[]).length.toLocaleString();
-  $("modeBadge").textContent = global ? "🌐 모든 방문자의 소원" : "💾 이 기기에만 저장된 소원";
-  const c = state.challenge % 108 || (state.challenge ? 108 : 0);
-  $("bar108").style.width = (c/108*100) + "%";
-  $("txt108").textContent = `${c} / 108` + (state.challenge >= 108 ? ` · 완주 ${Math.floor(state.challenge/108)}회` : "");
-  $("soundBtn").classList.toggle("off", !state.sound);
-  $("soundBtn").textContent = state.sound ? "🔔" : "🔕";
+/* ---------------- 소원지 게시대 ---------------- */
+const board = new THREE.Group(); board.position.set(-11,0,12); board.rotation.y=Math.PI/6;
+for(const x of [-2.6,2.6]) board.add(mesh(new THREE.CylinderGeometry(.12,.12,3.2,12), M.wood, x,1.6,0));
+board.add(mesh(new THREE.BoxGeometry(5.6,.15,.15), M.wood, 0,3.1,0));
+for(const y of [2.6,2.0,1.4]) board.add(mesh(new THREE.CylinderGeometry(.015,.015,5.2,4).rotateZ(Math.PI/2), new THREE.MeshStandardMaterial({color:0xd04040}), 0,y,0,false,false));
+const boardSign=mesh(new THREE.PlaneGeometry(2.4,.7), new THREE.MeshStandardMaterial({map:textTexture([{text:"소원지 거는 곳",size:84,y:.55}],{w:640,h:186,bg:"#1428a0",fg:"#ffffff",border:"#ffffff"})}),0,3.6,0,false,false);
+board.add(boardSign);
+board.add(mesh(new THREE.BoxGeometry(.1,.5,.1), M.wood, 0,3.3,0));
+scene.add(board); addBox(-11,12,5.8,2.2);
+const tagGroup = new THREE.Group(); board.add(tagGroup);
+const tagMats=[new THREE.MeshStandardMaterial({color:0xffffff,side:THREE.DoubleSide}),new THREE.MeshStandardMaterial({color:0xdbe6ff,side:THREE.DoubleSide}),new THREE.MeshStandardMaterial({color:0xfff2c4,side:THREE.DoubleSide})];
+function rebuildWishTags(){
+  tagGroup.clear();
+  const n=Math.min((view().wishes||[]).length, 45);
+  for(let i=0;i<n;i++){
+    const row=i%3, col=Math.floor(i/3);
+    const t=mesh(new THREE.PlaneGeometry(.28,.5), tagMats[i%3], -2.3+col*.33, [2.6,2.0,1.4][row]-.28, .02, true, false);
+    t.rotation.z=(Math.sin(i*12.9)*.12); t.userData.ph=i; tagGroup.add(t);
+  }
 }
 
-const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-function renderWall(){
-  const wishes = view().wishes || [];
-  const used = ["전체", ...new Set(wishes.map(w => w.company).filter(Boolean))];
-  $("wallFilter").innerHTML = used.length > 2 ? used.map(c =>
-    `<button class="${c===wallFilter?'on':''}" data-c="${esc(c)}">${esc(c)}</button>`).join("") : "";
-  $("wallFilter").querySelectorAll("button").forEach(b => b.onclick = () => { wallFilter = b.dataset.c; renderWall(); });
-  const list = wishes.filter(w => wallFilter==="전체" || w.company===wallFilter);
-  if(!list.length){ $("wall").innerHTML = `<div class="empty">아직 걸린 소원지가 없습니다. 첫 소원을 올려보세요!</div>`; return; }
-  const sorted = global ? list : list.slice().reverse();
-  $("wall").innerHTML = sorted.map(w => {
-    const d = DEITIES.find(x=>x.id===w.to) || DEITIES[2];
-    return `<div class="tag"><div class="to">▶ ${esc(d.name)}님께 · ${esc(w.stage)}${w.company?`<span class="co-tag">${esc(w.company)}</span>`:""}</div>${esc(w.text)}<div class="who">- ${esc(w.nick)} · ${esc(w.date)}</div></div>`;
-  }).join("");
+/* ---------------- 합격운 뽑기 함 ---------------- */
+const fbox = new THREE.Group(); fbox.position.set(11,0,12); fbox.rotation.y=-Math.PI/6;
+fbox.add(mesh(new THREE.BoxGeometry(1.4,1.1,1.4), M.wood, 0,.55,0));
+fbox.add(mesh(new THREE.CylinderGeometry(.42,.42,1.3,6), M.blue, 0,1.75,0));
+fbox.add(mesh(new THREE.CylinderGeometry(.47,.47,.12,6), M.gold, 0,2.4,0));
+const fsign=mesh(new THREE.PlaneGeometry(1.25,.55), new THREE.MeshStandardMaterial({map:textTexture([{text:"합격운",size:90,y:.55}],{w:420,h:186,bg:"#ffffff",fg:"#1428a0",border:"#1428a0"})}),0,.62,.71,false,false);
+fbox.add(fsign);
+scene.add(fbox); addBox(11,12,1.8,1.8);
+
+/* ---------------- 장식: 나무, 등 ---------------- */
+const treeMat=new THREE.MeshStandardMaterial({color:0x2f6b45,roughness:.9});
+function tree(x,z,s=1){
+  const t=new THREE.Group(); t.position.set(x,0,z); t.scale.setScalar(s);
+  t.add(mesh(new THREE.CylinderGeometry(.18,.25,1.6,8), M.wood, 0,.8,0));
+  for(let i=0;i<3;i++) t.add(mesh(new THREE.ConeGeometry(1.6-i*.4,1.8,10), treeMat, 0,2+i*1.0,0));
+  scene.add(t); addBox(x,z,.8*s,.8*s);
+}
+[[-24,-10],[-26,4],[-22,20],[24,-10],[26,4],[22,20],[-14,34],[14,34],[-30,-24],[30,-24],[-9,42],[9,42],[-34,12],[34,12]].forEach(([x,z],i)=>tree(x,z,1+((i*37)%5)/10));
+const lanternMat=new THREE.MeshStandardMaterial({color:0x2189ff, emissive:0x2189ff, emissiveIntensity:1.6, roughness:.6});
+const lanterns=[];
+for(const z of [26,20,14,8]) for(const x of [-3.6,3.6]){
+  scene.add(mesh(new THREE.CylinderGeometry(.06,.06,2.6,6), M.navy, x,1.3,z));
+  const l=mesh(new THREE.SphereGeometry(.32,16,12), lanternMat, x,2.75,z,false,false); l.scale.y=1.25; scene.add(l); lanterns.push(l);
+  addBox(x,z,.4,.4);
+}
+// 세계 경계
+const BOUND={x:38, zMin:HALL.back+1, zMax:46};
+
+/* ---------------- 플레이어 캐릭터 ---------------- */
+function makeCharacter(){
+  const suit=new THREE.MeshStandardMaterial({color:0x1d2233,roughness:.6});
+  const skin=new THREE.MeshStandardMaterial({color:0xf2cfae,roughness:.7});
+  const hairM=new THREE.MeshStandardMaterial({color:0x1a1410,roughness:.8});
+  const shirt=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.6});
+  const shoe=new THREE.MeshStandardMaterial({color:0x0c0c0c,roughness:.4});
+  const root=new THREE.Group();
+  const body=new THREE.Group(); body.position.y=0; root.add(body);       // 높이 조절용
+  const hips=new THREE.Group(); hips.position.y=.86; body.add(hips);
+  const legs=[], knees=[];
+  for(const sx of [-1,1]){
+    const p=new THREE.Group(); p.position.set(sx*.12,0,0); hips.add(p);
+    p.add(mesh(new THREE.BoxGeometry(.17,.44,.19), suit, 0,-.21,0));
+    const k=new THREE.Group(); k.position.y=-.42; p.add(k);
+    k.add(mesh(new THREE.BoxGeometry(.16,.4,.18), suit, 0,-.2,0));
+    k.add(mesh(new THREE.BoxGeometry(.18,.09,.3), shoe, 0,-.4,.05));
+    legs.push(p); knees.push(k);
+  }
+  const torso=new THREE.Group(); hips.add(torso);
+  torso.add(mesh(new THREE.BoxGeometry(.5,.62,.27), suit, 0,.31,0));
+  torso.add(mesh(new THREE.BoxGeometry(.16,.4,.01), shirt, 0,.42,.14,false,false));
+  torso.add(mesh(new THREE.BoxGeometry(.06,.34,.012), new THREE.MeshStandardMaterial({color:0x2189ff}), 0,.4,.148,false,false));
+  // 사원증
+  torso.add(mesh(new THREE.BoxGeometry(.1,.13,.01), new THREE.MeshStandardMaterial({color:0xffffff}), .15,.25,.14,false,false));
+  torso.add(mesh(new THREE.BoxGeometry(.1,.035,.012), M.blue, .15,.3,.142,false,false));
+  const head=new THREE.Group(); head.position.y=.74; torso.add(head);
+  head.add(mesh(new THREE.SphereGeometry(.2,24,18), skin, 0,0,0));
+  const h=mesh(new THREE.SphereGeometry(.21,24,12,0,Math.PI*2,0,Math.PI*.5), hairM, 0,.02,-.01); h.rotation.x=-.25; head.add(h);
+  for(const sx of [-1,1]) head.add(mesh(new THREE.SphereGeometry(.025,8,6), new THREE.MeshBasicMaterial({color:0x111111}), sx*.07,.0,.185,false,false));
+  head.add(arc(.05,.008,0,-.07,.18,Math.PI,new THREE.MeshBasicMaterial({color:0x8a3a2a})));
+  const arms=[], elbows=[];
+  for(const sx of [-1,1]){
+    const p=new THREE.Group(); p.position.set(sx*.31,.56,0); torso.add(p);
+    p.add(mesh(new THREE.BoxGeometry(.13,.3,.15), suit, 0,-.15,0));
+    const e=new THREE.Group(); e.position.y=-.29; p.add(e);
+    e.add(mesh(new THREE.BoxGeometry(.12,.3,.14), suit, 0,-.15,0));
+    e.add(mesh(new THREE.SphereGeometry(.065,12,8), skin, 0,-.34,0));
+    arms.push(p); elbows.push(e);
+  }
+  root.traverse(o=>{ if(o.isMesh) o.castShadow=true; });
+  return {root, body, hips, torso, head, legs, knees, arms, elbows};
+}
+const ch = makeCharacter(); scene.add(ch.root);
+const player = { pos:new THREE.Vector3(0,0,40), yaw:Math.PI, vel:0, mode:"walk", deity:null, bowT:-1, pose:{} };
+
+// 포즈: 몸 높이, 허벅지/무릎, 상체, 어깨/팔꿈치, 머리
+const POSE = {
+  stand: {y:0,    leg:0,     knee:0,    torso:0,    armX:0,     armZ:0,   elb:0,     elbZ:0,   head:0},
+  hap:   {y:0,    leg:0,     knee:0,    torso:.05,  armX:-.25,  armZ:.12, elb:-1.75, elbZ:.75, head:.12},
+  kneel: {y:-.22, leg:0,     knee:1.57, torso:.08,  armX:-.25,  armZ:.12, elb:-1.75, elbZ:.75, head:.12},
+  prost: {y:-.42, leg:-1.35, knee:2.75, torso:1.42, armX:-2.55, armZ:.08, elb:-.15,  elbZ:0,   head:.25},
+};
+const BOW_KEYS = [[0,"hap"],[.22,"kneel"],[.45,"prost"],[.62,"prost"],[.82,"kneel"],[1,"hap"]];
+const cur = {...POSE.stand};
+function lerpPose(a,b,t){ const o={}; for(const k in a) o[k]=a[k]+(b[k]-a[k])*t; return o; }
+const ease = t => t<.5 ? 2*t*t : 1-Math.pow(-2*t+2,2)/2;
+function bowPose(t){
+  for(let i=0;i<BOW_KEYS.length-1;i++){
+    const [t0,p0]=BOW_KEYS[i],[t1,p1]=BOW_KEYS[i+1];
+    if(t<=t1) return lerpPose(POSE[p0],POSE[p1],ease((t-t0)/(t1-t0)));
+  }
+  return {...POSE.hap};
+}
+function applyPose(p, walkPhase, walkAmt){
+  ch.body.position.y = p.y;
+  const sw = Math.sin(walkPhase)*walkAmt;
+  ch.legs[0].rotation.x = p.leg + sw*.7;  ch.legs[1].rotation.x = p.leg - sw*.7;
+  ch.knees[0].rotation.x = p.knee + Math.max(0,-sw)*.9; ch.knees[1].rotation.x = p.knee + Math.max(0,sw)*.9;
+  ch.torso.rotation.x = p.torso;
+  ch.head.rotation.x = p.head;
+  ch.arms[0].rotation.x = p.armX - sw*.6; ch.arms[1].rotation.x = p.armX + sw*.6;
+  ch.arms[0].rotation.z = p.armZ;         ch.arms[1].rotation.z = -p.armZ;     // 양수 = 안쪽
+  ch.elbows[0].rotation.x = p.elb - walkAmt*.25; ch.elbows[1].rotation.x = p.elb - walkAmt*.25;
+  ch.elbows[0].rotation.z = p.elbZ;       ch.elbows[1].rotation.z = -p.elbZ;
 }
 
-function renderAll(){ renderAltar(); renderCensor(); renderCounts(); renderWall(); }
+/* ---------------- 상호작용 대상 ---------------- */
+const interactables = [
+  ...DEITIES.map(d => ({pos:d.cushion, r:1.6, label:`${d.name}님 앞 방석에 서기`, act:()=>sitOn(d)})),
+  {pos:new THREE.Vector3(0,0,5.2), r:2.4, label:"향 피우기", act:lightIncense},
+  {pos:new THREE.Vector3(-10,0,13.8), r:2.8, label:"소원지 쓰기", act:openWish},
+  {pos:new THREE.Vector3(10.3,0,13.4), r:2.4, label:"합격운 뽑기", act:drawFortune},
+];
+let nearest=null;
 
-/* ---------------- 효과 ---------------- */
-function floatText(txt, el){
-  const r = el.getBoundingClientRect();
-  const f = document.createElement("div"); f.className="float-txt"; f.textContent = txt;
-  f.style.left = (r.left + r.width/2 - 40) + "px"; f.style.top = (r.top) + "px";
-  document.body.appendChild(f); setTimeout(()=>f.remove(), 1500);
+/* ---------------- 입력 ---------------- */
+const keys = {};
+const isTouch = matchMedia("(pointer:coarse)").matches || "ontouchstart" in window;
+addEventListener("keydown", e=>{
+  if(document.querySelector(".modal.show")) { if(e.code==="Escape") document.querySelectorAll(".modal.show").forEach(m=>closeModal(m.id)); return; }
+  keys[e.code]=true;
+  if(e.code==="KeyE" && player.mode==="walk" && nearest) nearest.act();
+  if(player.mode==="sit"){
+    if(e.code==="Space"){ e.preventDefault(); doBow(); }
+    if(e.code==="KeyR") doBead();
+    if(e.code==="Escape") leave();
+    if(["KeyW","KeyA","KeyS","KeyD","ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.code) && player.bowT<0) leave();
+  }
+  if(e.code==="Space") e.preventDefault();
+});
+addEventListener("keyup", e=>{ keys[e.code]=false; });
+addEventListener("blur", ()=>{ for(const k in keys) keys[k]=false; });
+
+// 카메라 회전 (마우스/터치 드래그)
+const camS = {yaw:0, pitch:.32, dist:7, tYaw:null};
+let drag=null;
+canvas.addEventListener("pointerdown", e=>{
+  if(isTouch && e.clientX < innerWidth*0.45 && e.clientY > innerHeight*0.45) return; // 조이스틱 영역
+  drag={id:e.pointerId,x:e.clientX,y:e.clientY}; canvas.setPointerCapture(e.pointerId);
+});
+canvas.addEventListener("pointermove", e=>{
+  if(!drag || drag.id!==e.pointerId) return;
+  camS.yaw -= (e.clientX-drag.x)*0.006; camS.pitch = Math.min(1.2, Math.max(.05, camS.pitch + (e.clientY-drag.y)*0.004));
+  drag.x=e.clientX; drag.y=e.clientY;
+});
+const endDrag=e=>{ if(drag && drag.id===e.pointerId) drag=null; };
+canvas.addEventListener("pointerup", endDrag); canvas.addEventListener("pointercancel", endDrag);
+canvas.addEventListener("wheel", e=>{ camS.dist=Math.min(14,Math.max(3,camS.dist+e.deltaY*0.01)); }, {passive:true});
+
+// 조이스틱
+const joy={x:0,y:0,id:null};
+if(isTouch){
+  $("joy").style.display="block";
+  const J=$("joy"), K=$("knob");
+  const setK=(e)=>{ const r=J.getBoundingClientRect(); let dx=e.clientX-(r.left+r.width/2), dy=e.clientY-(r.top+r.height/2);
+    const m=Math.hypot(dx,dy), max=r.width/2-10; if(m>max){dx*=max/m;dy*=max/m;}
+    joy.x=dx/max; joy.y=dy/max; K.style.transform=`translate(${dx}px,${dy}px)`; };
+  J.addEventListener("pointerdown",e=>{joy.id=e.pointerId;J.setPointerCapture(e.pointerId);setK(e); if(player.mode==="sit"&&player.bowT<0) leave();});
+  J.addEventListener("pointermove",e=>{if(e.pointerId===joy.id)setK(e);});
+  const end=e=>{if(e.pointerId===joy.id){joy.id=null;joy.x=joy.y=0;K.style.transform="";}};
+  J.addEventListener("pointerup",end); J.addEventListener("pointercancel",end);
 }
-let toastTimer;
-function toast(msg){
-  const t = $("toast"); t.textContent = msg; t.classList.add("show");
-  clearTimeout(toastTimer); toastTimer = setTimeout(()=>t.classList.remove("show"), 2200);
-}
-function showCard(title, big, text, talisman){
-  $("cardTitle").textContent = title;
-  $("cardBig").innerHTML = talisman
-    ? `<div class="talisman">${[...big].map(c=>`<span>${esc(c)}</span>`).join("")}<small>合格寺</small></div>` : esc(big);
-  $("cardText").textContent = text;
-  $("overlay").classList.add("show");
-}
+$("prompt").onclick = ()=>{ if(nearest) nearest.act(); };
 
 /* ---------------- 행동 ---------------- */
-async function bow(){
-  state.bows[selected] = (state.bows[selected]||0) + 1;
-  state.challenge++; save(); moktak();
-  if(global){ global.bows[selected] = (global.bows[selected]||0) + 1; api("/bow",{to:selected}).catch(()=>{}); }
-  const fl = $("flash"); fl.classList.remove("go"); void fl.offsetWidth; fl.classList.add("go");
-  renderAltar(); renderCounts();
-  floatText("합격 기원 +1", document.querySelector(`.deity[data-id="${selected}"]`) || $("bowBtn"));
-  if(state.challenge % 108 === 0){
-    bell();
-    const d = DEITIES.find(x=>x.id===selected);
-    showCard(`108배 완주! ${d.name}님이 내리신 부적`, "最終合格", "이 부적을 캡처해서 배경화면으로 두세요. 최종 합격까지 함께합니다.", true);
-  }
+function sitOn(d){
+  player.mode="sit"; player.deity=d;
+  player.pos.set(d.cushion.x, HALL.h, d.cushion.z);
+  player.yaw = Math.atan2(d.faceTo.x-d.cushion.x, d.faceTo.z-d.cushion.z);
+  camS.tYaw = player.yaw + Math.PI + 0.55;   // 비스듬히 뒤에서 보기
+  $("who").innerHTML = `<span>${esc(d.co)} ${esc(d.title)}</span> ${esc(d.name)}님께 기원 중`;
+  $("actions").style.display="flex"; $("prompt").style.display="none";
+  if(isTouch) $("joy").style.display="none";
+  updateBeads(); moktak(.5);
 }
-$("bowBtn").onclick = bow;
-document.addEventListener("keydown", e => {
-  if(e.code === "Space" && !/INPUT|TEXTAREA|SELECT|BUTTON/.test(document.activeElement.tagName)){ e.preventDefault(); bow(); }
-});
-
-$("incenseBtn").onclick = () => {
+function leave(){
+  if(player.mode!=="sit") return;
+  player.mode="walk"; player.bowT=-1; player.hap=false; stopChant();
+  $("actions").style.display="none";
+  if(isTouch) $("joy").style.display="block";
+  player.pos.z += 1.2*Math.cos(player.yaw+Math.PI); player.pos.x += 1.2*Math.sin(player.yaw+Math.PI);
+  camS.tYaw=null;
+}
+function doBow(){
+  if(player.mode!=="sit" || player.bowT>=0) return;
+  player.bowT = 0;
+  setTimeout(()=>{ // 엎드리는 순간 카운트
+    if(player.mode!=="sit") return;
+    const d=player.deity; moktak();
+    state.bows[d.id]=(state.bows[d.id]||0)+1; state.challenge++; save();
+    if(global){ global.bows[d.id]=(global.bows[d.id]||0)+1; api("/bow",{to:d.id}).catch(()=>{}); }
+    const fl=$("flash"); fl.classList.remove("go"); void fl.offsetWidth; fl.classList.add("go");
+    floatAt(new THREE.Vector3(player.pos.x,player.pos.y+1.8,player.pos.z), "합격 기원 +1");
+    d.glow = 1;
+    updateHUD();
+    if(state.challenge%108===0){
+      setTimeout(()=>{ bell(); showCard(`108배 완주! ${d.name}님이 내리신 부적`, `<div class="talisman">${[..."最終合格"].map(c=>`<span>${c}</span>`).join("")}<small>合格寺</small></div>`,
+        "이 부적을 캡처해서 배경화면으로 두세요. 최종 합격까지 함께합니다."); }, 700);
+    }
+  }, 1900*0.5);
+}
+function doBead(){
+  state.beads=(state.beads+1)%1080; save(); bead(); updateBeads();
+  if(state.beads%108===0){ bell(); toast("📿 염주 한 바퀴(108알)를 돌렸습니다"); }
+}
+function updateBeads(){ const b=state.beads%108; $("beadBar").style.width=(b/108*100)+"%"; $("beadTxt").textContent=`${b}/108`; }
+function lightIncense(){
   state.incense++; save(); bell();
-  if(global){ global.incense = (global.incense||0) + 1; api("/incense",{}).catch(()=>{}); }
-  renderCensor(); renderCounts();
-  floatText("향 +1 🪔", $("censer"));
-};
-
-$("wishBtn").onclick = async () => {
-  const text = $("wish").value.trim();
-  if(!text){ toast("소원을 적어주세요 🙏"); return; }
-  const d = new Date();
-  const w = { to:selected, company:$("company").value, nick:$("nick").value.trim() || "익명의 취준생",
-              stage:$("stage").value, text, date:`${d.getMonth()+1}/${d.getDate()}` };
-  $("wishBtn").disabled = true;
+  if(global){ global.incense=(global.incense||0)+1; api("/incense",{}).catch(()=>{}); }
+  updateIncense(); updateHUD();
+  floatAt(new THREE.Vector3(0,3,3), "향 +1 🪔"); toast("향을 피웠습니다. 합격의 향기가 퍼집니다 🪔");
+}
+function openWish(){
+  $("wTo").innerHTML = DEITIES.map(d=>`<option value="${d.id}" ${d.main?"selected":""}>${esc(d.name)} (${esc(d.co)} ${esc(d.title)})</option>`).join("");
+  $("mWish").classList.add("show"); for(const k in keys) keys[k]=false;
+}
+$("wCo").innerHTML = COMPANIES.map(c=>`<option>${c}</option>`).join("");
+$("wSubmit").onclick = async ()=>{
+  const text=$("wText").value.trim(); if(!text){ toast("소원을 적어주세요 🙏"); return; }
+  const dt=new Date();
+  const w={to:$("wTo").value, company:$("wCo").value, nick:$("wNick").value.trim()||"익명의 취준생", stage:$("wStage").value, text, date:`${dt.getMonth()+1}/${dt.getDate()}`};
+  $("wSubmit").disabled=true;
   try{
-    if(global){ const r = await api("/wish", w); global.wishes.unshift(r.wish || w); }
-    else { state.wishes.push(w); if(state.wishes.length > 200) state.wishes.shift(); save(); }
-    $("wish").value = ""; bell(); renderWall(); renderCounts(); toast("소원지를 걸었습니다 📜");
-    $("wall").scrollIntoView({behavior:"smooth", block:"start"});
-  }catch(e){ toast("소원지 걸기 실패: " + e.message); }
-  finally{ $("wishBtn").disabled = false; }
+    if(global){ const r=await api("/wish",w); global.wishes.unshift(r.wish||w); }
+    else { state.wishes.push(w); if(state.wishes.length>200) state.wishes.shift(); save(); }
+    $("wText").value=""; closeModal("mWish"); bell(); rebuildWishTags(); updateHUD(); toast("소원지를 걸었습니다 📜");
+  }catch(e){ toast("실패: "+e.message); }
+  finally{ $("wSubmit").disabled=false; }
 };
-
 const FORTUNES = [
   ["大吉","최종 합격의 기운이 하늘을 찌릅니다. 면접장에서 평소처럼만 하세요."],
   ["大吉","GSAT 수리 영역에서 신들린 계산력이 발휘될 운세입니다."],
@@ -526,24 +803,164 @@ const FORTUNES = [
   ["中吉","자소서 한 문장만 더 다듬으면 완벽해집니다."],
   ["小吉","오늘은 휴식이 보약. 푹 자야 내일 문제가 잘 풀립니다."],
 ];
-$("fortuneBtn").onclick = () => {
-  const d = DEITIES.find(x=>x.id===selected);
-  const [big, txt] = FORTUNES[Math.floor(Math.random()*FORTUNES.length)];
-  moktak(); showCard(`${d.name}님이 내려주신 오늘의 합격운`, big, txt);
+function drawFortune(){
+  const [big,txt]=FORTUNES[Math.floor(Math.random()*FORTUNES.length)];
+  moktak(); setTimeout(bell,200);
+  showCard("합격사가 내려주신 오늘의 합격운", `<div class="fortune-big">${big}</div>`, txt);
+}
+function showCard(title, bigHTML, text){
+  $("cardTitle").textContent=title; $("cardBig").innerHTML=bigHTML; $("cardText").textContent=text;
+  $("mCard").classList.add("show"); for(const k in keys) keys[k]=false;
+}
+function openWall(){
+  const ws=view().wishes||[]; const list=global?ws:ws.slice().reverse();
+  $("wallMode").textContent = global ? "🌐 모든 방문자의 소원" : "💾 이 기기에만 저장된 소원";
+  $("wallList").innerHTML = list.length ? list.map(w=>{const d=DEITIES.find(x=>x.id===w.to)||DEITIES[2];
+    return `<div class="tag"><div class="to">▶ ${esc(d.name)}님께 · ${esc(w.stage)}${w.company?`<span class="co">${esc(w.company)}</span>`:""}</div>${esc(w.text)}<div class="by">- ${esc(w.nick)} · ${esc(w.date)}</div></div>`;}).join("")
+    : `<div class="empty">아직 걸린 소원지가 없습니다. 앞마당 왼쪽 게시대에서 첫 소원을 걸어보세요!</div>`;
+  $("mWall").classList.add("show");
+}
+
+/* ---------------- HUD ---------------- */
+function updateHUD(){
+  const v=view(); const total=Object.values(v.bows||{}).reduce((a,b)=>a+b,0);
+  $("scope").textContent = global ? "모두의" : "내";
+  $("cBow").textContent=total.toLocaleString(); $("cInc").textContent=(v.incense||0).toLocaleString();
+  $("cWish").textContent=(v.wishes||[]).length.toLocaleString();
+  $("c108").textContent = state.challenge%108 || (state.challenge?108:0);
+  $("soundBtn").textContent = state.sound?"🔔":"🔕"; $("soundBtn").classList.toggle("off",!state.sound);
+}
+let toastT; function toast(m){ const t=$("toast"); t.textContent=m; t.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),2200); }
+function floatAt(v3, txt){
+  const p=v3.clone().project(camera); if(p.z>1) return;
+  const el=document.createElement("div"); el.className="float-txt"; el.textContent=txt;
+  el.style.left=((p.x+1)/2*innerWidth)+"px"; el.style.top=((1-p.y)/2*innerHeight)+"px";
+  document.body.appendChild(el); setTimeout(()=>el.remove(),1500);
+}
+$("aBow").onclick=doBow; $("aBead").onclick=doBead; $("aChant").onclick=()=>{ ac(); toggleChant(); }; $("aLeave").onclick=leave;
+$("aHap").onclick=()=>{ player.hap=!player.hap; $("aHap").classList.toggle("on",player.hap); if(player.hap) moktak(.4); };
+$("wallBtn").onclick=openWall;
+$("helpBtn").onclick=()=>$("mHelp").classList.add("show");
+$("soundBtn").onclick=()=>{ state.sound=!state.sound; save(); updateHUD(); if(!state.sound) stopChant(); else moktak(); };
+$("shareBtn").onclick=async()=>{
+  const data={title:"합격사 · 3D 삼성 합격 기원 법당", text:"캐릭터 끌고 가서 같이 절 올리자 🙇 삼성 최종 합격 기원", url:location.href};
+  try{ if(navigator.share) await navigator.share(data); else { await navigator.clipboard.writeText(location.href); toast("링크를 복사했습니다 🔗"); } }catch(e){}
 };
 
-$("shareBtn").onclick = async () => {
-  const data = { title:"합격사 · 삼성 합격 기원 도량", text:"삼성 최종 합격 기원하러 같이 절 올리자 🙇", url:location.href };
-  try{
-    if(navigator.share) await navigator.share(data);
-    else { await navigator.clipboard.writeText(location.href); toast("링크를 복사했습니다 🔗"); }
-  }catch(e){ /* 사용자가 공유 취소 */ }
+/* ---------------- 메인 루프 ---------------- */
+const clock=new THREE.Clock();
+let walkPhase=0, walkAmt=0, started=false;
+const tmp=new THREE.Vector3();
+function resolveCollisions(p){
+  const R=.35;
+  for(const b of boxes){
+    const cx=Math.max(b.x1,Math.min(p.x,b.x2)), cz=Math.max(b.z1,Math.min(p.z,b.z2));
+    const dx=p.x-cx, dz=p.z-cz, d2=dx*dx+dz*dz;
+    if(d2 < R*R){
+      if(d2>1e-6){ const d=Math.sqrt(d2); p.x=cx+dx/d*R; p.z=cz+dz/d*R; }
+      else { // 내부: 가장 가까운 면으로
+        const opts=[[p.x-b.x1,-1,0],[b.x2-p.x,1,0],[p.z-b.z1,0,-1],[b.z2-p.z,0,1]].sort((a,c)=>a[0]-c[0]);
+        const [pen,nx,nz]=opts[0]; p.x+=nx*(pen+R); p.z+=nz*(pen+R);
+      }
+    }
+  }
+  p.x=Math.max(-BOUND.x,Math.min(BOUND.x,p.x)); p.z=Math.max(BOUND.zMin,Math.min(BOUND.zMax,p.z));
+}
+
+function tick(){
+  const dt=Math.min(clock.getDelta(), .05), t=clock.elapsedTime;
+  // 이동
+  let mx=0, mz=0;
+  if(started && player.mode==="walk" && !document.querySelector(".modal.show")){
+    if(keys.KeyW||keys.ArrowUp) mz-=1; if(keys.KeyS||keys.ArrowDown) mz+=1;
+    if(keys.KeyA||keys.ArrowLeft) mx-=1; if(keys.KeyD||keys.ArrowRight) mx+=1;
+    mx+=joy.x; mz+=joy.y;
+  }
+  const mag=Math.min(1,Math.hypot(mx,mz));
+  if(mag>0.08){
+    const run = keys.ShiftLeft||keys.ShiftRight||Math.hypot(joy.x,joy.y)>.9;
+    const speed = (run?7.5:4.2)*mag;
+    // 카메라 기준 방향
+    const ang = Math.atan2(mx,mz) + camS.yaw;
+    const dx=Math.sin(ang), dz=Math.cos(ang);
+    player.pos.x+=dx*speed*dt; player.pos.z+=dz*speed*dt;
+    resolveCollisions(player.pos);
+    let diff=ang-player.yaw; diff=Math.atan2(Math.sin(diff),Math.cos(diff)); player.yaw+=diff*Math.min(1,dt*12);
+    walkPhase += dt*speed*2.2; walkAmt=Math.min(1,walkAmt+dt*6);
+  } else { walkAmt=Math.max(0,walkAmt-dt*6); }
+  player.pos.y += (groundY(player.pos.x,player.pos.z)-player.pos.y)*Math.min(1,dt*15);
+
+  // 포즈
+  let target;
+  if(player.freeze!=null) player.bowT=player.freeze;
+  if(player.bowT>=0){
+    if(player.freeze==null) player.bowT += dt/1.9;
+    if(player.bowT>=1){ player.bowT=-1; }
+    target = player.bowT>=0 ? bowPose(player.bowT) : (player.hap?POSE.hap:POSE.hap);
+    Object.assign(cur, target);
+  } else {
+    target = player.mode==="sit" ? (player.hap?POSE.hap:POSE.stand) : POSE.stand;
+    for(const k in cur) cur[k]+= (target[k]-cur[k])*Math.min(1,dt*10);
+  }
+  if(player.mode==="walk") cur.y += 0;
+  applyPose(cur, walkPhase, walkAmt*(player.mode==="walk"?1:0));
+  ch.root.position.copy(player.pos);
+  if(walkAmt>0) ch.body.position.y += Math.abs(Math.sin(walkPhase))*0.05*walkAmt;
+  ch.root.rotation.y = player.yaw;
+
+  // 가까운 상호작용 대상
+  nearest=null;
+  if(player.mode==="walk"){
+    let best=1e9;
+    for(const it of interactables){ const d=Math.hypot(it.pos.x-player.pos.x, it.pos.z-player.pos.z); if(d<it.r && d<best){best=d; nearest=it;} }
+    const pr=$("prompt");
+    if(nearest && started){ pr.innerHTML = (isTouch?"👆 ":"<kbd>E</kbd>")+nearest.label; pr.style.display="block"; } else pr.style.display="none";
+  }
+
+  // 카메라
+  if(camS.tYaw!=null && player.mode==="sit" && !drag){ let d=camS.tYaw-camS.yaw; d=Math.atan2(Math.sin(d),Math.cos(d)); camS.yaw+=d*Math.min(1,dt*3); }
+  const inside = player.pos.z < HALL.front+1;
+  const dist = inside ? Math.min(camS.dist, 6.5) : camS.dist;
+  const pitch = inside ? Math.min(camS.pitch, .55) : camS.pitch;
+  const tgt = tmp.set(player.pos.x, player.pos.y+1.35, player.pos.z);
+  const cx = tgt.x + Math.sin(camS.yaw)*Math.cos(pitch)*dist;
+  const cz = tgt.z + Math.cos(camS.yaw)*Math.cos(pitch)*dist;
+  let cy = tgt.y + Math.sin(pitch)*dist;
+  let px=cx, pz=cz;
+  if(inside){ px=Math.max(-HALL.w/2+1,Math.min(HALL.w/2-1,px)); pz=Math.max(HALL.back+1.2,pz); cy=Math.min(cy,HALL.h+HALL.wallH-.8); }
+  camera.position.lerp(new THREE.Vector3(px,Math.max(.6,cy),pz), started?Math.min(1,dt*8):1);
+  if(isTouch && player.mode==="sit") tgt.y -= 1.3;   // 모바일: 버튼 패널 위로 캐릭터가 보이게
+  camera.lookAt(tgt);
+
+  // 효과: 광배, 연기, 등, 소원지 흔들림
+  for(const d of DEITIES){ d.glow=Math.max(0,(d.glow||0)-dt*.8); d.halo.material.opacity=.3+.08*Math.sin(t*2+d.x)+d.glow*.5; }
+  const nInc=Math.min(view().incense||0,15), active=nInc?Math.min(40,8+nInc*4):0;
+  smokes.forEach((s,i)=>{
+    if(i>=active){ s.material.opacity=0; return; }
+    s.userData.t=(s.userData.t+dt*.25)%1; const k=s.userData.t;
+    s.position.set(burner.position.x+Math.sin(i*1.7+k*3)*.4*k, 2.5+k*5, burner.position.z+Math.cos(i*2.3)*.3+k*.6);
+    s.scale.setScalar(.4+k*2.2); s.material.opacity=(1-k)*.45;
+  });
+  lanterns.forEach((l,i)=>{ l.rotation.z=Math.sin(t*1.5+i)*.08; });
+  tagGroup.children.forEach(c=>{ c.rotation.z=Math.sin(t*2+c.userData.ph)*.12; });
+
+  renderer.render(scene,camera);
+  requestAnimationFrame(tick);
+}
+
+addEventListener("resize",()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); });
+
+// 시작
+updateIncense(); rebuildWishTags(); updateHUD(); updateBeads();
+camera.position.set(0,3,48);
+tick();
+$("loading").style.display="none"; $("enterBtn").style.display="inline-block";
+$("enterBtn").onclick=()=>{
+  ac(); $("intro").style.display="none"; started=true; canvas.focus(); bell();
+  toast(isTouch?"왼쪽 아래 조이스틱으로 걸어서 법당으로 가보세요":"WASD로 걸어서 법당으로 가보세요 · 마우스 드래그로 시점 회전");
 };
-
-$("soundBtn").onclick = () => { state.sound = !state.sound; save(); renderCounts(); if(state.sound) moktak(); };
-
-renderSelects(); renderAll(); loadGlobal();
+loadGlobal();
+window.__hgs = {player, sitOn, DEITIES, doBow, camS, leave};   // 테스트용
 </script>
-
 </body>
 </html>
