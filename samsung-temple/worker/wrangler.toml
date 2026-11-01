@@ -1,0 +1,12 @@
+name = "hapgyeoksa-api"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+
+[vars]
+# 사이트 주소로 바꾸면 그 주소에서만 API 호출 허용 (예: "https://leesh801110-bit.github.io")
+ALLOWED_ORIGIN = "*"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "hapgyeoksa"
+database_id = "여기에_D1_데이터베이스_ID_입력"

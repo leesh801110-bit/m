@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>합격사(合格寺) · 삼성 합격 기원 도량</title>
 <meta name="description" content="삼성그룹 지원자들의 최종 합격을 기원하는 온라인 기도처 (비공식 패러디)">
+<meta property="og:title" content="합격사(合格寺) · 삼성 합격 기원 도량">
+<meta property="og:description" content="절 올리고, 향 피우고, 소원지 걸고. 삼성 최종 합격 기원 🙇">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#1d0e12">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🙏</text></svg>">
 <style>
   :root{
     --gold:#e8c66a; --gold2:#b8902f; --red:#8e1b1b; --red2:#5c0f0f;
@@ -131,6 +136,26 @@
     animation:up 1.4s ease forwards}
   @keyframes up{to{transform:translateY(-120px);opacity:0}}
 
+  button.ghost{background:transparent;color:var(--gold);border:1px solid var(--gold2);box-shadow:none}
+  .desc{font-size:14px;opacity:.8;margin-bottom:12px}
+  .progress{position:relative;height:30px;border-radius:15px;background:#0f0805;border:1px solid #6b4a1e;overflow:hidden}
+  .progress .bar{height:100%;width:0;background:linear-gradient(90deg,var(--gold2),#fff0b0);transition:width .3s}
+  .progress span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:700;text-shadow:0 1px 3px #000}
+  .mode{font-size:12px;letter-spacing:0;color:var(--paper);opacity:.75;margin-left:8px;font-weight:400}
+  .filter{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+  .filter button{padding:6px 12px;font-size:13px;font-weight:400;background:#0f0805;color:var(--paper);border:1px solid #6b4a1e;box-shadow:none}
+  .filter button.on{background:var(--gold2);color:var(--ink)}
+  .tag .co-tag{display:inline-block;font-size:11px;background:var(--blue);color:#fff;border-radius:3px;padding:1px 6px;margin-left:4px}
+  .sound-toggle{position:fixed;top:12px;right:12px;z-index:60;width:44px;height:44px;padding:0;border-radius:50%;font-size:20px;
+    background:#130905;border:1px solid var(--gold2);box-shadow:none}
+  .sound-toggle.off{opacity:.45}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(80px);z-index:70;background:#130905;border:1px solid var(--gold2);
+    padding:10px 18px;border-radius:20px;transition:.3s;opacity:0}
+  .toast.show{transform:translateX(-50%);opacity:1}
+  .talisman{width:150px;margin:6px auto 0;padding:14px 8px;background:#f5d24a;color:#b3121b;border:3px solid #b3121b;
+    font-weight:900;font-size:34px;line-height:1.25;display:flex;flex-direction:column;align-items:center;box-shadow:inset 0 0 0 4px #f5d24a,inset 0 0 0 6px #b3121b}
+  .talisman small{font-size:12px;margin-top:8px;letter-spacing:.1em}
+
   footer{margin-top:40px;text-align:center;font-size:12px;opacity:.6;line-height:1.7}
 
   @media (max-width:760px){
@@ -143,6 +168,8 @@
 <body>
 <div class="stars"></div>
 <div class="bow-flash" id="flash"></div>
+<button class="sound-toggle" id="soundBtn" aria-label="효과음 켜기/끄기">🔔</button>
+<div class="toast" id="toast"></div>
 
 <main>
   <header>
@@ -172,6 +199,10 @@
         <input id="nick" maxlength="12" placeholder="예) 삼성가고싶은 취준생">
       </div>
       <div class="field">
+        <label for="company">지원 계열사</label>
+        <select id="company"></select>
+      </div>
+      <div class="field">
         <label for="stage">현재 전형</label>
         <select id="stage">
           <option>서류 전형</option><option>GSAT</option><option>1차 면접</option>
@@ -188,12 +219,20 @@
       <button id="incenseBtn" class="alt">🪔 향 피우기</button>
       <button id="wishBtn">📜 소원지 걸기</button>
       <button id="fortuneBtn" class="alt">🎴 합격운 뽑기</button>
+      <button id="shareBtn" class="ghost">🔗 친구에게 공유</button>
     </div>
-    <div class="counter">지금까지 올린 절 <b id="totalBows">0</b>번 · 피운 향 <b id="totalIncense">0</b>개</div>
+    <div class="counter"><span id="scopeLabel">이 기기에서</span> 올린 절 <b id="totalBows">0</b>번 · 피운 향 <b id="totalIncense">0</b>개</div>
   </section>
 
   <section class="panel">
-    <h2>📜 소원 벽</h2>
+    <h2>📿 108배 챌린지</h2>
+    <p class="desc">절 올리기 버튼(또는 스페이스바)을 눌러 108배를 채우면 특별 합격 부적을 받습니다.</p>
+    <div class="progress"><div class="bar" id="bar108"></div><span id="txt108">0 / 108</span></div>
+  </section>
+
+  <section class="panel">
+    <h2>📜 소원 벽 <span class="mode" id="modeBadge"></span></h2>
+    <div class="filter" id="wallFilter"></div>
     <div class="wall" id="wall"></div>
   </section>
 
@@ -227,11 +266,6 @@ const DEITIES = [
   { id:"dx",    co:"삼성전자 DX부문",  title:"대표이사", name:"노태문",  photo:"", tone:"#d9b25a" },
 ];
 
-const STORE = "hapgyeoksa-v1";
-const state = Object.assign({bows:{}, incense:0, wishes:[]}, JSON.parse(localStorage.getItem(STORE) || "{}"));
-const save = () => localStorage.setItem(STORE, JSON.stringify(state));
-let selected = "main";
-
 /* 금빛 흉상 SVG */
 function statueSVG(d){
   const g = "g"+d.id;
@@ -261,8 +295,67 @@ function statueSVG(d){
   </svg>`;
 }
 
+/* =========================================================
+   지원 계열사 목록 (소원지에 표시)
+   ========================================================= */
+const COMPANIES = ["삼성전자","삼성디스플레이","삼성바이오로직스","삼성바이오에피스","삼성SDI","삼성전기","삼성SDS",
+  "삼성물산","삼성중공업","삼성E&A","삼성생명","삼성화재","삼성카드","삼성증권","호텔신라","제일기획","에스원","삼성웰스토리","기타"];
+
+/* =========================================================
+   공유 서버 주소
+   - 비워두면 각 방문자 브라우저에만 저장됩니다(개인 모드).
+   - worker/ 폴더의 Cloudflare Worker 를 배포한 뒤 그 주소를 넣으면
+     모든 방문자가 절 횟수와 소원 벽을 함께 봅니다(공유 모드).
+     예) const API_BASE = "https://hapgyeoksa-api.내계정.workers.dev";
+   ========================================================= */
+const API_BASE = "";
+
+const STORE = "hapgyeoksa-v1";
+const state = Object.assign({bows:{}, incense:0, wishes:[], challenge:0, sound:true}, JSON.parse(localStorage.getItem(STORE) || "{}"));
+const save = () => localStorage.setItem(STORE, JSON.stringify(state));
+let global = null;          // 공유 모드일 때 서버 데이터
+let selected = "main";
+let wallFilter = "전체";
+const $ = id => document.getElementById(id);
+const view = () => global || state;
+
+/* ---------------- 서버 통신 ---------------- */
+async function api(path, body){
+  const res = await fetch(API_BASE.replace(/\/$/,"") + path, body ? {
+    method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body)} : {});
+  if(!res.ok) throw new Error((await res.json().catch(()=>({}))).error || res.status);
+  return res.json();
+}
+async function loadGlobal(){
+  if(!API_BASE) return;
+  try{ global = await api("/state"); }
+  catch(e){ global = null; toast("서버 연결 실패 · 이 기기 저장 모드로 동작합니다"); }
+  renderAll();
+}
+
+/* ---------------- 효과음 (Web Audio, 파일 불필요) ---------------- */
+let actx;
+function ctx(){ actx = actx || new (window.AudioContext||window.webkitAudioContext)(); return actx; }
+function moktak(){            // 목탁 소리
+  if(!state.sound) return; const c = ctx(), t = c.currentTime;
+  const o = c.createOscillator(), g = c.createGain();
+  o.type="sine"; o.frequency.setValueAtTime(820,t); o.frequency.exponentialRampToValueAtTime(480,t+0.08);
+  g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.7,t+0.005); g.gain.exponentialRampToValueAtTime(0.0001,t+0.25);
+  o.connect(g).connect(c.destination); o.start(t); o.stop(t+0.3);
+}
+function bell(){              // 범종/풍경 소리
+  if(!state.sound) return; const c = ctx(), t = c.currentTime;
+  [[196,1],[392,.5],[523,.3],[784,.15]].forEach(([f,v])=>{
+    const o=c.createOscillator(), g=c.createGain(); o.type="sine"; o.frequency.value=f;
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.35*v,t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+3.5);
+    o.connect(g).connect(c.destination); o.start(t); o.stop(t+3.6);
+  });
+}
+
+/* ---------------- 렌더링 ---------------- */
 function renderAltar(){
-  const altar = document.getElementById("altar");
+  const bows = view().bows || {};
+  const altar = $("altar");
   altar.innerHTML = DEITIES.map(d => `
     <div class="deity ${d.main?'main':''} ${selected===d.id?'selected':''}" data-id="${d.id}">
       <div class="statue">
@@ -273,26 +366,25 @@ function renderAltar(){
       <div class="plate">
         <div class="co">${d.co} ${d.title}</div>
         <div class="nm">${d.name}${d.main?' 님':''}</div>
-        <div class="bows">🙇 ${(state.bows[d.id]||0).toLocaleString()}배</div>
+        <div class="bows">🙇 ${(bows[d.id]||0).toLocaleString()}배</div>
       </div>
     </div>`).join("");
   altar.querySelectorAll(".deity").forEach(el => el.onclick = () => {
-    selected = el.dataset.id;
-    document.getElementById("target").value = selected;
-    renderAltar();
+    selected = el.dataset.id; $("target").value = selected; renderAltar();
   });
 }
 
-function renderSelect(){
-  document.getElementById("target").innerHTML = DEITIES.map(d =>
+function renderSelects(){
+  $("target").innerHTML = DEITIES.map(d =>
     `<option value="${d.id}" ${d.id===selected?'selected':''}>${d.name} (${d.co} ${d.title})</option>`).join("");
-  document.getElementById("target").onchange = e => { selected = e.target.value; renderAltar(); };
+  $("target").onchange = e => { selected = e.target.value; renderAltar(); };
+  $("company").innerHTML = COMPANIES.map(c => `<option>${c}</option>`).join("");
 }
 
 function renderCensor(){
-  const wrap = document.getElementById("censer");
+  const wrap = $("censer");
   wrap.querySelectorAll(".incense,.smoke").forEach(n => n.remove());
-  const n = Math.min(state.incense, 9) || 1;
+  const n = Math.min(view().incense || 0, 9) || 1;
   for(let i=0;i<n;i++){
     const x = 50 + (i - (n-1)/2) * 12;
     const s = document.createElement("div"); s.className="incense"; s.style.left=`calc(${x}% - 1px)`; wrap.appendChild(s);
@@ -301,77 +393,130 @@ function renderCensor(){
 }
 
 function renderCounts(){
-  const total = Object.values(state.bows).reduce((a,b)=>a+b,0);
-  document.getElementById("totalBows").textContent = total.toLocaleString();
-  document.getElementById("totalIncense").textContent = state.incense.toLocaleString();
+  const v = view();
+  const total = Object.values(v.bows||{}).reduce((a,b)=>a+b,0);
+  $("scopeLabel").textContent = global ? "모두가 함께" : "이 기기에서";
+  $("totalBows").textContent = total.toLocaleString();
+  $("totalIncense").textContent = (v.incense||0).toLocaleString();
+  $("modeBadge").textContent = global ? "🌐 모든 방문자의 소원" : "💾 이 기기에만 저장된 소원";
+  const c = state.challenge % 108 || (state.challenge ? 108 : 0);
+  $("bar108").style.width = (c/108*100) + "%";
+  $("txt108").textContent = `${c} / 108` + (state.challenge >= 108 ? ` · 완주 ${Math.floor(state.challenge/108)}회` : "");
+  $("soundBtn").classList.toggle("off", !state.sound);
+  $("soundBtn").textContent = state.sound ? "🔔" : "🔕";
 }
 
-const esc = s => s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 function renderWall(){
-  const wall = document.getElementById("wall");
-  if(!state.wishes.length){ wall.innerHTML = `<div class="empty">아직 걸린 소원지가 없습니다. 첫 소원을 올려보세요!</div>`; return; }
-  wall.innerHTML = state.wishes.slice().reverse().map(w => {
+  const wishes = view().wishes || [];
+  const used = ["전체", ...new Set(wishes.map(w => w.company).filter(Boolean))];
+  $("wallFilter").innerHTML = used.length > 2 ? used.map(c =>
+    `<button class="${c===wallFilter?'on':''}" data-c="${esc(c)}">${esc(c)}</button>`).join("") : "";
+  $("wallFilter").querySelectorAll("button").forEach(b => b.onclick = () => { wallFilter = b.dataset.c; renderWall(); });
+  const list = wishes.filter(w => wallFilter==="전체" || w.company===wallFilter);
+  if(!list.length){ $("wall").innerHTML = `<div class="empty">아직 걸린 소원지가 없습니다. 첫 소원을 올려보세요!</div>`; return; }
+  const sorted = global ? list : list.slice().reverse();
+  $("wall").innerHTML = sorted.map(w => {
     const d = DEITIES.find(x=>x.id===w.to) || DEITIES[2];
-    return `<div class="tag"><div class="to">▶ ${esc(d.name)}님께 · ${esc(w.stage)}</div>${esc(w.text)}<div class="who">- ${esc(w.nick)} · ${w.date}</div></div>`;
+    return `<div class="tag"><div class="to">▶ ${esc(d.name)}님께 · ${esc(w.stage)}${w.company?`<span class="co-tag">${esc(w.company)}</span>`:""}</div>${esc(w.text)}<div class="who">- ${esc(w.nick)} · ${esc(w.date)}</div></div>`;
   }).join("");
 }
 
+function renderAll(){ renderAltar(); renderCensor(); renderCounts(); renderWall(); }
+
+/* ---------------- 효과 ---------------- */
 function floatText(txt, el){
   const r = el.getBoundingClientRect();
   const f = document.createElement("div"); f.className="float-txt"; f.textContent = txt;
   f.style.left = (r.left + r.width/2 - 40) + "px"; f.style.top = (r.top) + "px";
   document.body.appendChild(f); setTimeout(()=>f.remove(), 1500);
 }
+let toastTimer;
+function toast(msg){
+  const t = $("toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer = setTimeout(()=>t.classList.remove("show"), 2200);
+}
+function showCard(title, big, text, talisman){
+  $("cardTitle").textContent = title;
+  $("cardBig").innerHTML = talisman
+    ? `<div class="talisman">${[...big].map(c=>`<span>${esc(c)}</span>`).join("")}<small>合格寺</small></div>` : esc(big);
+  $("cardText").textContent = text;
+  $("overlay").classList.add("show");
+}
 
-document.getElementById("bowBtn").onclick = e => {
-  state.bows[selected] = (state.bows[selected]||0) + 1; save();
-  const fl = document.getElementById("flash"); fl.classList.remove("go"); void fl.offsetWidth; fl.classList.add("go");
+/* ---------------- 행동 ---------------- */
+async function bow(){
+  state.bows[selected] = (state.bows[selected]||0) + 1;
+  state.challenge++; save(); moktak();
+  if(global){ global.bows[selected] = (global.bows[selected]||0) + 1; api("/bow",{to:selected}).catch(()=>{}); }
+  const fl = $("flash"); fl.classList.remove("go"); void fl.offsetWidth; fl.classList.add("go");
   renderAltar(); renderCounts();
-  const statueEl = document.querySelector(`.deity[data-id="${selected}"]`);
-  floatText("합격 기원 +1", statueEl || e.target);
+  floatText("합격 기원 +1", document.querySelector(`.deity[data-id="${selected}"]`) || $("bowBtn"));
+  if(state.challenge % 108 === 0){
+    bell();
+    const d = DEITIES.find(x=>x.id===selected);
+    showCard(`108배 완주! ${d.name}님이 내리신 부적`, "最終合格", "이 부적을 캡처해서 배경화면으로 두세요. 최종 합격까지 함께합니다.", true);
+  }
+}
+$("bowBtn").onclick = bow;
+document.addEventListener("keydown", e => {
+  if(e.code === "Space" && !/INPUT|TEXTAREA|SELECT|BUTTON/.test(document.activeElement.tagName)){ e.preventDefault(); bow(); }
+});
+
+$("incenseBtn").onclick = () => {
+  state.incense++; save(); bell();
+  if(global){ global.incense = (global.incense||0) + 1; api("/incense",{}).catch(()=>{}); }
+  renderCensor(); renderCounts();
+  floatText("향 +1 🪔", $("censer"));
 };
 
-document.getElementById("incenseBtn").onclick = e => {
-  state.incense++; save(); renderCensor(); renderCounts();
-  floatText("향 +1 🪔", document.getElementById("censer"));
-};
-
-document.getElementById("wishBtn").onclick = () => {
-  const text = document.getElementById("wish").value.trim();
-  if(!text){ alert("소원을 적어주세요 🙏"); return; }
+$("wishBtn").onclick = async () => {
+  const text = $("wish").value.trim();
+  if(!text){ toast("소원을 적어주세요 🙏"); return; }
   const d = new Date();
-  state.wishes.push({
-    to: selected,
-    nick: document.getElementById("nick").value.trim() || "익명의 취준생",
-    stage: document.getElementById("stage").value,
-    text, date: `${d.getMonth()+1}/${d.getDate()}`
-  });
-  if(state.wishes.length > 200) state.wishes.shift();
-  save(); renderWall();
-  document.getElementById("wish").value = "";
-  document.getElementById("wall").scrollIntoView({behavior:"smooth", block:"start"});
+  const w = { to:selected, company:$("company").value, nick:$("nick").value.trim() || "익명의 취준생",
+              stage:$("stage").value, text, date:`${d.getMonth()+1}/${d.getDate()}` };
+  $("wishBtn").disabled = true;
+  try{
+    if(global){ const r = await api("/wish", w); global.wishes.unshift(r.wish || w); }
+    else { state.wishes.push(w); if(state.wishes.length > 200) state.wishes.shift(); save(); }
+    $("wish").value = ""; bell(); renderWall(); toast("소원지를 걸었습니다 📜");
+    $("wall").scrollIntoView({behavior:"smooth", block:"start"});
+  }catch(e){ toast("소원지 걸기 실패: " + e.message); }
+  finally{ $("wishBtn").disabled = false; }
 };
 
 const FORTUNES = [
   ["大吉","최종 합격의 기운이 하늘을 찌릅니다. 면접장에서 평소처럼만 하세요."],
   ["大吉","GSAT 수리 영역에서 신들린 계산력이 발휘될 운세입니다."],
+  ["大吉","인성검사도 면접도 술술. 진심이 통하는 날입니다."],
   ["吉","서류 합격 메일이 당신을 찾아오고 있습니다. 메일함을 자주 확인하세요."],
   ["吉","직무 이해도가 빛을 발하는 날. 직무 역량 질문에 자신 있게 답하세요."],
   ["吉","면접관이 당신의 경험담에 고개를 끄덕일 것입니다."],
+  ["吉","추리 영역 도식 문제가 오늘따라 술술 풀립니다."],
   ["中吉","조금만 더 준비하면 됩니다. 오늘은 기출 한 세트 더!"],
   ["中吉","귀인이 나타날 운. 현직자 선배에게 연락해 보세요."],
+  ["中吉","자소서 한 문장만 더 다듬으면 완벽해집니다."],
   ["小吉","오늘은 휴식이 보약. 푹 자야 내일 문제가 잘 풀립니다."],
 ];
-document.getElementById("fortuneBtn").onclick = () => {
+$("fortuneBtn").onclick = () => {
   const d = DEITIES.find(x=>x.id===selected);
   const [big, txt] = FORTUNES[Math.floor(Math.random()*FORTUNES.length)];
-  document.getElementById("cardTitle").textContent = `${d.name}님이 내려주신 오늘의 합격운`;
-  document.getElementById("cardBig").textContent = big;
-  document.getElementById("cardText").textContent = txt;
-  document.getElementById("overlay").classList.add("show");
+  moktak(); showCard(`${d.name}님이 내려주신 오늘의 합격운`, big, txt);
 };
 
-renderSelect(); renderAltar(); renderCensor(); renderCounts(); renderWall();
+$("shareBtn").onclick = async () => {
+  const data = { title:"합격사 · 삼성 합격 기원 도량", text:"삼성 최종 합격 기원하러 같이 절 올리자 🙇", url:location.href };
+  try{
+    if(navigator.share) await navigator.share(data);
+    else { await navigator.clipboard.writeText(location.href); toast("링크를 복사했습니다 🔗"); }
+  }catch(e){ /* 사용자가 공유 취소 */ }
+};
+
+$("soundBtn").onclick = () => { state.sound = !state.sound; save(); renderCounts(); if(state.sound) moktak(); };
+
+renderSelects(); renderAll(); loadGlobal();
 </script>
+
 </body>
 </html>
